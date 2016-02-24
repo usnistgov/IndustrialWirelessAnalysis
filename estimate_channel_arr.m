@@ -1,12 +1,18 @@
-function estimate_channel_arr(pattern)
+function estimate_channel_arr(pattern, doall, figvis)
 % Analyze complex impulse responses from measurements
 % Author: Rick Candell
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
 
+if nargin < 3
+    figvis = true;
+end
+if nargin < 2
+    doall = false;
+end
+
 more off; 
 grid minor;
-set(0,'DefaultFigureWindowStyle','docked')
 
 %
 peaks = [];
@@ -18,10 +24,16 @@ arr_dir = 'arr';
 files = dir([arr_dir '\' pattern]);
 for fk = 1:length(files)
     
+    % check for semphore
     mat_fname = files(fk).name;
-    disp(['opening ' mat_fname]);
+    sem_fname = ['semv\' mat_fname(1:end-4) '__sem.mat'];
+    if ~doall && exist(sem_fname, 'file')
+        disp('file exists. continuing...');
+        continue;
+    end
     try 
         cir_file_path = [arr_dir '\' mat_fname];
+        disp(['opening ' mat_fname]);
         cir_file = load(cir_file_path);
     catch me
         warning('Problem reading mat file, trying again then skipping.');
@@ -112,7 +124,7 @@ for fk = 1:length(files)
     end
 
     % Analyzer the Rician K-factor
-    h = figure(1); 
+    if ~figvis, h = figure('Visible','off'); else h = figure(); end      
     [counts,centers] = hist(K,30);
     bar(centers, counts/sum(counts));
     xlabel('K (dB)')
@@ -127,7 +139,7 @@ for fk = 1:length(files)
 
     % Plot the CIR Magnitude
     if 0
-    h = figure(2); 
+    if ~figvis, h = figure('Visible','off'); else h = figure(); end 
     for kk = index
         cir = cir_file.the_run.cir(:,kk);
         cir = circshift(cir, pn_over);
@@ -146,7 +158,7 @@ for fk = 1:length(files)
     end
 
     % View the time of peaks in time order
-    h = figure(3); clf
+    if ~figvis, h = figure('Visible','off'); else h = figure(); end
     plot(peaks_t*1e9, 'd')
     xlabel('record #')
     ylabel('time (ns)')
@@ -156,15 +168,15 @@ for fk = 1:length(files)
     print(h,[png_dir '\' mat_fname(1:end-4) '__peak_time.png'],'-dpng')
 
     % View the time of peaks in ascending distance
-    % figure(4)
+    % if ~figvis, h = figure('Visible','off'); else h = figure(); end
     % plot
 
     % view the K-factor as a function of ascending distance to transmitter
-    % figure(5)
+    % if ~figvis, h = figure('Visible','off'); else h = figure(); end
     % plot
 
     % Analyzer receive power
-    h = figure(6);
+    if ~figvis, h = figure('Visible','off'); else h = figure(); end
     plot(index, 10*log10(pdp_pwr), 'o')
     xlabel('index')
     ylabel('Received Power (dBm)')
@@ -193,9 +205,16 @@ for fk = 1:length(files)
     peaks_t = [];
     t = [];
     
+    % save semaphore
+    semv = 1;
+    if ~exist('semv', 'dir')
+        mkdir('semv');
+    end
+    save(sem_fname, 'semv')
+    
     % gather memory stats
-    disp('memory usage')
-    memory
+%     disp('memory usage')
+%     memory
 
 end
 

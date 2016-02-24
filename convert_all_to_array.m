@@ -4,11 +4,10 @@
 % Email: rick.candell@nist.gov
 
 clear;
-addpath('c:\Users\rnc4\git\rf_analysis')
-%dirs = { 'AAPlant D1', 'AAPlant D2', 'AAPlant D3' };
-%pattern = 'AA*.mat';
+clc;
+%addpath('C:\git\wpsm_rf_analysis')
 dirs = { 'Gaithersburg Day 1', 'Gaithersburg Day 2', 'Gaithersburg Day 3', 'AAPlant D1', 'AAPlant D2', 'AAPlant D3' };
-pattern = 'AA*.mat';
+pattern = '*.mat';
 
 dbstop error
 for kk = 1:length(dirs)
