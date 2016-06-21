@@ -1,8 +1,17 @@
-function estimate_channel_arr(pattern, doall, figvis)
+function estimate_channel_cwd(pattern, doall, figvis, Ts, TEST_DATA)
 % Analyze complex impulse responses from measurements
 % Author: Rick Candell
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
+
+TESTING = false;
+if nargin == 5
+    TESTING = true;
+end
+
+if nargin < 4
+    Ts = 12.5e-9;
+end
 
 if nargin < 3
     figvis = true;
@@ -19,9 +28,9 @@ peaks = [];
 peaks_t = [];
 K = [];
 cir_file = [];
-arr_dir = 'arr';
+arr_dir = '.';
 
-files = dir([arr_dir '\' pattern]);
+files = dir(pattern);
 for fk = 1:length(files)
     
     % check for semphore
@@ -34,7 +43,11 @@ for fk = 1:length(files)
     try 
         cir_file_path = [arr_dir '\' mat_fname];
         disp(['opening ' mat_fname]);
-        cir_file = load(cir_file_path);
+        if TESTING
+            cir_file = TEST_DATA;
+        else
+            cir_file = load(cir_file_path);
+        end
     catch me
         warning('Problem reading mat file, trying again then skipping.');
         disp(me.message)
@@ -49,21 +62,23 @@ for fk = 1:length(files)
     
     stats = struct('meta',[],'index',[],'peaks',[],'vars',[]);
     try
-        meta = cir_file.the_run.meta;
+        meta = cir_file.Strct_Metadata;
     catch me
         warning('problem with meta data  read')
         disp(me.message);
         continue;
     end
-    apf = meta{11,2};
-    pn_over = cell2mat(meta(7,2));
-    rpa = cell2mat(meta(9,2));
-    ns =  cell2mat(meta(8,2));
-    Ts = meta{14,2};
-    wl = meta{8,2};
-    t = [0:Ts:Ts*(wl-1)]-Ts*pn_over;
-    t_view_max_us = 1.6;
-
+    
+    % META DATA SECTION
+    apf = meta.NumberAcqusitions_num;       % acquisitions per file
+    pn_over = meta.PNOversample_num;        % samples per chip
+    rpa = meta.NumberRecordperAcqusition_num;      % records per acquisition
+    ns =  meta.CodewordLength_num;      % number of samples
+%     Ts = meta{14,2};                % sample period
+    wl = ns;        % codeword length
+    t = (0:Ts:Ts*(wl-1))-Ts*pn_over;    % time array over a burst transmission
+    t_view_max_us = 1.6;            % maximum view in microseconds
+    
     NN = apf*rpa;
     index = 1:NN;
 
@@ -84,7 +99,7 @@ for fk = 1:length(files)
     end
     Tx_rms_amp = sqrt(Tx_pwr);
     for kk = 1:NN
-        cir = cir_file.the_run.cir(:,kk);
+        cir = cir_file.IQdata(:,kk);
         cir = circshift(cir, pn_over);
         cir = [cir(1:end-20); zeros(20,1)]; 
         cir_mag = abs(cir);
@@ -123,7 +138,7 @@ for fk = 1:length(files)
         end
     end
 
-    % Analyzer the Rician K-factor
+    % Analyze the Rician K-factor 
     if ~figvis, h = figure('Visible','off'); else h = figure(); end      
     [counts,centers] = hist(K,30);
     bar(centers, counts/sum(counts));
@@ -136,6 +151,8 @@ for fk = 1:length(files)
     drawnow
     savefig(h,[fig_dir '\' mat_fname(1:end-4) '__Khist.fig']);
     print(h,[png_dir '\' mat_fname(1:end-4) '__Khist.png'],'-dpng')
+    
+    
 
     % Plot the CIR Magnitude
     if 0
