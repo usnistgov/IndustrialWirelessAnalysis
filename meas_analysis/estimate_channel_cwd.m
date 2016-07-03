@@ -1,16 +1,12 @@
-function estimate_channel_cwd(pattern, doall, figvis, Ts, TEST_DATA)
+function estimate_channel_cwd(pattern, doall, figvis, TEST_DATA)
 % Analyze complex impulse responses from measurements
 % Author: Rick Candell
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
 
 TESTING = false;
-if nargin == 5
+if nargin == 4
     TESTING = true;
-end
-
-if nargin < 4
-    Ts = 12.5e-9;
 end
 
 if nargin < 3
@@ -26,6 +22,7 @@ grid minor;
 %
 peaks = [];
 peaks_t = [];
+peaks_k = [];
 K = [];
 cir_file = [];
 arr_dir = '.';
@@ -60,7 +57,7 @@ for fk = 1:length(files)
         end
     end
     
-    stats = struct('meta',[],'index',[],'peaks',[],'vars',[]);
+    stats = struct('meta',[],'index',[],'peaks',[]);
     try
         meta = cir_file.Strct_Metadata;
     catch me
@@ -70,16 +67,14 @@ for fk = 1:length(files)
     end
     
     % META DATA SECTION
-    apf = meta.NumberAcqusitions_num;       % acquisitions per file
-    pn_over = meta.PNOversample_num;        % samples per chip
-    rpa = meta.NumberRecordperAcqusition_num;      % records per acquisition
-    ns =  meta.CodewordLength_num;      % number of samples
-%     Ts = meta{14,2};                % sample period
-    wl = ns;        % codeword length
-    t = (0:Ts:Ts*(wl-1))-Ts*pn_over;    % time array over a burst transmission
-    t_view_max_us = 1.6;            % maximum view in microseconds
+    meta
+    Ts = (1/meta.SampleRate_MHz_num)*1e-6;  % sample rate
+    wl =  meta.CodewordLength_num;      % codeword length
+    t = (0:Ts:Ts*(wl-1));% -Ts*pn_over;    % time array over a burst transmission
+    t_view_max_ns = 1e3;            % maximum view in microseconds
     
-    NN = apf*rpa;
+    %NN = apf*rpa;
+    NN = size(cir_file.IQdata,2);
     index = 1:NN;
 
     % setup output directories
@@ -91,55 +86,86 @@ for fk = 1:length(files)
     mkdir(png_dir);
 
     % Compute some metrics for each CIR's
-    Tx_pwr = NaN; %#ok<NASGU> % Watts
-    if ~isempty(strfind(mat_fname, '2G'))
-        Tx_pwr = 1.5;
-    else % 5 GHz
-        Tx_pwr = 1.25;
-    end
-    Tx_rms_amp = sqrt(Tx_pwr);
+    ERP_dBW = 10*log10(meta.TransmitterPower_watts_num) ...
+        + meta.TransmitterAntennaGain_dBi_num;
+    ERP_W = 10^(ERP_dBW/10);
+    ERP_Vrms = sqrt(ERP_W);
+    Tx_rms_amp = sqrt(ERP_Vrms);
     for kk = 1:NN
         cir = cir_file.IQdata(:,kk);
-        cir = circshift(cir, pn_over);
         cir = [cir(1:end-20); zeros(20,1)]; 
         cir_mag = abs(cir);
         if ~isempty(cir_mag)
-            if length(cir_mag) < ns
+            if length(cir_mag) < wl
                 peaks_t(kk) = NaN;
-                vars(kk) = NaN;
+                peaks_k(kk) = NaN;
                 K(kk) = NaN;   
-                pdp_pwr(kk) = nf;            
+                pdp_pwr(kk) = nf;  
+                delay_spread(kk) = NaN;
                 continue;
             end
+            
+            % compute the noise floor of the tail
             nf = mean(cir_mag(end-100:end-50));
-            [peaks(kk), peaks_t(kk)] = max(cir_mag(1:end-1024)); %#ok<*SAGROW>
+            
+            % compute the peak and the time of the peak
+            [peaks(kk), peaks_k(kk)] = max(cir_mag(1:end-1024)); %#ok<*SAGROW>
+            
             if peaks(kk) > nf*10
-                gtnf = cir_mag>nf*10;
+                
+                % only select components 6 dB above the noise floor
+                gtnf = cir_mag>nf*4;
                 cir_gtnf = cir(gtnf);
                 t_gtnf = t(gtnf);
-                peaks_t(kk) = peaks_t(kk)*Ts;
-                var_kk = var(cir_mag(cir_mag>(nf*4)));
-                K(kk) = 10*log10(peaks(kk)^2/(2*var_kk));   
+                
+                % compute the actual times of the peaks
+                peaks_t(kk) = peaks_k(kk)*Ts;
+                
+                % compute the K factor assuming Rician channel
+                r = cir_file.IQdata_Range_m(kk,3);
+                K(kk) = compute_k_factor(t, cir, r, 6);
+                
+                % compute the duration of the CIR from the time of the
+                % first component to time of the last component
                 T = t_gtnf(end)-t_gtnf(1);
                 Ngtnf = length(T);
-    %             pdp_pwr(kk) = sum(abs(Tx_rms_amp*cir_gtnf).^2)/T; %#ok<*AGROW>
+                
+                % compute the total power in the PDP
                 pdp_pwr(kk) = sum(abs(Tx_rms_amp*cir_gtnf).^2)/Ngtnf; %#ok<*AGROW>
+                
+                % compute delay spread of the CIR
+                delay_spread(kk) = compute_delay_spread(t_gtnf, cir_gtnf);
             else
                 peaks_t(kk) = NaN;
-                vars(kk) = NaN;
                 K(kk) = NaN;   
-                pdp_pwr(kk) = nf;            
+                pdp_pwr(kk) = nf;    
+                delay_spread(kk) = NaN;
             end
         else
             peaks_t(kk) = NaN;
-            vars(kk) = NaN;
             K(kk) = NaN;
             pdp_pwr(kk) = nf;
+            delay_spread(kk) = NaN;
         end
     end
+    
+    % Analyze the delay spread of the CIR's 
+    if ~figvis, h = figure('Visible','on'); else h = figure(); end      
+    [counts,centers] = hist(delay_spread*1e9,30);
+    bar(centers, counts/sum(counts));
+    xlabel('Delay Spread, Tau (nanosecs)')
+    ylabel('Pr.(Tau)')
+    grid on
+    grid minor
+    title('Histogram of Delay Spread')
+    title({'Histogram of Delay Spread', strrep(mat_fname,'_','-')})
+    drawnow
+    savefig(h,[fig_dir '\' mat_fname(1:end-4) '__DelaySpread.fig']);
+    print(h,[png_dir '\' mat_fname(1:end-4) '__DelaySpread.png'],'-dpng')    
+    close(h)
 
     % Analyze the Rician K-factor 
-    if ~figvis, h = figure('Visible','off'); else h = figure(); end      
+    if ~figvis, h = figure('Visible','on'); else h = figure(); end      
     [counts,centers] = hist(K,30);
     bar(centers, counts/sum(counts));
     xlabel('K (dB)')
@@ -151,63 +177,56 @@ for fk = 1:length(files)
     drawnow
     savefig(h,[fig_dir '\' mat_fname(1:end-4) '__Khist.fig']);
     print(h,[png_dir '\' mat_fname(1:end-4) '__Khist.png'],'-dpng')
+    close(h)
     
-    
-
     % Plot the CIR Magnitude
     if 0
-    if ~figvis, h = figure('Visible','off'); else h = figure(); end 
-    for kk = index
-        cir = cir_file.the_run.cir(:,kk);
-        cir = circshift(cir, pn_over);
-        cir = [cir(1:end-20); zeros(20,1)]; 
+    if ~figvis, h = figure('Visible','on'); else h = figure(); end 
+    for kk = 1:NN
+        cir = cir_file.IQdata(:,kk);
         if ~isempty(cir)
-            plot(t*1e6, 10*log10(abs(cir)))
+            plot(t*1e9, 10*log10(abs(cir)))
             title(sprintf('#%d CIR Mag', kk))
-            xlim([0 t_view_max_us]) 
-            xlabel('time (us)')
+            xlim([0 t_view_max_ns]) 
+            xlabel('time (ns)')
             ylabel('Gain (dB)')
             drawnow
         end
     end
     savefig(h, [fig_dir '\' mat_fname(1:end-4) '__cir_mag.fig']);
     print(h,[png_dir '\' mat_fname(1:end-4) '__cir_mag.png'],'-dpng')
+    close(h)
     end
 
-    % View the time of peaks in time order
-    if ~figvis, h = figure('Visible','off'); else h = figure(); end
-    plot(peaks_t*1e9, 'd')
-    xlabel('record #')
-    ylabel('time (ns)')
-    title({'Time of Peak', strrep(mat_fname,'_','-')})
-    drawnow
-    savefig(h, [fig_dir '\' mat_fname(1:end-4) '_peaktime.fig']);
-    print(h,[png_dir '\' mat_fname(1:end-4) '__peak_time.png'],'-dpng')
-
-    % View the time of peaks in ascending distance
-    % if ~figvis, h = figure('Visible','off'); else h = figure(); end
-    % plot
-
-    % view the K-factor as a function of ascending distance to transmitter
-    % if ~figvis, h = figure('Visible','off'); else h = figure(); end
-    % plot
+%     % View the time of peaks in time order
+%     if ~figvis, h = figure('Visible','on'); else h = figure(); end
+%     plot(peaks_t*1e9, 'd')
+%     xlabel('record #')
+%     ylabel('time (ns)')
+%     title({'Time of Peak', strrep(mat_fname,'_','-')})
+%     drawnow
+%     savefig(h, [fig_dir '\' mat_fname(1:end-4) '_peaktime.fig']);
+%     print(h,[png_dir '\' mat_fname(1:end-4) '__peak_time.png'],'-dpng')
+%     close(h)
 
     % Analyzer receive power
-    if ~figvis, h = figure('Visible','off'); else h = figure(); end
-    plot(index, 10*log10(pdp_pwr), 'o')
-    xlabel('index')
-    ylabel('Received Power (dBm)')
+    if ~figvis, h = figure('Visible','on'); else h = figure(); end
+    plot(cir_file.IQdata_Range_m(:,3), 10*log10(pdp_pwr), 'o')
+    xlabel('Distance (m)')
+    ylabel('Received Power (dBW)')
     title({'Received Power', strrep(mat_fname,'_','-')})
     drawnow
     savefig(h, [fig_dir '\' mat_fname(1:end-4) '__power.fig']);
     print(h,[png_dir '\' mat_fname(1:end-4) '__power.png'],'-dpng')
+    close(h)
 
     % save the metrics
     stats.meta = meta;
     stats.index = index;
     stats.pdp_pwr = pdp_pwr;
     stats.peaks = peaks; 
-    stats.K = K; %#ok<STRNU>
+    stats.K = K; 
+    stats.delay_spread = delay_spread;
     save([stats_dir '\' mat_fname(1:end-4) '__channel_stats.mat'], 'stats')
 
     % explicit clear of large memory
@@ -221,6 +240,7 @@ for fk = 1:length(files)
     peaks = [];
     peaks_t = [];
     t = [];
+    delay_spread = [];
     
     % save semaphore
     semv = 1;

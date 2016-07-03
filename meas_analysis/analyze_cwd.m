@@ -6,13 +6,17 @@
 addpath('C:\git\wpsm_rf_analysis')
 
 tic
-doall = false;
+doall = true;
 figvis = false;
 
 set(0,'DefaultFigureWindowStyle','docked')
 %set(0,'DefaultFigureWindowStyle','normal')
 
 pattern = '*.mat';
-estimate_channel_cwd(pattern, doall, figvis, 12.5E-9);
+if exist('TEST_DATA','var')
+    estimate_channel_cwd(pattern, doall, figvis, TEST_DATA);
+else
+    estimate_channel_cwd(pattern, doall, figvis);
+end
 
 toc
