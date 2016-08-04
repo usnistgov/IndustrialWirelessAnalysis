@@ -1,4 +1,4 @@
-function [ tau_u, tau_s, T ] = compute_delay_spread( t, cir, minA )
+function [ tau_u, tau_s, T ] = compute_delay_spread( t, cir )
 % COMPUTE_DELAY_SPREAD Compute the delay spread of the input CIR
 %
 % Outputs:
@@ -9,8 +9,6 @@ function [ tau_u, tau_s, T ] = compute_delay_spread( t, cir, minA )
 % Inputs:
 %   t is the time vector
 %   cir is the real or complex valued channel impulse response
-%   minA is the minimum amplitide to be considered for computation with
-%   units of linear amplitude
 %
 % Time and CIR vectors must have the same length.
 %
@@ -22,18 +20,16 @@ if nargin < 3
     minA = -Inf;
 end
 
-% select components above noise threshold
-k = find(cir > minA);
+% compute the magnitude of the cir
+cir_mag = abs(cir);
 
-% eliminate the last 10% of the CIR do to fft wrapping from post-processing
-% note that this wrapping is not ideal, but a result of the method of
-% post-processing of the raw data.
-NN = size(cir);
-NN = round(NN*0.9);
+% select components above noise threshold and within 10 dB of the peak
+cir_max = max(cir_mag);
+k = find(cir_mag > max([minA cir_max/10]));
 
 % select components
-a_k = cir(k(1:NN));
-t_k = t(k(1:NN));
+a_k = cir_mag(k);
+t_k = t(k);
 t_k = t_k - t_k(1);  % remove prop delay
 
 % compute the power in the signal

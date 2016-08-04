@@ -105,7 +105,7 @@ for fk = 1:length(files)
     mkdir(png_dir); 
 
     %
-    % META DATA
+    % ANTENNA DATA
     % 
     TransmitterAntennaGain_dBi = meta.TransmitterAntennaGain_dBi_num;
     ReceiverAntennaGain_dBi = meta.ReceiverAntennaGain_dBi_num;
@@ -138,10 +138,10 @@ for fk = 1:length(files)
 
         %
         % We only consider components CIR's where the peak is greater than
-        % 6 dB above the noise floor.  If no samples exist, then we assume
+        % 10 dB above the noise floor.  If no samples exist, then we assume
         % that the cir is too noisy for channel estimation.
         %
-        if any(peaks(kk) > nf*4)
+        if any(peaks(kk) > nf*20)
             
             % only select components 6 dB above the noise floor
             gtnf = cir_mag>nf*4;
@@ -152,8 +152,10 @@ for fk = 1:length(files)
             peaks_t(kk) = peaks_k(kk)*Ts;
 
             % compute the K factor assuming Rician channel
+            % we only consider components 10 dB above the noise floor and
+            % where the peak occurs within 8 samples of beginning of the CIR 
             r = cir_file.IQdata_Range_m(kk,3);
-            K(kk) = compute_k_factor(t, cir, r, 6);
+            K(kk) = compute_k_factor(t, cir, r, 10, 8*Ts);
 
             % Compute the path loss in the cir
             % note that the CIR contains antenna gains.  We must remove the
@@ -166,8 +168,14 @@ for fk = 1:length(files)
                 - TransmitterAntennaGain_dBi - ReceiverAntennaGain_dBi;  
 
             % compute delay spread parameters of the CIR 
-            [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
-                compute_delay_spread(t_gtnf, cir_gtnf);
+            % because of the wrapping of energy in the FFT-based
+            % correlation we must remove the trailing edge.
+            t_ds = t_gtnf(t_gtnf<(0.8*t_gtnf(end)));
+            if length(t_ds) > 10  % we want at least 10 samples
+                cir_ds = cir_gtnf(1:length(t_ds));
+                [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
+                    compute_delay_spread(t_ds, cir_ds);
+            end
 
         end
     end
@@ -180,11 +188,20 @@ for fk = 1:length(files)
     %
     % Analyze path loss versus distance
     %
-    if ~figvis, h = figure('Visible','on'); else h = figure(); end
-    r_p = r;  pl_p = path_gain_dB;
+    h = figure();
+    k_gt3 = find(r>3);
+    r_gt3 = r(k_gt3);
+    r_p = r_gt3;  pl_p = path_gain_dB(k_gt3);
     r_p(isnan(pl_p)) = [];
     pl_p(isnan(pl_p)) = [];
-    semilogx(r_p, pl_p, 'o')
+    pl_p_fit = polyfit(r_p,pl_p,2);
+    
+    % one-segment linear fit
+    p1=polyfit(r_p,pl_p,1); 
+    r_px = linspace(min(r_p),max(r_p),100);
+    semilogx(r_p, pl_p, 'o', r_px, polyval(p1, r_px));
+    legend('Measured Data', ...
+        sprintf('p=%0.2fx + %0.2f',p1));
     setCommonGridProps()    
     xlabel('Distance (m)')
     ylabel('Path Loss (dB)')
@@ -197,16 +214,16 @@ for fk = 1:length(files)
     %
     % Analyze the delay spread of the CIR's 
     %
-    if ~figvis, h = figure('Visible','on'); else h = figure(); end      
+    h = figure();      
     [counts,centers] = hist(1e9*rms_delay_spread_sec,50000);
     ds_probs = cumsum(counts/sum(counts));
     ds_centers = centers(ds_probs<0.99);
     ds_probs = ds_probs(ds_probs<0.99);
     plot(ds_centers, ds_probs);
-    xlabel('Delay Spread, Tau (nanosecs)')
-    ylabel('Pr.(ds < \tau)')
+    xlabel('Delay Spread, \tau_0 (nanosecs)')
+    ylabel('Pr.(\tau < \tau_0)')
     setCommonGridProps()
-    title({'Cum Prob. of Delay Spread', strrep(mat_fname,'_','-')})
+    title({'CDF of Delay Spread', strrep(mat_fname,'_','-')})
     drawnow
     savefig(h,[fig_dir '\' mat_fname(1:end-4) '__ds.fig']);
     print(h,[png_dir '\' mat_fname(1:end-4) '__ds.png'],'-dpng')    
@@ -215,9 +232,11 @@ for fk = 1:length(files)
     %
     % Analyze the delay spread versus Distance
     %
-    if ~figvis, h = figure('Visible','on'); else h = figure(); end      
+    h = figure();      
     % remove nans from data
-    r_p = r;  ds_p = rms_delay_spread_sec;
+    k_gt3 = find(r>3);
+    r_gt3 = r(k_gt3);
+    r_p = r_gt3;  ds_p = rms_delay_spread_sec(k_gt3);
     r_p(isnan(ds_p)) = [];
     ds_p(isnan(ds_p)) = [];
     plot(r_p,ds_p,'o');
@@ -228,49 +247,32 @@ for fk = 1:length(files)
     drawnow
     savefig(h,[fig_dir '\' mat_fname(1:end-4) '__ds2dist.fig']);
     print(h,[png_dir '\' mat_fname(1:end-4) '__ds2dist.png'],'-dpng')    
-    close(h)
-    
-    %
-    % Analyze the duration of the CIR's 
-    %
-    if ~figvis, h = figure('Visible','on'); else h = figure(); end      
-    [counts,centers] = hist(1e9*cir_duration,1000);
-    dur_probs = cumsum(counts/sum(counts));
-    dur_centers = centers(dur_probs<0.99);
-    dur_probs = dur_probs(dur_probs<0.99);
-    plot(dur_centers, dur_probs);
-    xlabel('cir duration, Tau (nanosecs)')
-    ylabel('Pr.(dur < Tau)')
-    setCommonGridProps()
-    title({'Cum Prob. of CIR Duration', strrep(mat_fname,'_','-')})
-    drawnow
-    savefig(h,[fig_dir '\' mat_fname(1:end-4) '__dur.fig']);
-    print(h,[png_dir '\' mat_fname(1:end-4) '__dur.png'],'-dpng')    
-    close(h)    
+    close(h)   
 
     % 
     % Analyze the Rician K Factor Estimates
     % 
-    if ~figvis, h = figure('Visible','on'); else h = figure(); end      
+    h = figure();      
     [counts,centers] = hist(K,30);
-    bar(centers, counts/sum(counts));
-    xlabel('K (dB)')
-    ylabel('Pr.(K)')
+    plot(centers, cumsum(counts/sum(counts)));
+    xlabel('K_0 (dB)')
+    ylabel('Pr.(K < K_0)')
     setCommonGridProps()
     title('Histogram of K-factor')
-    title({'Histogram of K-factor', strrep(mat_fname,'_','-')})
+    title({'CDF of K-factor', strrep(mat_fname,'_','-')})
     drawnow
-    savefig(h,[fig_dir '\' mat_fname(1:end-4) '__Khist.fig']);
-    print(h,[png_dir '\' mat_fname(1:end-4) '__Khist.png'],'-dpng')
+    savefig(h,[fig_dir '\' mat_fname(1:end-4) '__Kcdf.fig']);
+    print(h,[png_dir '\' mat_fname(1:end-4) '__Kcdf.png'],'-dpng')
     close(h)
     
     % 
     % Analyze the Rician K Factor Estimates Versus Distance
     % 
-    if ~figvis, h = figure('Visible','on'); else h = figure(); end     
+    h = figure();     
     r = cir_file.IQdata_Range_m(:,3);
-    % remove nans from data
-    r_p = r;  K_p = K;
+    k_gt3 = find(r>3);
+    r_gt3 = r(k_gt3);
+    r_p = r_gt3;  K_p = K(k_gt3);
     r_p(isnan(K_p)) = [];
     K_p(isnan(K_p)) = [];
     plot(r_p, K_p, 'o');
@@ -278,37 +280,17 @@ for fk = 1:length(files)
     ylabel('K (dB)')
     grid on
     grid minor
-    title({'K versus Distance', strrep(mat_fname,'_','-')})
+    title({'Rician K versus Distance', strrep(mat_fname,'_','-')})
     drawnow
     savefig(h,[fig_dir '\' mat_fname(1:end-4) '__KvRange.fig']);
     print(h,[png_dir '\' mat_fname(1:end-4) '__KvRange.png'],'-dpng')    
     close(h)
     
-    % 
-    % Plot the CIR Magnitude
-    % 
-    if 0
-    if ~figvis, h = figure('Visible','on'); else h = figure(); end 
-    for kk = 1:NN
-        cir = cir_file.IQdata(:,kk);
-        if ~isempty(cir)
-            plot(t*1e9, 10*log10(abs(cir)))
-            title(sprintf('#%d CIR Mag', kk))
-            xlim([0 t_view_max_ns]) 
-            xlabel('time (ns)')
-            ylabel('Gain (dB)')
-            drawnow
-        end
-    end
-    savefig(h, [fig_dir '\' mat_fname(1:end-4) '__cir_mag.fig']);
-    print(h,[png_dir '\' mat_fname(1:end-4) '__cir_mag.png'],'-dpng')
-    close(h)
-    end
-    
     % save the metrics
     stats = struct(...
         'meta',meta,...
         'path_gain_dB',path_gain_dB,...
+        'path_gain_dB_poly',pl_p_fit,...
         'peaks',peaks,...
         'K',K,...
         'rms_delay_spread_sec',rms_delay_spread_sec, ...
@@ -318,10 +300,10 @@ for fk = 1:length(files)
     save([stats_dir '\' mat_fname(1:end-4) '__channel_stats.mat'], 'stats')
 
     % explicit clear of large memory
-    cir_file = [];
+    cir_file = []; %#ok<NASGU>
     
     % save semaphore
-    semv = 1;
+    semv = 1; %#ok<NASGU>
     if ~exist('semv', 'dir')
         mkdir('semv');
     end

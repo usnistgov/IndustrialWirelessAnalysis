@@ -3,7 +3,7 @@
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
 
-addpath('C:\git\wpsm_rf_analysis')
+addpath('c:\git\wpsm_rf_analysis\meas_analysis')
 
 tic
 doall = true;
