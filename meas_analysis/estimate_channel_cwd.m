@@ -1,17 +1,14 @@
-function estimate_channel_cwd(pattern, doall, figvis, TEST_DATA)
+function estimate_channel_cwd(pattern, doall, TEST_DATA)
 % Analyze complex impulse responses from measurements
 % Author: Rick Candell
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
 
 TESTING = false;
-if nargin == 4
+if nargin == 3
     TESTING = true;
 end
 
-if nargin < 3
-    figvis = true;
-end
 if nargin < 2
     doall = false;
 end
@@ -189,23 +186,27 @@ for fk = 1:length(files)
     % Analyze path loss versus distance
     %
     h = figure();
-    k_gt3 = find(r>3);
-    r_gt3 = r(k_gt3);
-    r_p = r_gt3;  pl_p = path_gain_dB(k_gt3);
-    r_p(isnan(pl_p)) = [];
-    pl_p(isnan(pl_p)) = [];
-    pl_p_fit = polyfit(r_p,pl_p,2);
+    r_p = r;  pl_p = path_gain_dB;
+    r_p = r_p(~isnan(pl_p));
+    pl_p = pl_p(~isnan(pl_p));
     
-    % one-segment linear fit
-    p1=polyfit(r_p,pl_p,1); 
+    r_min_fit = 1.05*min(r_p);
+    r_max_fit = 0.95*max(r_p);    
+    k_fit = find(r_p>r_min_fit & r_p<r_max_fit);
+    r_p_fit = r_p(k_fit);
+    pl_p_fit = pl_p(k_fit);
+    p1 = polyfit(r_p_fit,pl_p_fit,1);
+    
+    % one-segment linear fit 
     r_px = linspace(min(r_p),max(r_p),100);
-    semilogx(r_p, pl_p, 'o', r_px, polyval(p1, r_px));
+    %semilogx(r_p, pl_p, 'o', r_p_fit, pl_p_fit, 'gx', r_px, polyval(p1, r_px));
+    semilogx(r_p, pl_p, 'bo', r_px, polyval(p1, r_px), 'r-');
     legend('Measured Data', ...
         sprintf('p=%0.2fx + %0.2f',p1));
     setCommonGridProps()    
     xlabel('Distance (m)')
-    ylabel('Path Loss (dB)')
-    title({'Path Loss', strrep(mat_fname,'_','-')})
+    ylabel('Path Gain (dB)')
+    title(strrep(mat_fname,'_','-'))
     drawnow
     savefig(h, [fig_dir '\' mat_fname(1:end-4) '__pathloss.fig']);
     print(h,[png_dir '\' mat_fname(1:end-4) '__pathloss.png'],'-dpng')
@@ -290,7 +291,7 @@ for fk = 1:length(files)
     stats = struct(...
         'meta',meta,...
         'path_gain_dB',path_gain_dB,...
-        'path_gain_dB_poly',pl_p_fit,...
+        'path_gain_dB_poly',p1,...
         'peaks',peaks,...
         'K',K,...
         'rms_delay_spread_sec',rms_delay_spread_sec, ...
@@ -314,6 +315,8 @@ for fk = 1:length(files)
     % memory
 
 end
+
+cmp_pl_poly( '*_stats.mat', '.\stats', '.\figs', '.\png' )
 
 end % function
 

@@ -3,20 +3,25 @@
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
 
-addpath('c:\git\wpsm_rf_analysis\meas_analysis')
-
-tic
+top_dirs = { 'AAPlant', 'Boulder', 'GBurg'};
 doall = true;
 figvis = false;
 
-set(0,'DefaultFigureWindowStyle','docked')
-%set(0,'DefaultFigureWindowStyle','normal')
+for ii = 1:length(top_dirs)
+    
+    cd(top_dirs{ii})
 
-pattern = '*.mat';
-if exist('TEST_DATA','var')
-    estimate_channel_cwd(pattern, doall, figvis, TEST_DATA);
-else
-    estimate_channel_cwd(pattern, doall, figvis);
+    set(0,'DefaultFigureWindowStyle','docked')
+    %set(0,'DefaultFigureWindowStyle','normal')
+
+    pattern = '*.mat';
+    if exist('TEST_DATA','var')
+        estimate_channel_cwd(pattern, doall, TEST_DATA);
+    else
+        estimate_channel_cwd(pattern, doall);
+    end
+    
+    cd('..\')
+
 end
 
-toc
