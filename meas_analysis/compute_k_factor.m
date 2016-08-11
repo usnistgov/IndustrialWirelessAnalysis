@@ -13,7 +13,6 @@ function [ K ] = compute_k_factor( t, cir, r, ns )
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
 
-C = 2.99792458e8; %m/s
 Ts = t(2)-t(1);
 dT0 = ns*Ts;
 
