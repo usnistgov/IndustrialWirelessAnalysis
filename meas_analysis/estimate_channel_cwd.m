@@ -152,7 +152,7 @@ for fk = 1:length(files)
             % we only consider components 10 dB above the noise floor and
             % where the peak occurs within 8 samples of beginning of the CIR 
             r = cir_file.IQdata_Range_m(kk,3);
-            K(kk) = compute_k_factor(t, cir, r, 10, 8*Ts);
+            K(kk) = compute_k_factor(t, cir, r, 8);
 
             % Compute the path loss in the cir
             % note that the CIR contains antenna gains.  We must remove the

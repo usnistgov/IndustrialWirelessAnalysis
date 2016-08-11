@@ -1,4 +1,4 @@
-function [ K ] = compute_k_factor( t, cir, r, L, dT0 )
+function [ K ] = compute_k_factor( t, cir, r, ns )
 %COMPUTE_K_FACTOR Computes the K-factor of the impulse response
 %   Computes the K factor of the CIR using all components of magnitude
 %   greater than the noise floor times L.  The range, r, in meters guides
@@ -7,8 +7,7 @@ function [ K ] = compute_k_factor( t, cir, r, L, dT0 )
 %   t:      time in seconds
 %   cir:    the channel impulse response
 %   r:      range in meters (not used)
-%   L:      linear limit multiplier 
-%   dT0:    time to expect peak from first cir sample
+%   ns:    oversample rate
 % 
 % Author: Rick Candell
 % Organization: National Institute of Standards and Technology
@@ -16,31 +15,38 @@ function [ K ] = compute_k_factor( t, cir, r, L, dT0 )
 
 C = 2.99792458e8; %m/s
 Ts = t(2)-t(1);
+dT0 = ns*Ts;
 
-% eliminate the anomolous tail components (last 8 samples)
+% eliminate the anomalous tail components (last 8 samples)
 t = t(1:end-8);
 cir = cir(1:end-8);
 
-% segregate the peak values above the noise floor and within 10 dB of the
-% peak magnitudea
-cir_mag = abs(cir);
-nf = mean(cir_mag(round(length(cir)*0.8):round(length(cir)*0.9)));
-cir_max = max(cir_mag);
-cir_peaks_k = find( cir_mag > max([nf*L cir_max/10]) );
+% select peak values above the noise floor and within 12 dB (15.8489) of
+% the peak magnitude per ITU P1407-5 S2.2.7
+% the PDP is normalized to the peak power in the CIR
+cir_mag2 = (abs(cir).^2);
+cir_max = max(cir_mag2);
+cir_mag2 = (abs(cir).^2)/cir_max;
+nf = mean(cir_mag2(round(length(cir)*0.8):round(length(cir)*0.9)));
+cir_peaks_k = find( cir_mag2 > max([10*nf cir_max/15.8489]) );
 cir_peaks_t = t(cir_peaks_k);
-cir_peaks = cir_mag(cir_peaks_k);
+cir_peaks = cir_mag2(cir_peaks_k);
+if 1
+plot(t, 10*log10(cir_mag2), cir_peaks_t, 10*log10(cir_peaks), 'ro')
+refline(0,10*log10(nf)+10)
+refline(0,-12)
+end
 if isempty(cir_peaks)
     K = NaN;
     return
 end
 
 % we want at least 10 components for computation.
-if length(cir_peaks) < 10
+% a component is considered 4 sample
+if length(cir_peaks) < 40
     K = NaN;
     return
 end
-
-%plot(cir_peaks_t, 10*log10(cir_peaks),'x')
 
 % calculate the peak value
 [cir_max, cir_max_k] = max(cir_peaks);
@@ -54,7 +60,8 @@ if klos > 1
 else
     dfuse_mag(klos:klos+1) = NaN;
 end
-dfuse_pwr = nanvar(dfuse_mag);
+dfuse_mag = dfuse_mag(~isnan(dfuse_mag));
+dfuse_pwr = var(dfuse_mag);
 
 % A. Doukas and G. Kalivas, "Rician K Factor Estimation for Wireless
 % Communication Systems," 2006 International Conference on Wireless and
