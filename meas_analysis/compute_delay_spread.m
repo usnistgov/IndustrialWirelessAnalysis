@@ -1,4 +1,4 @@
-function [ tau_u, tau_s, T ] = compute_delay_spread( t, cir )
+function [ tau_u, tau_s, T ] = compute_delay_spread( t, cir, nf )
 % COMPUTE_DELAY_SPREAD Compute the delay spread of the input CIR
 %
 % Outputs:
@@ -9,6 +9,7 @@ function [ tau_u, tau_s, T ] = compute_delay_spread( t, cir )
 % Inputs:
 %   t is the time vector
 %   cir is the real or complex valued channel impulse response
+%   nf is the linear domain measured noise floor
 %
 % Time and CIR vectors must have the same length.
 %
@@ -16,24 +17,48 @@ function [ tau_u, tau_s, T ] = compute_delay_spread( t, cir )
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
 
-if nargin < 3
-    minA = -Inf;
+if isempty(cir)
+    tau_u = NaN;
+    tau_s = NaN;
+    T = NaN;
+    return
 end
 
-% compute the magnitude of the cir
-cir_mag = abs(cir);
+% we want at least 4 components for computation.
+% a component is considered to be at least 3 samples
+% Note that this is a rought estimate of the number of components for K
+% factor estimation.  A better method could be to use the delay spread to
+% determine candidacy for K estimation.
+if length(cir) < 12
+    tau_u = NaN;
+    tau_s = NaN;
+    T = NaN;
+    return
+end
 
-% select components above noise threshold and within 10 dB of the peak
-cir_max = max(cir_mag);
-k = find(cir_mag > max([minA cir_max/10]));
+a_k = abs(cir);
 
-% select components
-a_k = cir_mag(k);
-t_k = t(k);
-t_k = t_k - t_k(1);  % remove prop delay
+% only consider cir's with GT 20 dB SNR peak to noise floor
+if 10*log10(max(a_k.^2)/nf) < 20
+    tau_u = NaN;
+    tau_s = NaN;
+    T = NaN;
+    return
+end
+
+% normalize the cir for computation
+a_k = a_k/max(a_k);
+t_k = t;
+t_k = t_k - t_k(1);  % remove propagation delay
+
+% remove spurious outliers
+t_k_x = 3*median(t_k);
+a_k = a_k(t_k<t_k_x);
+t_k = t_k(t_k<t_k_x);
 
 % compute the power in the signal
-P_k = abs(a_k).^2;
+% P_k = abs(a_k).^2;
+P_k = a_k.^2;
 
 % compute the mean excess delay
 tau_u = sum(P_k(:)'*t_k(:))/sum(P_k);  

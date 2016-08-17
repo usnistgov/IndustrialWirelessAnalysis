@@ -1,63 +1,62 @@
-function [ K ] = compute_k_factor( t, cir, r, ns )
+function [ K, LOS ] = compute_k_factor( t, cir, ns )
 %COMPUTE_K_FACTOR Computes the K-factor of the impulse response
 %   Computes the K factor of the CIR using all components of magnitude
 %   greater than the noise floor times L.  The range, r, in meters guides
-%   the extraction of the LOS power component.
+%   the extraction of the LOS power component.  It is assumed that the
+%   select_cir_samples() function has been used to remove unwanted samples
+%   withing the cir
 %
-%   t:      time in seconds
-%   cir:    the channel impulse response
-%   r:      range in meters (not used)
-%   ns:    oversample rate
+%   Outputs:
+%       K:      The K factor in dB
+%       LOS:    boolean LOS indicator
+%           -1 for NLOS
+%            0 for unknown
+%           +1 for LOS
+%
+%   Inputs:
+%       t:      time in seconds
+%       cir:    the channel impulse response
+%       ns:    oversample rate
 % 
 % Author: Rick Candell
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
 
-Ts = t(2)-t(1);
-dT0 = ns*Ts;
-
-% eliminate the anomalous tail components (last 8 samples)
-t = t(1:end-8);
-cir = cir(1:end-8);
-
-% select peak values above the noise floor and within 12 dB (15.8489) of
-% the peak magnitude per ITU P1407-5 S2.2.7
-% the PDP is normalized to the peak power in the CIR
-cir_mag2 = (abs(cir).^2);
-cir_max = max(cir_mag2);
-cir_mag2 = (abs(cir).^2)/cir_max;
-nf = mean(cir_mag2(round(length(cir)*0.8):round(length(cir)*0.9)));
-cir_peaks_k = find( cir_mag2 > max([10*nf cir_max/15.8489]) );
-cir_peaks_t = t(cir_peaks_k);
-cir_peaks = cir_mag2(cir_peaks_k);
-if 1
-plot(t, 10*log10(cir_mag2), cir_peaks_t, 10*log10(cir_peaks), 'ro')
-refline(0,10*log10(nf)+10)
-refline(0,-12)
-end
-if isempty(cir_peaks)
+if isempty(cir)
     K = NaN;
+    LOS = 0;
     return
 end
 
-% we want at least 10 components for computation.
-% a component is considered 4 sample
-if length(cir_peaks) < 40
+% we want at least 4 components for computation.
+% a component is considered to be at least 3 samples
+% Note that this is a rought estimate of the number of components for K
+% factor estimation.  A better method could be to use the delay spread to
+% determine candidacy for K estimation.
+if length(cir) < 12
     K = NaN;
+    LOS = 0;
     return
 end
+
+% default is LOS
+LOS = +1;
 
 % calculate the peak value
-[cir_max, cir_max_k] = max(cir_peaks);
-cir_max_t = cir_peaks_t(cir_max_k);
+cir_mag = abs(cir);
+[cir_max, cir_max_k] = max(cir_mag);
+cir_max_t = t(cir_max_k);
 
-% form the diffuse components to estimate nlos power
+% form the diffuse components to estimate non-los power.  This is done by
+% removing the local samples related to peak magnitude value
 klos = cir_max_k;
-dfuse_mag = cir_peaks; 
-if klos > 1
-    dfuse_mag(klos-1:klos+1) = NaN;
+dfuse_mag = cir_mag; 
+if klos > ns/2
+    kklos = klos-1:klos+1;
+    dfuse_mag(kklos) = NaN;
 else
-    dfuse_mag(klos:klos+1) = NaN;
+    kklos = klos:klos+1;
+    dfuse_mag(kklos) = NaN;
 end
 dfuse_mag = dfuse_mag(~isnan(dfuse_mag));
 dfuse_pwr = var(dfuse_mag);
@@ -70,15 +69,19 @@ K = 10*log10(cir_max^2/(2*dfuse_pwr));
 
 if K < 6
     K = NaN;
+    LOS = -1;
     return
 end
 
 % final filter: time-based determination.  The peak must occur within a
 % reasonable amount of time from the start of the cir.  In this case, the
-% calling function makes the time threshold determination.
-cir_dT0 = cir_max_t - cir_peaks_t(1);
+% calling function makes the time threshold determination. 
+Ts = t(2)-t(1);
+dT0 = ns*Ts;
+cir_dT0 = cir_max_t - t(1);
 if cir_dT0 > dT0
     K = NaN;
+    LOS = -1;
     return
 end
                 
