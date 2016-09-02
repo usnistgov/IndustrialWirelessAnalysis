@@ -1,5 +1,5 @@
-function estimate_channel_cwd(pattern, OPTS, TEST_DATA)
-% Analyze complex impulse responses from measurements
+function estimate_cloud_cwd(pattern, OPTS, TEST_DATA)
+% Analyze complex impulse responses from cloud measurements
 % Author: Rick Candell
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
@@ -10,14 +10,12 @@ if nargin == 3
 end
 
 OPT_PATH_GAIN = 1;
-OPT_KFACTOR = 2;
 OPT_DELAY_SPREAD = 3;
 OPT_AVGCIR_NTap = 4;
 if nargin < 2
     OPTS = ...
         [ ...   
             1; ...  % compute path gain
-            1; ...  % K factor
             1; ...  % delay spread
             1; ...  % compute average CIR from data
         ]; 
@@ -25,14 +23,6 @@ end
 
 if nargin < 1
     error 'specify a file search pattern'
-end
-
-if OPTS(OPT_AVGCIR_NTap) == 1
-    if OPTS(OPT_KFACTOR) == 0
-        OPTS(OPT_KFACTOR) = 1;
-        disp('average cir estimation requires k factor estimation')
-        disp('enabling k factor estimation')
-    end
 end
 
 more off;
@@ -138,14 +128,23 @@ for fk = 1:Nfiles
     % 
     TransmitterAntennaGain_dBi = meta.TransmitterAntennaGain_dBi_num;
     ReceiverAntennaGain_dBi = meta.ReceiverAntennaGain_dBi_num;
-
+    
+    
+    % plot the x,y positions
+    plot(cir_file.IQdata_CloudLocations_m_num.xPositions, ...
+        cir_file.IQdata_CloudLocations_m_num.yPositions)
+    xlabel('xpos (m)')
+    ylabel('ypos (m)')
+    
+    
     % 
     % Loop through all records within the file
     %
     for kk = 1:NN
         
-        % range of the CIR data record
-        r = cir_file.IQdata_Range_m(kk,3);
+        % position of the CIR data record
+        POS = [ cir_file.IQdata_CloudLocations_m_num.xPositions(kk), ...
+                cir_file.IQdata_CloudLocations_m_num.yPositions(kk) ];
         
         % extract the CIR for this record from the data file
         cir = cir_file.IQdata(:,kk);
@@ -189,39 +188,15 @@ for fk = 1:Nfiles
                 TransmitterAntennaGain_dBi, ...
                 ReceiverAntennaGain_dBi);           
         end
-
-        % compute the K factor assuming Rician channel
-        % we only consider components 10 dB above the noise floor and
-        % where the peak occurs within 8 samples of beginning of the CIR 
-        if OPTS(OPT_KFACTOR) || OPTS(OPT_AVGCIR_NTap)
-            [K(kk), LOS(kk), klos] = compute_k_factor(t_k, cir_k, ns);
-        end
         
         % Aggregate the sums for later computation of avg CIR
         % LOS and NLOS are considered as separate classes of CIR's
         if OPTS(OPT_AVGCIR_NTap)
+            [K(kk), LOS(kk), klos] = compute_k_factor(t_k, cir_k, ns);
             inds = mlos-klos+1:wla-klos;
-            if LOS(kk) == 1
-                num_los = num_los + 1;
-                cir_sum_los(inds) = cir_sum_los(inds) + cir;
-            elseif LOS(kk) == -1
-                num_nlos = num_nlos + 1;
-                cir_sum_nlos(inds) = cir_sum_nlos(inds) + cir;
-            end
-            
-        end
-%         if OPTS(OPT_AVGCIR_NTap)
-%             cir_for_avg = select_for_avg_cir( cir );
-%             if LOS(kk) == 1
-%                 num_los = num_los + 1;
-%                 cir_sum_los(1:length(cir_for_avg)) = ...
-%                     cir_sum_los(1:length(cir_for_avg)) + cir_for_avg; 
-%             elseif LOS(kk) == -1
-%                 num_nlos = num_nlos + 1;
-%                 cir_sum_nlos(1:length(cir_for_avg)) = ...
-%                     cir_sum_nlos(1:length(cir_for_avg)) + cir_for_avg;                 
-%             end
-%         end           
+            num_los = num_los + 1;
+            cir_sum_los(inds) = cir_sum_los(inds) + cir;
+        end        
 
         % compute delay spread parameters of the CIR 
         % because of the wrapping of energy in the FFT-based
@@ -330,162 +305,68 @@ for fk = 1:Nfiles
         setFigureForPrinting();
         print(h,[png_dir '\' mat_fname(1:end-4) '__ds.png'],'-dpng','-r300')    
         close(gcf)
-
-        %
-        % Analyze the delay spread versus distance
-        %
-        h = figure();      
-        % remove nans from data
-        k_lfit = find(r>10);
-        r_lfit = r(k_lfit);
-        r_p = r_lfit;  
-        ds_p = rms_delay_spread_sec(k_lfit);
-        r_p(isnan(ds_p)) = [];
-        ds_p(isnan(ds_p)) = [];
-        plot(r_p,1e9*ds_p, 'color', [0,0,0]+0.7, ...
-            'marker', '.', 'linestyle' , 'none');
-        hold on;
-        stdS = 1e9*std(rms_delay_spread_sec(~isnan(rms_delay_spread_sec)));
-        ds_poly = polyfit(r_p,1e9*ds_p,1);
-        r_p_plot = linspace(min(r_p), max(r_p), 10);
-        ds_poly_vals = polyval(ds_poly, r_p_plot);
-        plot(r_p_plot, ds_poly_vals, 'k-', ...
-           r_p_plot, repmat(ds_poly_vals(:),1,2)+stdS*[ones(10,1) -ones(10,1)], ...
-            'k--', 'LineWidth', 1.0);
-        hold off;
-        setCommonAxisProps()
-        legend({'measured', ...
-            sprintf('%0.2fx + %0.1f',ds_poly), ...
-            '+/- \sigma'}, 'Location', 'best');        
-        xlabel('distance, d (m)')
-        ylabel('S (ns)')
-        grid off
-        %title({'RMS Delay Spread versus Distance', strrep(mat_fname,'_','-')})
-        drawnow
-        savefig(h,[fig_dir '\' mat_fname(1:end-4) '__ds2dist.fig']);
-        setFigureForPrinting();
-        print(h,[png_dir '\' mat_fname(1:end-4) '__ds2dist.png'],'-dpng','-r300')    
-        close(gcf)     
         
     end %if OPTS(OPT_DELAY_SPREAD)
 
     if OPTS(OPT_KFACTOR)
-        % 
-        % Analyze the Rician K Factor Estimates CDF
-        % 
-        h = figure();      
-        [counts,centers] = hist(K,30);
-        plot(centers, cumsum(counts/sum(counts)), 'k');
-        ylim([0 1]);
-        str = '$$K$$ (dB)'; xlabel(str,'Interpreter','Latex');
-        str = '$$ \hat{K} < K $$'; ylabel(str,'Interpreter','Latex');
-        setCommonAxisProps()
-        %title({'CDF of Rician K-factor Estimate', strrep(mat_fname,'_','-')})
-        drawnow
-        savefig(h,[fig_dir '\' mat_fname(1:end-4) '__Kcdf.fig']);
-        setFigureForPrinting();
-        print(h,[png_dir '\' mat_fname(1:end-4) '__Kcdf.png'],'-dpng','-r300')
-        close(gcf)
-
-        % 
-        % Analyze the Rician K Factor Estimates Versus Distance
-        % 
-        h = figure();     
-        r = cir_file.IQdata_Range_m(:,3);
-        k_lfit = find(r>3);
-        r_lfit = r(k_lfit);
-        r_p = r_lfit;  K_p = K(k_lfit);
-        r_p(isnan(K_p)) = [];
-        K_p(isnan(K_p)) = [];
-        plot(r_p, K_p, 'color', [0,0,0]+0.7, 'marker', '.', 'linestyle' , 'none');
-        hold on 
-        KdB_poly = polyfit(r_p,K_p,1);
-        r_p_plot = linspace(min(r_p), max(r_p), 10);
-        KdB_poly_vals = polyval(KdB_poly, r_p_plot);
-        stdK = std(K(~isnan(K)));
-        plot(r_p_plot, KdB_poly_vals, 'k-', ...
-           r_p_plot, repmat(KdB_poly_vals(:),1,2)+2*stdK*[ones(10,1) -ones(10,1)], ...
-            'k--', 'LineWidth', 1.0);
-        hold off
-        setCommonAxisProps()
-        legend({'measured', ...
-            sprintf('%0.2fx + %0.1f',KdB_poly), ...
-        '+/- 2\sigma'},'FontSize',9);
-        xlabel('distance (m)')
-        ylabel('K (dB)')
-        %title({'Rician K versus Distance', strrep(mat_fname,'_','-')})
-        drawnow
-        savefig(h,[fig_dir '\' mat_fname(1:end-4) '__KvRange.fig']);
-        setFigureForPrinting();
-        print(h,[png_dir '\' mat_fname(1:end-4) '__KvRange.png'],'-dpng','-r300')    
-        close(gcf)   
-    
     end % OPTS(OPT_KFACTOR)
     
     % approximate an N-tap CIR from the measured CIR's
     if OPTS(OPT_AVGCIR_NTap)
         
         NtapApprox_N = 13;
-        for cir_class_ii = 1:length(cir_class)
         
-            cir_class_name = cir_class(cir_class_ii);
-            h = figure();  
-            if strcmp(cir_class_name,'los')
-                cir_avg = cir_sum_los/num_los;
-            else
-                cir_avg = cir_sum_nlos/num_nlos;
-            end
-            
-            % now remove leading zeros
-            cir_avg(1:find(cir_avg, 1,'first')-1) = [];
-            cir_avg = cir_avg(1:wl);
-            cir_avg = select_for_avg_cir(cir_avg);
-            cir_avg = cir_avg/max(abs(cir_avg));
-            Ncir_avg = length(cir_avg);
-            t_ciravg = t(1:Ncir_avg);
-            cir_avg = cir_avg(1:Ncir_avg);
-            [r_t,r_h,r_ph] = reduce_taps(cir_avg,NtapApprox_N);
-            r_h = r_h/max(r_h);  % normalize the approximated cir
+        cir_class_name = cir_class(cir_class_ii);
+        h = figure(); 
+        cir_avg = cir_sum_los/num_los;
 
-            hold off
-            subplot(4,1,1:2)
-            stem(1E9*t_ciravg, abs(cir_avg), '+-'); 
-            str = '$$\mid{h(t)}\mid$$';ylabel(str, 'Interpreter', 'Latex')
-            hold on; 
-            stem(1E9*t_ciravg(r_t+1), abs(r_h),'d-');
-            set(gca,'XTickLabel','')
-            xlim([0 1000]); 
-            hold off
-            setCommonAxisProps();
-            set(gca,'OuterPosition',get(gca,'OuterPosition').*[1 1 0.95 0.95]+[0.05 0.05 0 0])
-            
-            subplot(4,1,3:4)
-            stem(1E9*t_ciravg, angle(cir_avg), '+-');
-            str = '$$\angle{h(t)}$$';ylabel(str, 'Interpreter', 'Latex')
-            xlabel('time (ns)')
-            set(gca,...
-                 'ylim',[-2*pi() 2*pi()],...
-                 'ytick',[-2*pi() 0 2*pi()],...
-                 'yticklabel',{'-2\pi' '0' '2\pi'})
-            xlim([0 1000]); 
-            hold on
-            stem(1E9*t_ciravg(r_t+1), r_ph, 'r')
-            hold off
-            setCommonAxisProps();
-            set(gca,'OuterPosition',get(gca,'OuterPosition').*[1 1 0.95 0.95]+[0.05 0.05 0 0])
+        % now remove leading zeros
+        cir_avg(1:find(cir_avg, 1,'first')-1) = [];
+        cir_avg = cir_avg(1:wl);
+        cir_avg = select_for_avg_cir(cir_avg);
+        cir_avg = cir_avg/max(abs(cir_avg));
+        Ncir_avg = length(cir_avg);
+        t_ciravg = t(1:Ncir_avg);
+        cir_avg = cir_avg(1:Ncir_avg);
+        [r_t,r_h,r_ph] = reduce_taps(cir_avg,NtapApprox_N);
+        r_h = r_h/max(r_h);  % normalize the approximated cir
 
-            cir_avg_st(cir_class_ii).time = t_ciravg;
-            cir_avg_st(cir_class_ii).mag = r_h;
-            cir_avg_st(cir_class_ii).angle = r_ph;     
+        hold off
+        subplot(4,1,1:2)
+        stem(1E9*t_ciravg, abs(cir_avg), '+-'); 
+        str = '$$\mid{h(t)}\mid$$';ylabel(str, 'Interpreter', 'Latex')
+        hold on; 
+        stem(1E9*t_ciravg(r_t+1), abs(r_h),'d-');
+        set(gca,'XTickLabel','')
+        xlim([0 1000]); 
+        hold off
+        setCommonAxisProps();
+        set(gca,'OuterPosition',get(gca,'OuterPosition').*[1 1 0.95 0.95]+[0.05 0.05 0 0])
 
-            drawnow
-            savefig(h,[fig_dir '\' mat_fname(1:end-4) '__avgcir_' cell2mat(cir_class_name) '.fig']);
-            setFigureForPrinting();
-            print(h,[png_dir '\' mat_fname(1:end-4) '__avgcir_' cell2mat(cir_class_name) '.png'],'-dpng','-r300')    
-            close(gcf)   
-        
-        end
+        subplot(4,1,3:4)
+        stem(1E9*t_ciravg, angle(cir_avg), '+-');
+        str = '$$\angle{h(t)}$$';ylabel(str, 'Interpreter', 'Latex')
+        xlabel('time (ns)')
+        set(gca,...
+             'ylim',[-2*pi() 2*pi()],...
+             'ytick',[-2*pi() 0 2*pi()],...
+             'yticklabel',{'-2\pi' '0' '2\pi'})
+        xlim([0 1000]); 
+        hold on
+        stem(1E9*t_ciravg(r_t+1), r_ph, 'r')
+        hold off
+        setCommonAxisProps();
+        set(gca,'OuterPosition',get(gca,'OuterPosition').*[1 1 0.95 0.95]+[0.05 0.05 0 0])
 
+        cir_avg_st(cir_class_ii).time = t_ciravg;
+        cir_avg_st(cir_class_ii).mag = r_h;
+        cir_avg_st(cir_class_ii).angle = r_ph;     
+
+        drawnow
+        savefig(h,[fig_dir '\' mat_fname(1:end-4) '__avgcir_' cell2mat(cir_class_name) '.fig']);
+        setFigureForPrinting();
+        print(h,[png_dir '\' mat_fname(1:end-4) '__avgcir_' cell2mat(cir_class_name) '.png'],'-dpng','-r300')    
+        close(gcf)   
         
     end % OPTS(OPT_AVGCIR_NTap)
     
@@ -493,9 +374,6 @@ for fk = 1:Nfiles
     stats = struct(...
         'meta',meta,...
         'path_gain_dB',path_gain_dB,...
-        'path_gain_dB_poly',path_gain_dB_poly,...
-        'K',K,...
-        'los', LOS, ...
         'rms_delay_spread_sec',rms_delay_spread_sec, ...
         'mean_delay_sec',mean_delay_sec, ...
         'cir_duration_sec',cir_duration, ...
