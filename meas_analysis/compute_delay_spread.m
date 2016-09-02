@@ -39,12 +39,12 @@ end
 a_k = abs(cir);
 
 % only consider cir's with GT 20 dB SNR peak to noise floor
-if 10*log10(max(a_k.^2)/nf) < 20
-    tau_u = NaN;
-    tau_s = NaN;
-    T = NaN;
-    return
-end
+% if 10*log10(max(a_k.^2)/nf) < 20
+%     tau_u = NaN;
+%     tau_s = NaN;
+%     T = NaN;
+%     return
+% end
 
 % normalize the cir for computation
 a_k = a_k/max(a_k);

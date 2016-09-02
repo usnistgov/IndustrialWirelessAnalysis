@@ -1,4 +1,4 @@
-function [ K, LOS ] = compute_k_factor( t, cir, ns )
+ function [ K, LOS, klos ] = compute_k_factor( t, cir, ns )
 %COMPUTE_K_FACTOR Computes the K-factor of the impulse response
 %   Computes the K factor of the CIR using all components of magnitude
 %   greater than the noise floor times L.  The range, r, in meters guides
@@ -12,6 +12,7 @@ function [ K, LOS ] = compute_k_factor( t, cir, ns )
 %           -1 for NLOS
 %            0 for unknown
 %           +1 for LOS
+%       k0 is the index of the first peak
 %
 %   Inputs:
 %       t:      time in seconds
@@ -22,34 +23,32 @@ function [ K, LOS ] = compute_k_factor( t, cir, ns )
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
 
+K = NaN;
+LOS = 0;
+klos = nan;
 if isempty(cir)
-    K = NaN;
-    LOS = 0;
     return
 end
 
-% we want at least 4 components for computation.
-% a component is considered to be at least 3 samples
-% Note that this is a rought estimate of the number of components for K
-% factor estimation.  A better method could be to use the delay spread to
-% determine candidacy for K estimation.
-if length(cir) < 12
-    K = NaN;
-    LOS = 0;
-    return
-end
-
-% default is LOS
-LOS = +1;
-
-% calculate the peak value
+% calculate the peak value and the time of its occurrance
 cir_mag = abs(cir);
-[cir_max, cir_max_k] = max(cir_mag);
-cir_max_t = t(cir_max_k);
+cir_max = max(cir_mag);
+
+% Time-based determination.  The first peak must be greater in magnitude
+% than all of the other peaks in the cir.
+[pks, k_pks] = findpeaks(cir_mag,1:length(cir_mag));  % requires the signal processing toolbox
+if isempty(pks)
+    return
+end
+klos = k_pks(1);
+cir_los = cir_mag(klos);
+if cir_los ~= cir_max
+    LOS = -1;  % max is not the first peak, so NLOS
+    return;
+end
 
 % form the diffuse components to estimate non-los power.  This is done by
 % removing the local samples related to peak magnitude value
-klos = cir_max_k;
 dfuse_mag = cir_mag; 
 if klos > ns/2
     kklos = klos-1:klos+1;
@@ -65,25 +64,8 @@ dfuse_pwr = var(dfuse_mag);
 % Communication Systems," 2006 International Conference on Wireless and
 % Mobile Communications (ICWMC'06), Bucharest, 2006, pp. 69-69.  
 % doi: 10.1109/ICWMC.2006.81  
-K = 10*log10(cir_max^2/(2*dfuse_pwr));  
-
-if K < 6
-    K = NaN;
-    LOS = -1;
-    return
-end
-
-% final filter: time-based determination.  The peak must occur within a
-% reasonable amount of time from the start of the cir.  In this case, the
-% calling function makes the time threshold determination. 
-Ts = t(2)-t(1);
-dT0 = ns*Ts;
-cir_dT0 = cir_max_t - t(1);
-if cir_dT0 > dT0
-    K = NaN;
-    LOS = -1;
-    return
-end
+LOS = 1;
+K = 10*log10(cir_los^2/(2*dfuse_pwr));  
                 
 end
 

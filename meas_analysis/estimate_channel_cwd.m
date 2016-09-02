@@ -1,4 +1,4 @@
-function estimate_channel_cwd(pattern, doall, TEST_DATA)
+function estimate_channel_cwd(pattern, OPTS, TEST_DATA)
 % Analyze complex impulse responses from measurements
 % Author: Rick Candell
 % Organization: National Institute of Standards and Technology
@@ -9,12 +9,33 @@ if nargin == 3
     TESTING = true;
 end
 
+OPT_PATH_GAIN = 1;
+OPT_KFACTOR = 2;
+OPT_DELAY_SPREAD = 3;
+OPT_AVGCIR_NTap = 4;
 if nargin < 2
-    doall = false;
+    OPTS = ...
+        [ ...   
+            1; ...  % compute path gain
+            1; ...  % K factor
+            1; ...  % delay spread
+            1; ...  % compute average CIR from data
+        ]; 
 end
 
-more off; 
-grid minor;
+if nargin < 1
+    error 'specify a file search pattern'
+end
+
+if OPTS(OPT_AVGCIR_NTap) == 1
+    if OPTS(OPT_KFACTOR) == 0
+        OPTS(OPT_KFACTOR) = 1;
+        disp('average cir estimation requires k factor estimation')
+        disp('enabling k factor estimation')
+    end
+end
+
+more off;
 
 %
 % query the list of measurement files
@@ -23,9 +44,21 @@ arr_dir = '.';          % sub directory of stored cir records
 files = dir(pattern);
 
 %
+% setup data for stats text file 
+%
+Cstats = {};
+Cstats_ii = 1;
+
+%
 % Process each file in turn
 %
-for fk = 1:length(files)
+cir_file = [];
+if TESTING
+    Nfiles = 1;
+else
+    Nfiles = length(files);
+end
+for fk = 1:Nfiles
     
     % use test data or the real thing
     try 
@@ -36,38 +69,21 @@ for fk = 1:length(files)
             disp('opening TEST_DATA');
             cir_file = TEST_DATA;
         else
-            disp(['opening ' mat_fname]);
-        
-            % check for semphore file to indicate that it is already processed
-            sem_fname = ['semv\' mat_fname(1:end-4) '__sem.mat'];
-            if ~doall && exist(sem_fname, 'file')
-                disp('semaphore file exists. overwriting...');
-                cir_file = load(cir_file_path);
-            elseif ~doall && exist(sem_fname, 'file')
-                disp('semaphore file exists. skipping...');
-                continue;
-            else
-                disp('semaphore file does not exist. loading...');
-                cir_file = load(cir_file_path);
-            end
+            disp(['loading file ' mat_fname '  ...']);
+            cir_file = load(cir_file_path);
         end
         
     catch me
         warning('Problem reading mat file, trying again then skipping.');
-        disp(me.message)
-        try
-        cir_file = load(mat_fname);
-        catch
-            disp(me.message)            
-            warning('Skipping file...');
-            continue;
-        end
+        disp(me.message)         
+        warning('Skipping file...');
+        continue;
     end
     
     try
         meta = cir_file.Strct_Metadata;
     catch me
-        warning('problem with meta data  read')
+        warning('problem reading meta data')
         disp(me.message);
         continue;
     end
@@ -82,16 +98,32 @@ for fk = 1:length(files)
     %NN = apf*rpa;
     NN = size(cir_file.IQdata,2);
 
-    % setup some memory for the metrics
-    peaks = nan(NN,1);
-    peaks_t = nan(NN,1);
-    peaks_k = nan(NN,1);
+    % Initialize memory for the metrics
+    USE = nan(NN,1);  
     K = nan(NN,1);  
     LOS = nan(NN,1);  
     path_gain_dB = nan(NN,1);  
+    path_gain_dB_poly = 0;
     rms_delay_spread_sec = nan(NN,1);     
     mean_delay_sec = nan(NN,1); 
     cir_duration = nan(NN,1);    
+    
+    % Memory for calculation of average cir
+    klos = 0; 
+    wla = 2*wl+1;   % size of cir avg calculation buffer
+    mlos = ceil(wla/2);  %mid-point of cir avg calculation buffer
+    cir_sum_los = zeros(wla,1);
+    num_los = 0;
+    cir_sum_nlos = zeros(wla,1);
+    num_nlos = 0;
+    
+    cir_class = {'los','nlos'};
+    for cir_class_ii = 1:length(cir_class)
+        cir_avg_st(cir_class_ii).class = cir_class; %#ok<*AGROW>
+        cir_avg_st(cir_class_ii).time = [];
+        cir_avg_st(cir_class_ii).mag = [];
+        cir_avg_st(cir_class_ii).angle = [];
+    end
 
     % setup output directories
     stats_dir = 'stats';
@@ -107,10 +139,12 @@ for fk = 1:length(files)
     TransmitterAntennaGain_dBi = meta.TransmitterAntennaGain_dBi_num;
     ReceiverAntennaGain_dBi = meta.ReceiverAntennaGain_dBi_num;
     
-    % compute the ERP and RMS amplitude
+    % 
+    % Loop through all records within the file
+    %
     for kk = 1:NN
         
-        % range of the measurement
+        % range of the CIR data record
         r = cir_file.IQdata_Range_m(kk,3);
         
         % extract the CIR for this record from the data file
@@ -129,20 +163,20 @@ for fk = 1:length(files)
         end
 
         % select the sample of the cir that meet threshold criteria
-        k = select_cir_samples(r, t, cir);
-        t_k = t(k);
-        cir_k = cir(k);
-
-        % compute the noise floor of the tail end of the record but not the
-        % mathematical wrapping of the forward impulse components 
-        nf = mean(cir_mag2(end-100:end-50));
-
-        % compute the peak and the time of the peak of the CIR
-        % save the peak information for later analysis
-        [peaks(kk), peaks_k(kk)] = max(cir_mag2(1:end-1024)); %#ok<*SAGROW>
-
-        % compute the actual times of the peaks
-        peaks_t(kk) = peaks_k(kk)*Ts;
+        % also compute the noise floor
+        [k_sel, nf] = select_cir_samples(r, cir);
+        if isempty(k_sel)
+            continue
+        else
+            if length(k_sel) < 8
+                continue
+            end
+        end
+        USE(kk) = 1;
+        
+        % extract the data at selected indicies
+        t_k = t(k_sel);
+        cir_k = cir(k_sel);
 
         % Compute the path loss in the cir
         % note that the CIR contains antenna gains.  We must remove the
@@ -150,29 +184,64 @@ for fk = 1:length(files)
         % applied equally to all multi-path components.  We know that
         % this is not the true case, but without ray-tracing it is the
         % only option.
-        path_gain_dB(kk) = compute_path_gain(cir_k, ...
-            TransmitterAntennaGain_dBi, ...
-            ReceiverAntennaGain_dBi);           
+        if OPTS(OPT_PATH_GAIN)
+            path_gain_dB(kk) = compute_path_gain(cir_k, ...
+                TransmitterAntennaGain_dBi, ...
+                ReceiverAntennaGain_dBi);           
+        end
 
         % compute the K factor assuming Rician channel
         % we only consider components 10 dB above the noise floor and
         % where the peak occurs within 8 samples of beginning of the CIR 
-        [K(kk), LOS(kk)] = compute_k_factor(t_k, cir_k, ns);
+        if OPTS(OPT_KFACTOR) || OPTS(OPT_AVGCIR_NTap)
+            [K(kk), LOS(kk), klos] = compute_k_factor(t_k, cir_k, ns);
+        end
+        
+        % Aggregate the sums for later computation of avg CIR
+        % LOS and NLOS are considered as separate classes of CIR's
+        if OPTS(OPT_AVGCIR_NTap)
+            inds = mlos-klos+1:wla-klos;
+            if LOS(kk) == 1
+                num_los = num_los + 1;
+                cir_sum_los(inds) = cir_sum_los(inds) + cir;
+            elseif LOS(kk) == -1
+                num_nlos = num_nlos + 1;
+                cir_sum_nlos(inds) = cir_sum_nlos(inds) + cir;
+            end
+            
+        end
+%         if OPTS(OPT_AVGCIR_NTap)
+%             cir_for_avg = select_for_avg_cir( cir );
+%             if LOS(kk) == 1
+%                 num_los = num_los + 1;
+%                 cir_sum_los(1:length(cir_for_avg)) = ...
+%                     cir_sum_los(1:length(cir_for_avg)) + cir_for_avg; 
+%             elseif LOS(kk) == -1
+%                 num_nlos = num_nlos + 1;
+%                 cir_sum_nlos(1:length(cir_for_avg)) = ...
+%                     cir_sum_nlos(1:length(cir_for_avg)) + cir_for_avg;                 
+%             end
+%         end           
 
         % compute delay spread parameters of the CIR 
         % because of the wrapping of energy in the FFT-based
         % correlation we must remove the trailing edge.
-        [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
-            compute_delay_spread(t_k, cir_k, nf);
-        if rms_delay_spread_sec(kk) >= 0.5e-5
-            %disp(max(t_k)/mean(t_k));
-            h=figure();
-            plot(t,10*log10(abs(cir).^2/max(abs(cir).^2)),...
-                t_k,10*log10(abs(cir_k).^2/max(abs(cir_k).^2)),'ro')
-            refline(0, 10*log10(nf/max(abs(cir).^2)))
-            close(h)
+        if OPTS(OPT_DELAY_SPREAD)
+            [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
+                compute_delay_spread(t_k, cir_k, nf);
         end
 
+    end
+    
+    
+    %
+    % determine if the run produced enough data to form estimates.  The
+    % selection of threshold was chosen arbitrarily
+    %
+    if sum(~isnan(USE)) < 100
+        warning 'not enough CIRs passed selection to form metrics'
+        disp(mat_fname)
+        continue
     end
     
     %
@@ -182,242 +251,364 @@ for fk = 1:length(files)
     path_gain_dB = path_gain_dB(r~=r(1));
     r = r(r~=r(1));
     
+    if OPTS(OPT_PATH_GAIN)
     %
     % Analyze path loss versus distance
     %
     r_p = r;  pl_p = path_gain_dB;
     r_p = r_p(~isnan(pl_p));
     pl_p = pl_p(~isnan(pl_p));
-    r_min_fit = 1.05*min(r_p);
-    r_max_fit = 0.95*max(r_p);    
-    k_fit = find(r_p>r_min_fit & r_p<r_max_fit);
-    r_p_fit = r_p(k_fit);
-    pl_p_fit = pl_p(k_fit);
-    p1 = polyfit(r_p_fit,pl_p_fit,1);
+    r_min_fit = 10;
+    r_max_fit = 0.9*max(r_p);    
+    k_lfit = find(r_p>r_min_fit & r_p<r_max_fit);
+    r_p_fit = r_p(k_lfit);
+    pl_p_fit = pl_p(k_lfit);
+    path_gain_dB_poly = polyfit(r_p_fit,pl_p_fit,1);
     
     h = figure();
-    r_px = linspace(min(r_p),max(r_p),100);
-    plot(r_p, pl_p, 'bo', r_px, polyval(p1, r_px), 'r-');
-    legend('Measured Data', ...
-        sprintf('p=%0.2fx + %0.2f',p1));
+    stdPathGain = std(path_gain_dB(~isnan(path_gain_dB)));
+    r_p_plot = linspace(min(r_p_fit), max(r_p_fit), 10);
+    pl_poly_vals = polyval(path_gain_dB_poly, r_p_plot);
+    plot(r_p, pl_p, 'color', [0,0,0]+0.7, 'marker', '.', 'linestyle' , 'none'); 
+    hold on
+    plot(r_p_plot, pl_poly_vals, 'k-', ...
+       r_p_plot, repmat(pl_poly_vals(:),1,2)+stdPathGain*[ones(10,1) -ones(10,1)], ...
+        'k--', 'LineWidth', 1.0);
+    hold off
+    legend({'measured', ...
+        sprintf('%0.2fx + %0.1f',path_gain_dB_poly), ...
+        '+/- \sigma'}, 'Location', 'best');
     setCommonAxisProps()    
-    xlabel('distance [m]')
+    xlabel('distance (m)')
     ylabel('Path Gain (dB)')
-    title({'Path Loss', strrep(mat_fname,'_','-')})
+    %title({'Path Loss', strrep(mat_fname,'_','-')})
     drawnow
     savefig(h, [fig_dir '\' mat_fname(1:end-4) '__pl.fig']);
-    print(h,[png_dir '\' mat_fname(1:end-4) '__pl.png'],'-dpng')
-    close(h)    
+    setFigureForPrinting();
+    print(h,[png_dir '\' mat_fname(1:end-4) '__pl.png'],'-dpng','-r300')
+    close(gcf)         
     
-    % path loss error bars
-    h = figure();
-    [r_bins, xx_u, xx_s] = makeErrorBars(gca(), r_p, pl_p, 20, 'log');
-    set(gca,'xscale','log');
-    setCommonAxisProps();
-    title({'Path Loss (Error Bars)', strrep(mat_fname,'_','-')})
-    xlabel('distance [m]')
-    ylabel('Path Gain [dB]')
-    drawnow
-    savefig(h,[fig_dir '\' mat_fname(1:end-4) '__pl_eb.fig']);
-    print(h,[png_dir '\' mat_fname(1:end-4) '__pl_eb.png'],'-dpng')    
-    close(h)   
+    end % if OPTS(OPT_PATH_GAIN)
     
-    % path loss log normal distribution, variance versus distance
-    h = figure();
-    stem(r_bins, xx_s);
-    set(gca,'xscale','log');
-    setCommonAxisProps();
-    title({'Path Gain Variation versus Distance', strrep(mat_fname,'_','-')})
-    xlabel('distance [m]')
-    ylabel('\sigma [dB]')
-    drawnow
-    savefig(h,[fig_dir '\' mat_fname(1:end-4) '__plstd.fig']);
-    print(h,[png_dir '\' mat_fname(1:end-4) '__plstd.png'],'-dpng')    
-    close(h)       
 
-    
-    %
-    % Analyze the average delay of the CIR's 
-    %
-    h = figure();      
-    [du_counts,du_centers] = hist(1e9*mean_delay_sec,50000);
-    du_probs = cumsum(du_counts/sum(du_counts));
-    plot(du_centers, du_probs);
-    ylim([0 1]);
-    xlim([0 max(du_centers(du_probs<0.995))]);
-    xlabel('average delay spread, t_D [ns]')
-    ylabel('Pr.(T_D < t_D)')
-    setCommonAxisProps();
-    title({'CDF of Average Delay', strrep(mat_fname,'_','-')})
-    drawnow
-    savefig(h,[fig_dir '\' mat_fname(1:end-4) '__du.fig']);
-    print(h,[png_dir '\' mat_fname(1:end-4) '__du.png'],'-dpng')    
-    close(h)
-    
-    %
-    % Analyze the delay spread of the CIR's 
-    %
-    h = figure();      
-    [ds_counts,ds_centers] = hist(1e9*rms_delay_spread_sec,5000);
-    ds_probs = cumsum(ds_counts/sum(ds_counts));
-    plot(ds_centers, ds_probs);
-    ylim([0 1]);
-    xlabel('rms delay spread, s [ns]')
-    ylabel('Pr.(S < s)')
-    setCommonAxisProps();
-    title({'CDF of Delay Spread', strrep(mat_fname,'_','-')})
-    drawnow
-    savefig(h,[fig_dir '\' mat_fname(1:end-4) '__ds.fig']);
-    print(h,[png_dir '\' mat_fname(1:end-4) '__ds.png'],'-dpng')    
-    close(h)
-    
-    %
-    % Analyze the delay spread versus distance
-    %
-    h = figure();      
-    % remove nans from data
-    k_gt3 = find(r>3);
-    r_gt3 = r(k_gt3);
-    r_p = r_gt3;  
-    ds_p = rms_delay_spread_sec(k_gt3);
-    r_p(isnan(ds_p)) = [];
-    ds_p(isnan(ds_p)) = [];
-    plot(r_p,1e9*ds_p,'o');
-    xlabel('distance, d [m])')
-    ylabel('S [ns]')
-    setCommonAxisProps()
-    title({'RMS Delay Spread versus Distance', strrep(mat_fname,'_','-')})
-    drawnow
-    savefig(h,[fig_dir '\' mat_fname(1:end-4) '__ds2dist.fig']);
-    print(h,[png_dir '\' mat_fname(1:end-4) '__ds2dist.png'],'-dpng')    
-    close(h)   
-    
-    % delay spread error bars
-    h = figure();  
-    makeErrorBars(gca(), r_p, ds_p, 30, 'linear', 1e9);
-    xlabel('distance, d [m])')
-    ylabel('S [ns]')    
-    setCommonAxisProps()
-    title({'RMS Delay Spread versus Distance (Error Bars)', strrep(mat_fname,'_','-')})
-    drawnow
-    savefig(h,[fig_dir '\' mat_fname(1:end-4) '__ds2dist_eb.fig']);
-    print(h,[png_dir '\' mat_fname(1:end-4) '__ds2dist_eb.png'],'-dpng')    
-    close(h)   
+    if OPTS(OPT_DELAY_SPREAD) && sum(~isnan(mean_delay_sec)) > 100
+        %
+        % Analyze the average delay of the CIR's 
+        %
+        h = figure();      
+        [du_counts,du_centers] = hist(1e9*mean_delay_sec,50000);
+        du_probs = cumsum(du_counts/sum(du_counts));
+        plot(du_centers, du_probs, 'k');
+        ylim([0 1]);
+        xlim([0 max(du_centers(du_probs<0.995))]);
+        str = 'average delay, $$\tau_D$$ (ns)';xlabel(str,'Interpreter','Latex')
+        str = 'Pr. $$ \hat{\tau_D} < {\tau_D} $$'; ylabel(str,'Interpreter','Latex'); 
+        setCommonAxisProps();
+        %title({'CDF of Average Delay', strrep(mat_fname,'_','-')})
+        drawnow
+        savefig(h,[fig_dir '\' mat_fname(1:end-4) '__du.fig']);
+        setFigureForPrinting();
+        print(h,[png_dir '\' mat_fname(1:end-4) '__du.png'],'-dpng','-r300')    
+        close(gcf)
 
-    % 
-    % Analyze the Rician K Factor Estimates
-    % 
-    h = figure();      
-    [counts,centers] = hist(K,30);
-    plot(centers, cumsum(counts/sum(counts)));
-    ylim([0 1]);
-    xlabel('K_0 [dB]')
-    ylabel('Pr.(K < K_0)')
-    setCommonAxisProps()
-    title({'CDF of Rician K-factor Estimate', strrep(mat_fname,'_','-')})
-    drawnow
-    savefig(h,[fig_dir '\' mat_fname(1:end-4) '__Kcdf.fig']);
-    print(h,[png_dir '\' mat_fname(1:end-4) '__Kcdf.png'],'-dpng')
-    close(h)
+        %
+        % Analyze the delay spread of the CIR's 
+        %
+        h = figure();      
+        [ds_counts,ds_centers] = hist(1e9*rms_delay_spread_sec,5000);
+        ds_probs = cumsum(ds_counts/sum(ds_counts));
+        plot(ds_centers, ds_probs, 'k');
+        ylim([0 1]);
+        %xlabel('rms delay spread, S (ns)')
+        str = 'rms delay spread, $$S$$ (ns)';xlabel(str,'Interpreter','Latex')
+        str = 'Pr. $$\hat{S} < S$$'; ylabel(str,'Interpreter','Latex');
+        setCommonAxisProps();
+        %title({'CDF of Delay Spread', strrep(mat_fname,'_','-')})
+        drawnow
+        savefig(h,[fig_dir '\' mat_fname(1:end-4) '__ds.fig']);
+        h.PaperPositionMode = 'auto';
+        setFigureForPrinting();
+        print(h,[png_dir '\' mat_fname(1:end-4) '__ds.png'],'-dpng','-r300')    
+        close(gcf)
+
+        %
+        % Analyze the delay spread versus distance
+        %
+        h = figure();      
+        % remove nans from data
+        k_lfit = find(r>10);
+        r_lfit = r(k_lfit);
+        r_p = r_lfit;  
+        ds_p = rms_delay_spread_sec(k_lfit);
+        r_p(isnan(ds_p)) = [];
+        ds_p(isnan(ds_p)) = [];
+        plot(r_p,1e9*ds_p, 'color', [0,0,0]+0.7, ...
+            'marker', '.', 'linestyle' , 'none');
+        hold on;
+        stdS = 1e9*std(rms_delay_spread_sec(~isnan(rms_delay_spread_sec)));
+        ds_poly = polyfit(r_p,1e9*ds_p,1);
+        r_p_plot = linspace(min(r_p), max(r_p), 10);
+        ds_poly_vals = polyval(ds_poly, r_p_plot);
+        plot(r_p_plot, ds_poly_vals, 'k-', ...
+           r_p_plot, repmat(ds_poly_vals(:),1,2)+stdS*[ones(10,1) -ones(10,1)], ...
+            'k--', 'LineWidth', 1.0);
+        hold off;
+        setCommonAxisProps()
+        legend({'measured', ...
+            sprintf('%0.2fx + %0.1f',ds_poly), ...
+            '+/- \sigma'}, 'Location', 'best');        
+        xlabel('distance, d (m)')
+        ylabel('S (ns)')
+        grid off
+        %title({'RMS Delay Spread versus Distance', strrep(mat_fname,'_','-')})
+        drawnow
+        savefig(h,[fig_dir '\' mat_fname(1:end-4) '__ds2dist.fig']);
+        setFigureForPrinting();
+        print(h,[png_dir '\' mat_fname(1:end-4) '__ds2dist.png'],'-dpng','-r300')    
+        close(gcf)     
+        
+    end %if OPTS(OPT_DELAY_SPREAD)
+
+    if OPTS(OPT_KFACTOR)
+        % 
+        % Analyze the Rician K Factor Estimates CDF
+        % 
+        h = figure();      
+        [counts,centers] = hist(K,30);
+        plot(centers, cumsum(counts/sum(counts)), 'k');
+        ylim([0 1]);
+        str = '$$K$$ (dB)'; xlabel(str,'Interpreter','Latex');
+        str = '$$ \hat{K} < K $$'; ylabel(str,'Interpreter','Latex');
+        setCommonAxisProps()
+        %title({'CDF of Rician K-factor Estimate', strrep(mat_fname,'_','-')})
+        drawnow
+        savefig(h,[fig_dir '\' mat_fname(1:end-4) '__Kcdf.fig']);
+        setFigureForPrinting();
+        print(h,[png_dir '\' mat_fname(1:end-4) '__Kcdf.png'],'-dpng','-r300')
+        close(gcf)
+
+        % 
+        % Analyze the Rician K Factor Estimates Versus Distance
+        % 
+        h = figure();     
+        r = cir_file.IQdata_Range_m(:,3);
+        k_lfit = find(r>3);
+        r_lfit = r(k_lfit);
+        r_p = r_lfit;  K_p = K(k_lfit);
+        r_p(isnan(K_p)) = [];
+        K_p(isnan(K_p)) = [];
+        plot(r_p, K_p, 'color', [0,0,0]+0.7, 'marker', '.', 'linestyle' , 'none');
+        hold on 
+        KdB_poly = polyfit(r_p,K_p,1);
+        r_p_plot = linspace(min(r_p), max(r_p), 10);
+        KdB_poly_vals = polyval(KdB_poly, r_p_plot);
+        stdK = std(K(~isnan(K)));
+        plot(r_p_plot, KdB_poly_vals, 'k-', ...
+           r_p_plot, repmat(KdB_poly_vals(:),1,2)+2*stdK*[ones(10,1) -ones(10,1)], ...
+            'k--', 'LineWidth', 1.0);
+        hold off
+        setCommonAxisProps()
+        legend({'measured', ...
+            sprintf('%0.2fx + %0.1f',KdB_poly), ...
+        '+/- 2\sigma'},'FontSize',9);
+        xlabel('distance (m)')
+        ylabel('K (dB)')
+        %title({'Rician K versus Distance', strrep(mat_fname,'_','-')})
+        drawnow
+        savefig(h,[fig_dir '\' mat_fname(1:end-4) '__KvRange.fig']);
+        setFigureForPrinting();
+        print(h,[png_dir '\' mat_fname(1:end-4) '__KvRange.png'],'-dpng','-r300')    
+        close(gcf)   
     
-    % 
-    % Analyze the Rician K Factor Estimates Versus Distance
-    % 
-    h = figure();     
-    r = cir_file.IQdata_Range_m(:,3);
-    k_gt3 = find(r>3);
-    r_gt3 = r(k_gt3);
-    r_p = r_gt3;  K_p = K(k_gt3);
-    r_p(isnan(K_p)) = [];
-    K_p(isnan(K_p)) = [];
-    plot(r_p, K_p, 'o');
-    xlabel('distance [m])')
-    ylabel('K [dB]')
-    grid on
-    grid minor
-    title({'Rician K versus Distance', strrep(mat_fname,'_','-')})
-    drawnow
-    savefig(h,[fig_dir '\' mat_fname(1:end-4) '__KvRange.fig']);
-    print(h,[png_dir '\' mat_fname(1:end-4) '__KvRange.png'],'-dpng')    
-    close(h)
+    end % OPTS(OPT_KFACTOR)
     
-    % Rician K error bars
-    h = figure();  
-    makeErrorBars(gca(), r_p, K_p, 25);
-    setCommonAxisProps();
-    xlabel('distance [m])')
-    ylabel('K [dB]')    
-    title({'Rician K (Error Bars)', strrep(mat_fname,'_','-')})
-    drawnow
-    savefig(h,[fig_dir '\' mat_fname(1:end-4) '__KvRange_eb.fig']);
-    print(h,[png_dir '\' mat_fname(1:end-4) '__KvRange_eb.png'],'-dpng')    
-    close(h)       
+    % approximate an N-tap CIR from the measured CIR's
+    if OPTS(OPT_AVGCIR_NTap)
+        
+        NtapApprox_N = 13;
+        for cir_class_ii = 1:length(cir_class)
+        
+            cir_class_name = cir_class(cir_class_ii);
+            h = figure();  
+            if strcmp(cir_class_name,'los')
+                cir_avg = cir_sum_los/num_los;
+            else
+                cir_avg = cir_sum_nlos/num_nlos;
+            end
+            
+            % now remove leading zeros
+            cir_avg(1:find(cir_avg, 1,'first')-1) = [];
+            cir_avg = cir_avg(1:wl);
+            cir_avg = select_for_avg_cir(cir_avg);
+            cir_avg = cir_avg/max(abs(cir_avg));
+            Ncir_avg = length(cir_avg);
+            t_ciravg = t(1:Ncir_avg);
+            cir_avg = cir_avg(1:Ncir_avg);
+            [r_t,r_h,r_ph] = reduce_taps(cir_avg,NtapApprox_N);
+            r_h = r_h/max(r_h);  % normalize the approximated cir
+
+            hold off
+            subplot(4,1,1:2)
+            stem(1E9*t_ciravg, abs(cir_avg), '+-'); 
+            str = '$$\mid{h(t)}\mid$$';ylabel(str, 'Interpreter', 'Latex')
+            hold on; 
+            stem(1E9*t_ciravg(r_t+1), abs(r_h),'d-');
+            set(gca,'XTickLabel','')
+            xlim([0 1000]); 
+            hold off
+            setCommonAxisProps();
+            set(gca,'OuterPosition',get(gca,'OuterPosition').*[1 1 0.95 0.95]+[0.05 0.05 0 0])
+            
+            subplot(4,1,3:4)
+            stem(1E9*t_ciravg, angle(cir_avg), '+-');
+            str = '$$\angle{h(t)}$$';ylabel(str, 'Interpreter', 'Latex')
+            xlabel('time (ns)')
+            set(gca,...
+                 'ylim',[-2*pi() 2*pi()],...
+                 'ytick',[-2*pi() 0 2*pi()],...
+                 'yticklabel',{'-2\pi' '0' '2\pi'})
+            xlim([0 1000]); 
+            hold on
+            stem(1E9*t_ciravg(r_t+1), r_ph, 'r')
+            hold off
+            setCommonAxisProps();
+            set(gca,'OuterPosition',get(gca,'OuterPosition').*[1 1 0.95 0.95]+[0.05 0.05 0 0])
+
+            cir_avg_st(cir_class_ii).time = t_ciravg;
+            cir_avg_st(cir_class_ii).mag = r_h;
+            cir_avg_st(cir_class_ii).angle = r_ph;     
+
+            drawnow
+            savefig(h,[fig_dir '\' mat_fname(1:end-4) '__avgcir_' cell2mat(cir_class_name) '.fig']);
+            setFigureForPrinting();
+            print(h,[png_dir '\' mat_fname(1:end-4) '__avgcir_' cell2mat(cir_class_name) '.png'],'-dpng','-r300')    
+            close(gcf)   
+        
+        end
+
+        
+    end % OPTS(OPT_AVGCIR_NTap)
     
     % save the metrics
     stats = struct(...
         'meta',meta,...
         'path_gain_dB',path_gain_dB,...
-        'path_gain_dB_poly',p1,...
-        'peaks',peaks,...
+        'path_gain_dB_poly',path_gain_dB_poly,...
         'K',K,...
         'los', LOS, ...
         'rms_delay_spread_sec',rms_delay_spread_sec, ...
         'mean_delay_sec',mean_delay_sec, ...
-        'cir_duration_sec',cir_duration);
+        'cir_duration_sec',cir_duration, ...
+        'avg_cir_st', cir_avg_st);
     
     save([stats_dir '\' mat_fname(1:end-4) '__channel_stats.mat'], 'stats')
 
-    % explicit clear of large memory
-    cir_file = []; %#ok<NASGU>
-    
-    % save semaphore
-    semv = 1; %#ok<NASGU>
-    if ~exist('semv', 'dir')
-        mkdir('semv');
+    % save the stats for this measurement run
+    RxPol = 'U';
+    if strfind(meta.ReceiverAntenna_str,'V Pol')
+        RxPol = 'V';
+    elseif ~isempty(strfind(meta.ReceiverAntenna_str,'Cross Pol')) || ...
+            ~isempty(strfind(meta.ReceiverAntenna_str,'X Pol')) || ...
+            ~isempty(strfind(meta.ReceiverAntenna_str,'Long Pol'))
+        RxPol = 'X';
     end
-    save(sem_fname, 'semv')
-    
-    % gather memory stats
-    % disp('memory usage')
-    % memory
+    TxPol = 'U';
+    if ~isempty(strfind(meta.TransmitterAntenna_str,'V Pol'))
+        TxPol = 'V';
+    elseif ~isempty(strfind(meta.TransmitterAntenna_str,'Cross Pol')) || ...
+            ~isempty(strfind(meta.TransmitterAntenna_str,'X Pol')) || ...
+            ~isempty(strfind(meta.TransmitterAntenna_str,'Long Pol'))
+        TxPol = 'X';
+    end    
+    Cstats(Cstats_ii,:) = {   
+        meta.MatFile_str, meta.Frequency_GHz_num, ...
+        RxPol, meta.ReceiverAntennaGain_dBi_num, ...
+        TxPol, meta.TransmitterAntennaGain_dBi_num, ...
+        stats.path_gain_dB_poly(1), stats.path_gain_dB_poly(2), ...
+        nanmean(stats.K), nanmin(stats.K), nanmax(stats.K) ...
+        1e9*nanmean(stats.mean_delay_sec), 1e9*nanmin(stats.mean_delay_sec), 1e9*nanmax(stats.mean_delay_sec)...
+        1e9*nanmean(stats.rms_delay_spread_sec), 1e9*nanmin(stats.rms_delay_spread_sec), 1e9*nanmax(stats.rms_delay_spread_sec) ...
+    };
+    Cstats_ii = Cstats_ii + 1;
+
+    % explicit clear of large memory
+    cir_file = [];  %#ok<NASGU>
 
 end
 
+% add entry to the stats text file
+writeStatsToFile(Cstats);
+
+%
+% Create summary data
+%
+
+% create the aggregate polynomial for path loss
 cmp_pl_poly( '*_stats.mat', '.\stats', '.\figs', '.\png' )
 
 end % function
 
 function setCommonAxisProps()
-    grid on
+
+    alw = 0.75;    % AxesLineWidth
+    fsz = 10;      % Fontsize
+    lw = 1.5;      % LineWidth
+    msz = 3.5;       % MarkerSize
+    
+%    grid on
+    set(gca,'XGrid','on')
+    set(gca,'XMinorGrid','off')
+    set(gca,'YGrid','on')
+    set(gca,'YMinorGrid','off')
     set(gca,'GridAlpha',0.5)
-    set(gca,'MinorGridAlpha',0.5)
-    set(gca,'Fontsize',12)
+    set(gca,'MinorGridAlpha',0.4)
+    set(gca,'Fontsize',fsz)
+    set(gca,'LineWidth',alw);
     set(gca,'FontName','TimesRoman')
+    
+    % set the line properties
+    hline = get(gca,'Children');
+    for h = hline(:)'
+        h.LineWidth = lw;
+        h.MarkerSize = msz;
+    end
+end
+
+function setFigureForPrinting()
+    width=3; height=3;
+    %set(gcf,'InvertHardcopy','on');
+    set(gcf,'PaperUnits', 'inches');
+    papersize = get(gcf, 'PaperSize');
+    left = (papersize(1)- width)/2;
+    bottom = (papersize(2)- height)/2;
+    myfiguresize = [left, bottom, width, height];
+    set(gcf,'PaperPosition', myfiguresize);
+end
+
+function writeStatsToFile(X)
+    if isempty(X)
+        return
+    end
+    M = cell2table(X);
+    file_path = '../stats.dat';
+    VariableNames = ...
+        {'Run', 'Freq', 'RX_Ant_Type', 'RX_Ant_Gain', 'TX_Ant_Type', 'TX_Ant_Gain', ...
+        'Path_Gain_Poly_Slope', 'Path_Gain_Poly_YInt', 'Mean_K', 'Min_K', 'Max_K', ...
+        'Mean_Delay_ns', 'Min_Delay_ns', 'Max_Delay_ns', ...
+        'Mean_Delay_Spread_ns', 'Min_Delay_Spread_ns', 'Max_Delay_Spread_ns'};
+    M.Properties.VariableNames = VariableNames;
+    
+    M0 = [];
+    if exist(file_path,'file')
+        M0 = readtable(file_path);
+    end
+    if ~isempty(M0)
+        M = [M0;M];
+    end
+    M.Properties.VariableNames = VariableNames;
+    writetable(M, file_path, 'Delimiter', '\t');
+    
 end
 
 
-
-function [r_bins, xx_u, xx_s] = makeErrorBars(ha, r, v, n, xscale, yscale)
-    if nargin < 6
-        yscale = 1;
-    end
-    if nargin < 5
-        xscale = 'linear';
-    end
-    if strcmp(xscale, 'log')
-        r_bins=logspace(log10(min(r)),log10(max(r)),n);
-    else
-        r_bins=linspace(min(r),max(r),n);
-    end
-    r_d = discretize(r,r_bins);
-    Nbins = length(r_bins);
-    xx_u = zeros(Nbins,1);
-    xx_s = zeros(Nbins,1);
-    for ii = 1:Nbins
-        xx = v(r_d==ii);
-        xx_u(ii) = mean(xx);
-        xx_s(ii) = std(xx);
-    end
-    errorbar(ha, r_bins, yscale*xx_u, yscale*xx_s,'kd-');
-end
 

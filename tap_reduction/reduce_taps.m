@@ -24,7 +24,7 @@ RMS_delay(k) = sqrt( ((t_norm-excess_delay(k)).^2) * sq_h );
 end
 
 for count=1:size(h,2)
-    count
+    count;
 loop_h=conj(h(:,count)');
 loop_t=0:size(h,1)-1;
 while  length(loop_h)>r_paths

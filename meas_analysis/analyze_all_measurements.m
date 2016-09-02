@@ -14,7 +14,7 @@ for ii = 1:length(top_dirs)
     
     cd(top_dirs{ii})
 
-    analyze_cwd
+    analyze_cwd('all');
     
     cd('..\')
 

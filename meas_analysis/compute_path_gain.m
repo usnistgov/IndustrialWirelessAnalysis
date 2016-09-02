@@ -20,8 +20,7 @@ if isempty(cir)
 end
 
 cir_mag2 = abs(cir).^2;
-N = length(cir_mag2);
-G = 10*log10(sum(cir_mag2)/N) - Ga_tx - Ga_rx; 
+G = 10*log10(sum(cir_mag2)) - Ga_tx - Ga_rx; 
 
 end
 

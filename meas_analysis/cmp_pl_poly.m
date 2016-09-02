@@ -61,15 +61,20 @@ for ff = freqs(:)'
 
     p_all = polyfit(d_all, pv_all, 1);
     pv_all = polyval(p_all, d);
-    run_names{end+1} = ['combined (' sprintf('p=%0.2fx + %0.2f',p_all) ')'];
+    run_names{end+1} = sprintf('p=%0.2fx + %0.2f',p_all);
 
     h = figure(gcf);
-    semilogx(d, pv_arr, d, pv_all, 'k+-')
-    text(10,max(pv_all)+10,run_names{end});
+    semilogx(d, pv_arr, 'color', [0,0,0]+0.7);
+    hold on
+    semilogx(d, pv_all, 'k+-')
+    hold off
+    text(2,max(pv_all)-40,run_names{end});
     xlabel('distance (m)')
     ylabel('Gain (dB)')
 
+    setCommonAxisProps();
     savefig(h, [fig_dir_path '\zCombined_' num2str(ff) 'GHz__pathloss.fig']);
+    setFigureForPrinting();
     print(h, [png_dir_path '\zCombined_' num2str(ff) 'GHz__pathloss.png'],'-dpng')
     close(h) 
     
@@ -77,3 +82,43 @@ end
 
 end
 
+function setFigureForPrinting()
+    width=3; height=3;
+    set(gcf,'InvertHardcopy','on');
+    set(gcf,'PaperUnits', 'inches');
+    papersize = get(gcf, 'PaperSize');
+    left = (papersize(1)- width)/2;
+    bottom = (papersize(2)- height)/2;
+    myfiguresize = [left, bottom, width, height];
+    set(gcf,'PaperPosition', myfiguresize);
+end
+
+function setCommonAxisProps()
+
+    alw = 0.75;    % AxesLineWidth
+    fsz = 10;      % Fontsize
+    lw = 1.5;      % LineWidth
+    msz = 3.5;       % MarkerSize
+    
+%    grid on
+    set(gca,'XGrid','on')
+    set(gca,'XMinorGrid','on')
+    set(gca,'YGrid','on')
+    set(gca,'YMinorGrid','on')
+    set(gca,'GridAlpha',0.5)
+    set(gca,'MinorGridAlpha',0.4)
+    set(gca,'Fontsize',fsz)
+    set(gca,'LineWidth',alw);
+    set(gca,'FontName','TimesRoman')
+    
+    % set the line properties
+    hline = get(gca,'Children');
+    for h = hline(:)'
+        if isa(h,'matlab.graphics.chart.primitive.Line')
+            h.LineWidth = lw;
+            h.MarkerSize = msz;
+        elseif isa(h,'matlab.graphics.primitive.Text')
+            set(h,'FontName','TimesRoman')
+        end
+    end
+end
