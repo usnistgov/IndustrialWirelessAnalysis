@@ -10,8 +10,8 @@ if nargin == 3
 end
 
 OPT_PATH_GAIN = 1;
-OPT_DELAY_SPREAD = 3;
-OPT_AVGCIR_NTap = 4;
+OPT_DELAY_SPREAD = 2;
+OPT_AVGCIR_NTap = 3;
 if nargin < 2
     OPTS = ...
         [ ...   
@@ -84,6 +84,8 @@ for fk = 1:Nfiles
     wl =  meta.CodewordLength_num;          % codeword length
     ns = meta.PNOversample_num;             % oversample rate
     t = (0:Ts:Ts*(wl-1));% -Ts*pn_over;     % time array over a burst transmission
+    f = meta.Frequency_GHz_num;
+    lambda_m = 299792458/(f*1e9);
     
     %NN = apf*rpa;
     NN = size(cir_file.IQdata,2);
@@ -93,19 +95,15 @@ for fk = 1:Nfiles
     K = nan(NN,1);  
     LOS = nan(NN,1);  
     path_gain_dB = nan(NN,1);  
-    path_gain_dB_poly = 0;
     rms_delay_spread_sec = nan(NN,1);     
     mean_delay_sec = nan(NN,1); 
     cir_duration = nan(NN,1);    
     
     % Memory for calculation of average cir
-    klos = 0; 
     wla = 2*wl+1;   % size of cir avg calculation buffer
     mlos = ceil(wla/2);  %mid-point of cir avg calculation buffer
-    cir_sum_los = zeros(wla,1);
+    cir_sum = zeros(wla,1);
     num_los = 0;
-    cir_sum_nlos = zeros(wla,1);
-    num_nlos = 0;
     
     cir_class = {'los','nlos'};
     for cir_class_ii = 1:length(cir_class)
@@ -129,13 +127,29 @@ for fk = 1:Nfiles
     TransmitterAntennaGain_dBi = meta.TransmitterAntennaGain_dBi_num;
     ReceiverAntennaGain_dBi = meta.ReceiverAntennaGain_dBi_num;
     
-    
+    % verify that x,y position data is available for this file
+    if isempty(cir_file.IQdata_CloudLocations_m_num.xPositions)
+        warning 'no position data found'
+        continue;
+    end
     % plot the x,y positions
-    plot(cir_file.IQdata_CloudLocations_m_num.xPositions, ...
-        cir_file.IQdata_CloudLocations_m_num.yPositions)
-    xlabel('xpos (m)')
-    ylabel('ypos (m)')
+    NX = length(cir_file.IQdata_CloudLocations_m_num.xPositions);
+    NY = length(cir_file.IQdata_CloudLocations_m_num.yPositions);
+    h=figure();
+    plot(cir_file.IQdata_CloudLocations_m_num.xPositions/lambda_m, ...
+        cir_file.IQdata_CloudLocations_m_num.yPositions/lambda_m, '+')
+    xlabel('xpos (\lambda)')
+    ylabel('ypos (\lambda)')
+    drawnow
+    savefig(h,[fig_dir '\' mat_fname(1:end-4) '__position.fig']);
+    setFigureForPrinting();
+    print(h,[png_dir '\' mat_fname(1:end-4) '__position.png'],'-dpng','-r300')    
+    close(gcf)      
     
+    %
+    % TODO: compute the sample variance across all of the CIR's
+    %
+    % show the mean and variation of h(k) at each sample time??? 
     
     % 
     % Loop through all records within the file
@@ -143,8 +157,12 @@ for fk = 1:Nfiles
     for kk = 1:NN
         
         % position of the CIR data record
-        POS = [ cir_file.IQdata_CloudLocations_m_num.xPositions(kk), ...
-                cir_file.IQdata_CloudLocations_m_num.yPositions(kk) ];
+        k_pos = mod(kk-1,NX)+1;
+        POS = [ cir_file.IQdata_CloudLocations_m_num.xPositions(k_pos), ...
+                cir_file.IQdata_CloudLocations_m_num.yPositions(k_pos) ];
+            
+        % distance from origin in wavelengths
+        r(kk) = sqrt(sum(POS.^2))/lambda_m;
         
         % extract the CIR for this record from the data file
         cir = cir_file.IQdata(:,kk);
@@ -163,7 +181,7 @@ for fk = 1:Nfiles
 
         % select the sample of the cir that meet threshold criteria
         % also compute the noise floor
-        [k_sel, nf] = select_cir_samples(r, cir);
+        [k_sel, nf] = select_cir_samples(cir);
         if isempty(k_sel)
             continue
         else
@@ -195,7 +213,7 @@ for fk = 1:Nfiles
             [K(kk), LOS(kk), klos] = compute_k_factor(t_k, cir_k, ns);
             inds = mlos-klos+1:wla-klos;
             num_los = num_los + 1;
-            cir_sum_los(inds) = cir_sum_los(inds) + cir;
+            cir_sum(inds) = cir_sum(inds) + cir;
         end        
 
         % compute delay spread parameters of the CIR 
@@ -219,44 +237,33 @@ for fk = 1:Nfiles
         continue
     end
     
-    %
-    % Extract range data for off-line analysis
-    %
-    r = cir_file.IQdata_Range_m(:,3);
-    path_gain_dB = path_gain_dB(r~=r(1));
-    r = r(r~=r(1));
-    
     if OPTS(OPT_PATH_GAIN)
     %
     % Analyze path loss versus distance
     %
-    r_p = r;  pl_p = path_gain_dB;
-    r_p = r_p(~isnan(pl_p));
+    pl_p = path_gain_dB;
+    r_p = r(~isnan(pl_p));
     pl_p = pl_p(~isnan(pl_p));
-    r_min_fit = 10;
-    r_max_fit = 0.9*max(r_p);    
-    k_lfit = find(r_p>r_min_fit & r_p<r_max_fit);
-    r_p_fit = r_p(k_lfit);
-    pl_p_fit = pl_p(k_lfit);
+    r_p_fit = r_p(:);
+    pl_p_fit = pl_p(:);
     path_gain_dB_poly = polyfit(r_p_fit,pl_p_fit,1);
     
     h = figure();
     stdPathGain = std(path_gain_dB(~isnan(path_gain_dB)));
     r_p_plot = linspace(min(r_p_fit), max(r_p_fit), 10);
     pl_poly_vals = polyval(path_gain_dB_poly, r_p_plot);
-    plot(r_p, pl_p, 'color', [0,0,0]+0.7, 'marker', '.', 'linestyle' , 'none'); 
+    plot(r_p, pl_p, 'color', [0,0,0]+0.4, 'marker', '.', 'linestyle' , 'none'); 
     hold on
     plot(r_p_plot, pl_poly_vals, 'k-', ...
-       r_p_plot, repmat(pl_poly_vals(:),1,2)+stdPathGain*[ones(10,1) -ones(10,1)], ...
+       r_p_plot, repmat(pl_poly_vals(:),1,2)+2*stdPathGain*[ones(10,1) -ones(10,1)], ...
         'k--', 'LineWidth', 1.0);
     hold off
     legend({'measured', ...
         sprintf('%0.2fx + %0.1f',path_gain_dB_poly), ...
-        '+/- \sigma'}, 'Location', 'best');
+        '+/- 2\sigma'}, 'Location', 'best');
     setCommonAxisProps()    
-    xlabel('distance (m)')
-    ylabel('Path Gain (dB)')
-    %title({'Path Loss', strrep(mat_fname,'_','-')})
+    xlabel('distance (\lambda)')
+    ylabel('Gain (dB)')
     drawnow
     savefig(h, [fig_dir '\' mat_fname(1:end-4) '__pl.fig']);
     setFigureForPrinting();
@@ -294,11 +301,9 @@ for fk = 1:Nfiles
         ds_probs = cumsum(ds_counts/sum(ds_counts));
         plot(ds_centers, ds_probs, 'k');
         ylim([0 1]);
-        %xlabel('rms delay spread, S (ns)')
         str = 'rms delay spread, $$S$$ (ns)';xlabel(str,'Interpreter','Latex')
         str = 'Pr. $$\hat{S} < S$$'; ylabel(str,'Interpreter','Latex');
         setCommonAxisProps();
-        %title({'CDF of Delay Spread', strrep(mat_fname,'_','-')})
         drawnow
         savefig(h,[fig_dir '\' mat_fname(1:end-4) '__ds.fig']);
         h.PaperPositionMode = 'auto';
@@ -307,9 +312,6 @@ for fk = 1:Nfiles
         close(gcf)
         
     end %if OPTS(OPT_DELAY_SPREAD)
-
-    if OPTS(OPT_KFACTOR)
-    end % OPTS(OPT_KFACTOR)
     
     % approximate an N-tap CIR from the measured CIR's
     if OPTS(OPT_AVGCIR_NTap)
@@ -318,7 +320,7 @@ for fk = 1:Nfiles
         
         cir_class_name = cir_class(cir_class_ii);
         h = figure(); 
-        cir_avg = cir_sum_los/num_los;
+        cir_avg = cir_sum/num_los;
 
         % now remove leading zeros
         cir_avg(1:find(cir_avg, 1,'first')-1) = [];
@@ -402,8 +404,6 @@ for fk = 1:Nfiles
         meta.MatFile_str, meta.Frequency_GHz_num, ...
         RxPol, meta.ReceiverAntennaGain_dBi_num, ...
         TxPol, meta.TransmitterAntennaGain_dBi_num, ...
-        stats.path_gain_dB_poly(1), stats.path_gain_dB_poly(2), ...
-        nanmean(stats.K), nanmin(stats.K), nanmax(stats.K) ...
         1e9*nanmean(stats.mean_delay_sec), 1e9*nanmin(stats.mean_delay_sec), 1e9*nanmax(stats.mean_delay_sec)...
         1e9*nanmean(stats.rms_delay_spread_sec), 1e9*nanmin(stats.rms_delay_spread_sec), 1e9*nanmax(stats.rms_delay_spread_sec) ...
     };
@@ -416,13 +416,6 @@ end
 
 % add entry to the stats text file
 writeStatsToFile(Cstats);
-
-%
-% Create summary data
-%
-
-% create the aggregate polynomial for path loss
-cmp_pl_poly( '*_stats.mat', '.\stats', '.\figs', '.\png' )
 
 end % function
 
@@ -468,10 +461,9 @@ function writeStatsToFile(X)
         return
     end
     M = cell2table(X);
-    file_path = '../stats.dat';
+    file_path = 'cloud_stats.dat';
     VariableNames = ...
         {'Run', 'Freq', 'RX_Ant_Type', 'RX_Ant_Gain', 'TX_Ant_Type', 'TX_Ant_Gain', ...
-        'Path_Gain_Poly_Slope', 'Path_Gain_Poly_YInt', 'Mean_K', 'Min_K', 'Max_K', ...
         'Mean_Delay_ns', 'Min_Delay_ns', 'Max_Delay_ns', ...
         'Mean_Delay_Spread_ns', 'Min_Delay_Spread_ns', 'Max_Delay_Spread_ns'};
     M.Properties.VariableNames = VariableNames;
@@ -490,3 +482,38 @@ end
 
 
 
+function [ k, nf ] = select_cir_samples( cir )
+% SELECT_CIR_SAMPLES Compute the delay spread of the input CIR
+%
+% Outputs:
+%   k is an array of the selected indices
+%   nf is the noise floor
+%
+% Inputs:
+%   r is the range in meters from transmitter to receiver
+%   cir is the real or complex valued channel impulse response
+%
+% Time and CIR vectors must have the same length.
+%
+% Author: Rick Candell
+% Organization: National Institute of Standards and Technology
+% Email: rick.candell@nist.gov
+
+% linear domain thresholds
+nft = 10;           % 10 dB above noise floor
+pkt = 1/31.6228;    % 15 dB from peak
+
+% eliminate the anomalous tail components (last 8 samples)
+cir = cir(1:round(length(cir)*0.5));
+% cir = cir(1:end-8);
+
+% compute the magnitude squared of the cir normailzed to the peak value
+cir_mag2 = (abs(cir).^2);
+cir_max = max(cir_mag2);
+cir_mag2 = (abs(cir).^2)/cir_max;
+
+% select the cir sample for use in average cir estimation
+nf = mean(cir_mag2(round(length(cir)*0.8):round(length(cir)*0.9)));
+k = find( cir_mag2 > nf*nft );
+
+end
