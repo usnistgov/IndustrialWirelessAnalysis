@@ -16,8 +16,8 @@ if nargin < 2
     OPTS = ...
         [ ...   
             1; ...  % compute path gain
-            1; ...  % delay spread
-            1; ...  % compute average CIR from data
+            0; ...  % delay spread
+            0; ...  % compute average CIR from data
         ]; 
 end
 
@@ -268,7 +268,22 @@ for fk = 1:Nfiles
     savefig(h, [fig_dir '\' mat_fname(1:end-4) '__pl.fig']);
     setFigureForPrinting();
     print(h,[png_dir '\' mat_fname(1:end-4) '__pl.png'],'-dpng','-r300')
-    close(gcf)         
+    close(gcf)    
+    
+    h = figure();
+    [pl_counts,pl_centers] = hist(path_gain_dB,500);
+    pl_probs = cumsum(pl_counts/sum(pl_counts));
+    plot(pl_centers, pl_probs, 'k');
+    ylim([0 1]);
+    str = 'Path Gain, G (dB)';xlabel(str,'Interpreter','Latex')
+    str = 'Pr. $$ \hat{G} < G $$'; ylabel(str,'Interpreter','Latex'); 
+    setCommonAxisProps();
+    drawnow
+    savefig(h,[fig_dir '\' mat_fname(1:end-4) '__plcdf.fig']);
+    setFigureForPrinting();
+    print(h,[png_dir '\' mat_fname(1:end-4) '__plcdf.png'],'-dpng','-r300')    
+
+    close(h)    
     
     end % if OPTS(OPT_PATH_GAIN)
     

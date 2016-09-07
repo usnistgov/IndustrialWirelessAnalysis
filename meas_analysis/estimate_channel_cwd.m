@@ -119,7 +119,7 @@ for fk = 1:Nfiles
     
     cir_class = {'los','nlos'};
     for cir_class_ii = 1:length(cir_class)
-        cir_avg_st(cir_class_ii).class = cir_class; %#ok<*AGROW>
+        cir_avg_st(cir_class_ii).class = cir_class(cir_class_ii); %#ok<*AGROW>
         cir_avg_st(cir_class_ii).time = [];
         cir_avg_st(cir_class_ii).mag = [];
         cir_avg_st(cir_class_ii).angle = [];
@@ -286,7 +286,7 @@ for fk = 1:Nfiles
     savefig(h, [fig_dir '\' mat_fname(1:end-4) '__pl.fig']);
     setFigureForPrinting();
     print(h,[png_dir '\' mat_fname(1:end-4) '__pl.png'],'-dpng','-r300')
-    close(gcf)         
+    close(gcf)        
     
     end % if OPTS(OPT_PATH_GAIN)
     

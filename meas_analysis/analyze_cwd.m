@@ -5,7 +5,7 @@ function analyze_cwd(OPTS, TEST_DATA)
 % Email: rick.candell@nist.gov
 
 set(0,'DefaultFigureWindowStyle','docked')
-set(0, 'DefaultFigureVisible', 'on')
+set(0, 'DefaultFigureVisible', 'off')
 
 TESTING = false;
 if nargin == 2
