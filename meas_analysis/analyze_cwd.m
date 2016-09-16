@@ -19,6 +19,7 @@ if nargin < 1 || isempty(OPTS)
         0; ...  % K factor
         0; ...  % delay spread
         1; ...  % compute average CIR from data
+        0; ...  % calculate tap reduced cir's
     ]; 
     disp('using the following options')
     disp(OPTS)
@@ -30,6 +31,7 @@ elseif strcmp(OPTS,'all')
         1; ...  % K factor
         1; ...  % delay spread
         1; ...  % compute average CIR from data
+        0; ...  % calculate tap reduced CIR's
     ];     
 end
 
@@ -41,3 +43,4 @@ else
 end
 
 
+set(0, 'DefaultFigureVisible', 'on')

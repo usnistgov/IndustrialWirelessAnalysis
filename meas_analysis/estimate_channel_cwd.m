@@ -474,7 +474,7 @@ for fk = 1:Nfiles
             setCommonAxisProps();
             set(gca,'OuterPosition',get(gca,'OuterPosition').*[1 1 0.95 0.95]+[0.05 0.05 0 0])
 
-            cir_avg_st(cir_class_ii).time = t_ciravg;
+            cir_avg_st(cir_class_ii).time = t_ciravg(r_t);
             cir_avg_st(cir_class_ii).mag = r_h;
             cir_avg_st(cir_class_ii).angle = r_ph;     
 
@@ -545,6 +545,9 @@ writeStatsToFile(Cstats);
 
 % create the aggregate polynomial for path loss
 cmp_pl_poly( '*_stats.mat', '.\stats', '.\figs', '.\png' )
+
+% create the delay profile files for RF emulator
+stats2rfnestdp( '*_stats.mat', '.\stats', '.\emu' )
 
 end % function
 
