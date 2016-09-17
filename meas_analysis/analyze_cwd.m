@@ -5,7 +5,7 @@ function analyze_cwd(OPTS, TEST_DATA)
 % Email: rick.candell@nist.gov
 
 set(0,'DefaultFigureWindowStyle','docked')
-set(0, 'DefaultFigureVisible', 'off')
+set(0, 'DefaultFigureVisible', 'on')
 
 TESTING = false;
 if nargin == 2
@@ -19,19 +19,19 @@ if nargin < 1 || isempty(OPTS)
         0; ...  % K factor
         0; ...  % delay spread
         1; ...  % compute average CIR from data
-        0; ...  % calculate tap reduced cir's
+        0; ...  % calculate reduced tap cir's
     ]; 
     disp('using the following options')
     disp(OPTS)
 elseif strcmp(OPTS,'all')
-    disp('enalbing all options')
+    disp('enabling all options')
     OPTS = ...
     [ ...   
         1; ...  % compute path gain
         1; ...  % K factor
         1; ...  % delay spread
         1; ...  % compute average CIR from data
-        0; ...  % calculate tap reduced CIR's
+        0; ...  % calculate reduced tap CIR's
     ];     
 end
 
@@ -44,3 +44,4 @@ end
 
 
 set(0, 'DefaultFigureVisible', 'on')
+
