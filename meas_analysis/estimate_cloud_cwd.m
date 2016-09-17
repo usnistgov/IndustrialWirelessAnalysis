@@ -211,9 +211,11 @@ for fk = 1:Nfiles
         % LOS and NLOS are considered as separate classes of CIR's
         if OPTS(OPT_AVGCIR_NTap)
             [K(kk), LOS(kk), klos] = compute_k_factor(t_k, cir_k, ns);
-            inds = mlos-klos+1:wla-klos;
-            num_los = num_los + 1;
-            cir_sum(inds) = cir_sum(inds) + cir;
+            if ~isnan(klos)
+                inds = mlos-klos+1:wla-klos;
+                num_los = num_los + 1;
+                cir_sum(inds) = cir_sum(inds) + cir;
+            end
         end        
 
         % compute delay spread parameters of the CIR 
