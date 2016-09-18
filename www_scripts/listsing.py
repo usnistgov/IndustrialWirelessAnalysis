@@ -61,14 +61,20 @@ anchors = [
 	"autop2"
 ]
 f.write('<!DOCTYPE htm PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">')
-f.write('<htm>\n<head></head>\n<meta http-equiv="Content-Type" content="text/htm; charset=utf-8">\n')
+f.write('<htm>\n<head>\n')
+  
+f.write('</head>\n<meta http-equiv="Content-Type" content="text/htm; charset=utf-8">\n')
 f.write('<body>\n<ul>\n')
 f.write('<style>table, th, td { border: 1px solid black; border-collapse: collapse; padding: 8px;}</style>\n')
 f.write('<h1>Industrial Wireless Downloads</h1>')
-hdrtext = 'This page contains links to all of the files currently available for download.  \
-			 To download, click the link or right click and select Save-As.  Utilities such \
-			 as DownloadThemAll! are available to make downloading entire sections easier.'
-f.write(hdrtext)
+introtext = 'This page contains links to all of the files currently available for download.  \
+			 To download, click the link or right click and select Save-As.  Our downloadable \
+			 files are stored on an external server which may cause some download difficulties. \
+			 Utilities such as DownloadThemAll! are available to make downloading entire sections easier. \
+			 <p>We have tried to make accessing the data as easy as possible given our resources. Please \
+			 report broken links, missing data, or other requests to our project leader \
+			 listed on our project home page.</p>'
+f.write(introtext)
 
 f.write("<h2><u>Table of Contents</u></h2>\n")
 
