@@ -73,27 +73,32 @@ introtext = 'This page contains links to all of the files currently available fo
 			 Utilities such as DownloadThemAll! are available to make downloading entire sections easier. \
 			 <p>We have tried to make accessing the data as easy as possible given our resources. Please \
 			 report broken links, missing data, or other requests to our project leader \
-			 listed on our project home page.</p>'
+			 listed on our <a href="https://www.nist.gov/programs-projects/wireless-systems-industrial-environments">project home page</a>.</p>'
 f.write(introtext)
 
 f.write("<h2><u>Table of Contents</u></h2>\n")
 
 f.write('<h3>Summary files</h3>')
-f.write('<table style="width:60%">')
+f.write('<table style="width:75%">')
+
+f.write('<tr>')
+href_stat_table = 'https://s3.amazonaws.com/nist-ics-wireless/measurements/active_meas/stats.dat'
+f.write('<td><u>Table of Channel estimates, metrics, and statistics</u><br>One file that lists channel estimates and statistics. The file is tab-delimitted and may be imported into a spreadsheet or other software tool.</td><td align="center">  <a href=%s>stats.dat</a></td>' % href_stat_table)
+f.write('</tr>')
 
 f.write('<tr>')
 href_figures = 'https://s3.amazonaws.com/nist-ics-wireless/measurements/active_meas/figures.zip'
-f.write('<td>Channel estimation figures</td><td> <a href=%s>figures.zip</a></td>' % href_figures)
+f.write('<td><u>Channel estimation figures</u><br>These figures provide a visual of the channel estimates that were calculated based primiarily on ITU-R P.1407 \"Multipath propagation and parameterization of its characteristics.\" The figures are provided as PNG files and include estimates of channel gain, power delay, power delay spread, and Rician K-factor.</td><td align="center"> <a href=%s>figures.zip</a></td>' % href_figures)
 f.write('</tr>')
 
 f.write('<tr>')
 href_tr_cir = 'https://s3.amazonaws.com/nist-ics-wireless/measurements/active_meas/reduced_tap_delay_profiles.zip'
-f.write('<td>13 tap average channel impulse response files</td><td>  <a href=%s>reduced_tap_delay_profiles.zip</a></td>' % href_tr_cir)
+f.write('<td><u>13 tap average channel impulse response files</u><br>These impulse response files represent an average gain and phase over time given a particular RF band and measurement vicinity.  Files are formatted for the RFNest D508/D512 channel emulation system by Intelligent Automation.  Average CIR data may be found in the channel estimates files.</td><td align="center">  <a href=%s>reduced_tap_delay_profiles.zip</a></td>' % href_tr_cir)
 f.write('</tr>')
 
 f.write('<tr>')
 href_measst_cir = 'https://s3.amazonaws.com/nist-ics-wireless/measurements/active_meas/measurement_stats.zip'
-f.write('<td>Channel estimates, metrics, and statistics</td><td>  <a href=%s>reduced_tap_delay_profiles.zip</a></td>' % href_measst_cir)
+f.write('<td><u>MAT Files of channel estimates and statistics</u><br>These files are sorted according to the measurement run.  Files include all estimates presented in the figures and tables</td><td align="center">  <a href=%s>measurement_stats.zip</a></td>' % href_measst_cir)
 f.write('</tr>')
 
 f.write('</table>')
