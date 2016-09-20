@@ -6,10 +6,15 @@
 clear;
 clc;
 
-top_dirs = { 'AAPlant', 'Boulder', 'GBurg'};
+%% cloud/stationary measurements
+cd('Boulder_c')
+estimate_cloud_cwd('*.mat', ones(3,1))
+cd('..')
+
+%% mobile measurements
+top_dirs = { 'AAplant', 'Boulder', 'GBurg'};
 doall = true;
 figvis = false;
-
 for ii = 1:length(top_dirs)
     
     cd(top_dirs{ii})
