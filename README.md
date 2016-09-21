@@ -1,2 +1,3 @@
-# IndustrialWirelessAnalysis
-RF Analysis Scripts for Sounder Measurements
+# NIST Industrial Wireless Analysis
+Analysis results from simulations and measurements.
+
