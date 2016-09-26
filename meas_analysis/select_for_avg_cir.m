@@ -45,7 +45,7 @@ if 10*log10(max(abs(c_k).^2)/nf) < 30
     return
 end
 
-% zero out the noise floor and remove the samples before the beginning of the
+% Zero out the noise floor and remove the samples before the beginning of the
 % CIR. This removes the propagation delay but preserves the delay spread
 % information.  We only consider samples 10 dB above the noise floor.  The
 % Peak-Noise SNR is already determined to be at least 30 dB, so the number
@@ -53,9 +53,11 @@ end
 nf_thresh = 10;
 k_zero = abs(c_k).^2 < nf*nf_thresh;
 c_k( k_zero ) = 0;
-first = find(c_k,1,'first');
-if first > 1
-    c_k(1:first-1) = [];
+first_k = find(c_k,1,'first');
+if first_k > 1
+    c_k(1:first_k-1) = [];
+else
+    c_k(1) = [];
 end
 
 end

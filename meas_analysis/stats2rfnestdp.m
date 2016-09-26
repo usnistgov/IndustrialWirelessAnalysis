@@ -1,4 +1,4 @@
-function [ output_args ] = stats2rfnestdp( file_filter, stats_dir_path, emu_path )
+function stats2rfnestdp( file_filter, stats_dir_path, emu_path )
 %STATS2RFNESTDP Convert stats file reduced tap CIR to delay profile used by
 % the RFNest emulator.
 %
@@ -12,7 +12,7 @@ if nargin < 2
     stats_dir_path = '.';
 end
 if nargin < 1
-    file_filter = '*.mat'
+    file_filter = '*.mat';
 end
 
 if ~exist(emu_path,'dir')
@@ -38,14 +38,16 @@ for ii = 1:length(files)
     fout_root = strrep(fout_root, '__channel_stats', '');
     for jj = 1:2
         acir_st = stats.avg_cir_st(jj);
-        ntaps = length(acir_st.mag);
-        write_delay_profile(meta.SampleRate_MHz_num, acir_st, ntaps, fout_root);
+        if ~isempty(acir_st.mag)
+            ntaps = length(acir_st.mag);
+            write_delay_profile(acir_st, ntaps, fout_root);
+        end
     end
 end
 
 end
 
-function write_delay_profile(Ts, acir_st, ntaps, fout_root)
+function write_delay_profile(acir_st, ntaps, fout_root)
     
     los = false;
     cir_class = cell2mat(acir_st.class);
@@ -53,7 +55,7 @@ function write_delay_profile(Ts, acir_st, ntaps, fout_root)
     cir_mag = acir_st.mag;
     cir_angle = acir_st.angle;
     
-    if strcmp(lower(cir_class),'los')
+    if strcmpi(cir_class,'los')
         los = true;
     end
     
@@ -104,7 +106,7 @@ function write_delay_profile(Ts, acir_st, ntaps, fout_root)
     for ii = 2:ntaps
         linev(ii) = cir_t(ii) - sum(linev(1:ii-1));
     end
-    %plot([cir_t(:) linev(:) cumsum(linev)],'+-'), legend('t','d', 'cs')
+    
     plot([cir_t(:) linev(:)],'+-'), legend('t','d')
     title(['delay ' cir_class ': ' fout_root],'interpreter','none')
     drawnow

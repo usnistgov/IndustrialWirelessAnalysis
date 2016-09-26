@@ -19,7 +19,7 @@ if nargin < 1 || isempty(OPTS)
         0; ...  % K factor
         0; ...  % delay spread
         1; ...  % compute average CIR from data
-        0; ...  % calculate reduced tap cir's
+        0; ...  % write stats file
     ]; 
     disp('using the following options')
     disp(OPTS)
@@ -31,7 +31,8 @@ elseif strcmp(OPTS,'all')
         1; ...  % K factor
         1; ...  % delay spread
         1; ...  % compute average CIR from data
-        0; ...  % calculate reduced tap CIR's
+        0; ...  % ntap approx
+        1; ...  % write stats file        
     ];     
 end
 

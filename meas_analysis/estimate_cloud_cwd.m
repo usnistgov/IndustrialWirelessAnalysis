@@ -11,13 +11,17 @@ end
 
 OPT_PATH_GAIN = 1;
 OPT_DELAY_SPREAD = 2;
-OPT_AVGCIR_NTap = 3;
+OPT_AVGCIR_NTAP = 3;
+OPT_NTAP_APPROX = 4;
+OPT_WRITE_STATS = 5;
 if nargin < 2
     OPTS = ...
         [ ...   
             1; ...  % compute path gain
-            0; ...  % delay spread
-            0; ...  % compute average CIR from data
+            1; ...  % delay spread
+            1; ...  % compute average CIR from data
+            0; ...  % n tap approximation all cir records
+            1; ...  % append stats file
         ]; 
 end
 
@@ -209,7 +213,7 @@ for fk = 1:Nfiles
         
         % Aggregate the sums for later computation of avg CIR
         % LOS and NLOS are considered as separate classes of CIR's
-        if OPTS(OPT_AVGCIR_NTap)
+        if OPTS(OPT_AVGCIR_NTAP)
             [K(kk), LOS(kk), klos] = compute_k_factor(t_k, cir_k, ns);
             if ~isnan(klos)
                 inds = mlos-klos+1:wla-klos;
@@ -331,7 +335,7 @@ for fk = 1:Nfiles
     end %if OPTS(OPT_DELAY_SPREAD)
     
     % approximate an N-tap CIR from the measured CIR's
-    if OPTS(OPT_AVGCIR_NTap)
+    if OPTS(OPT_AVGCIR_NTAP)
         
         NtapApprox_N = 13;
         
@@ -351,33 +355,38 @@ for fk = 1:Nfiles
         r_h = r_h/max(r_h);  % normalize the approximated cir
 
         hold off
-        subplot(4,1,1:2)
-        stem(1E9*t_ciravg, abs(cir_avg), '+-'); 
+        %subplot(4,1,1:2)
+        plot(1E9*t_ciravg, abs(cir_avg)); 
         str = '$$\mid{h(t)}\mid$$';ylabel(str, 'Interpreter', 'Latex')
-        hold on; 
-        stem(1E9*t_ciravg(r_t+1), abs(r_h),'d-');
-        set(gca,'XTickLabel','')
-        xlim([0 1000]); 
-        hold off
-        setCommonAxisProps();
-        set(gca,'OuterPosition',get(gca,'OuterPosition').*[1 1 0.95 0.95]+[0.05 0.05 0 0])
-
-        subplot(4,1,3:4)
-        stem(1E9*t_ciravg, angle(cir_avg), '+-');
-        str = '$$\angle{h(t)}$$';ylabel(str, 'Interpreter', 'Latex')
+        %set(gca,'XTickLabel','')
         xlabel('time (ns)')
-        set(gca,...
-             'ylim',[-2*pi() 2*pi()],...
-             'ytick',[-2*pi() 0 2*pi()],...
-             'yticklabel',{'-2\pi' '0' '2\pi'})
-        xlim([0 1000]); 
-        hold on
-        stem(1E9*t_ciravg(r_t+1), r_ph, 'r')
-        hold off
+        xlim([0 1000]);         
+        if OPTS(OPT_NTAP_APPROX)
+            hold on; 
+            stem(1E9*t_ciravg(r_t+1), abs(r_h),'d-');
+            legend('Avg CIR','N-tap approx.')
+            hold off
+        end        
         setCommonAxisProps();
         set(gca,'OuterPosition',get(gca,'OuterPosition').*[1 1 0.95 0.95]+[0.05 0.05 0 0])
 
-        cir_avg_st(cir_class_ii).time = t_ciravg;
+        if 0
+            subplot(4,1,3:4)
+            plot(1E9*t_ciravg, angle(cir_avg));
+            str = '$$\angle{h(t)}$$';ylabel(str, 'Interpreter', 'Latex')
+            set(gca,...
+                 'ylim',[-2*pi() 2*pi()],...
+                 'ytick',[-2*pi() 0 2*pi()],...
+                 'yticklabel',{'-2\pi' '0' '2\pi'})
+            xlim([0 1000]); 
+            hold on
+            stem(1E9*t_ciravg(r_t+1), r_ph, 'r')
+            hold off
+            setCommonAxisProps();
+            set(gca,'OuterPosition',get(gca,'OuterPosition').*[1 1 0.95 0.95]+[0.05 0.05 0 0])
+        end
+
+        cir_avg_st(cir_class_ii).time = t_ciravg(r_t+1);
         cir_avg_st(cir_class_ii).mag = r_h;
         cir_avg_st(cir_class_ii).angle = r_ph;     
 
@@ -432,7 +441,14 @@ for fk = 1:Nfiles
 end
 
 % add entry to the stats text file
-writeStatsToFile(Cstats);
+if OPT_WRITE_STATS
+    writeStatsToFile(Cstats);
+end
+
+% create the delay profile files for RF emulator
+if OPT_AVGCIR_NTAP
+    stats2rfnestdp( '*_stats.mat', '.\stats', '.\emu' )
+end
 
 end % function
 
@@ -440,7 +456,7 @@ function setCommonAxisProps()
 
     alw = 0.75;    % AxesLineWidth
     fsz = 10;      % Fontsize
-    lw = 1.5;      % LineWidth
+    lw = 0.75;      % LineWidth
     msz = 3.5;       % MarkerSize
     
 %    grid on

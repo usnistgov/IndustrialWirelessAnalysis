@@ -8,7 +8,7 @@ clc;
 
 %% cloud/stationary measurements
 cd('Boulder_c')
-estimate_cloud_cwd('*.mat', ones(3,1))
+estimate_cloud_cwd('*.mat', [1 1 1 0 1]')
 cd('..')
 
 %% mobile measurements

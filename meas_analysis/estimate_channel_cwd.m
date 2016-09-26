@@ -12,7 +12,10 @@ end
 OPT_PATH_GAIN = 1;
 OPT_KFACTOR = 2;
 OPT_DELAY_SPREAD = 3;
-OPT_AVGCIR_NTap = 4;
+OPT_AVGCIR_NTAP = 4;
+OPT_NTAP_APPROX = 5;
+OPT_WRITE_STATS = 6;
+
 if nargin < 2
     OPTS = ...
         [ ...   
@@ -20,6 +23,8 @@ if nargin < 2
             1; ...  % K factor
             1; ...  % delay spread
             1; ...  % compute average CIR from data
+            0; ...  % compute ntap approximation
+            1; ...  % write stats file    
         ]; 
 end
 
@@ -27,7 +32,7 @@ if nargin < 1
     error 'specify a file search pattern'
 end
 
-if OPTS(OPT_AVGCIR_NTap) == 1
+if OPTS(OPT_AVGCIR_NTAP) == 1
     if OPTS(OPT_KFACTOR) == 0
         OPTS(OPT_KFACTOR) = 1;
         disp('average cir estimation requires k factor estimation')
@@ -111,7 +116,7 @@ for fk = 1:Nfiles
     % Memory for calculation of average cir
     klos = 0; 
     wla = 2*wl+1;   % size of cir avg calculation buffer
-    mlos = ceil(wla/2);  %mid-point of cir avg calculation buffer
+    mla = ceil(wla/2);  %mid-point of cir avg calculation buffer
     cir_sum_los = zeros(wla,1);
     num_los = 0;
     cir_sum_nlos = zeros(wla,1);
@@ -193,35 +198,38 @@ for fk = 1:Nfiles
         % compute the K factor assuming Rician channel
         % we only consider components 10 dB above the noise floor and
         % where the peak occurs within 8 samples of beginning of the CIR 
-        if OPTS(OPT_KFACTOR) || OPTS(OPT_AVGCIR_NTap)
+        if OPTS(OPT_KFACTOR) || OPTS(OPT_AVGCIR_NTAP)
             [K(kk), LOS(kk), klos] = compute_k_factor(t_k, cir_k, ns);
         end
         
         % Aggregate the sums for later computation of avg CIR
         % LOS and NLOS are considered as separate classes of CIR's
-        if OPTS(OPT_AVGCIR_NTap)
-            inds = mlos-klos+1:wla-klos;
+        if OPTS(OPT_AVGCIR_NTAP)
+            
+            [pks,pks_k] = findpeaks(abs(cir));
+            pks_k0 = pks_k(1);
+            %inds = pks_k0:length(c_k);                
+            inds = mla-pks_k0+1:wla-pks_k0;
             if LOS(kk) == 1
                 num_los = num_los + 1;
                 cir_sum_los(inds) = cir_sum_los(inds) + cir;
+                % subplot(2,1,1),plot(10*log10(abs(cir_sum_los))), xlim([mla-30 mla+300]), hold on, drawnow
             elseif LOS(kk) == -1
                 num_nlos = num_nlos + 1;
                 cir_sum_nlos(inds) = cir_sum_nlos(inds) + cir;
-            end
-            
-        end
-%         if OPTS(OPT_AVGCIR_NTap)
-%             cir_for_avg = select_for_avg_cir( cir );
+                % subplot(2,1,2),plot(10*log10(abs(cir_sum_nlos))), xlim([mla-30 mla+300]), hold on, drawnow
+            end      
+                
+%             inds = mlos-klos+1:wla-klos;
 %             if LOS(kk) == 1
 %                 num_los = num_los + 1;
-%                 cir_sum_los(1:length(cir_for_avg)) = ...
-%                     cir_sum_los(1:length(cir_for_avg)) + cir_for_avg; 
+%                 cir_sum_los(inds) = cir_sum_los(inds) + cir;
 %             elseif LOS(kk) == -1
 %                 num_nlos = num_nlos + 1;
-%                 cir_sum_nlos(1:length(cir_for_avg)) = ...
-%                     cir_sum_nlos(1:length(cir_for_avg)) + cir_for_avg;                 
+%                 cir_sum_nlos(inds) = cir_sum_nlos(inds) + cir;
 %             end
-%         end           
+
+        end          
 
         % compute delay spread parameters of the CIR 
         % because of the wrapping of energy in the FFT-based
@@ -423,7 +431,7 @@ for fk = 1:Nfiles
     end % OPTS(OPT_KFACTOR)
     
     % approximate an N-tap CIR from the measured CIR's
-    if OPTS(OPT_AVGCIR_NTap)
+    if OPTS(OPT_AVGCIR_NTAP)
         
         NtapApprox_N = 13;
         for cir_class_ii = 1:length(cir_class)
@@ -448,19 +456,24 @@ for fk = 1:Nfiles
             r_h = r_h/max(r_h);  % normalize the approximated cir
 
             hold off
-            subplot(4,1,1:2)
-            stem(1E9*t_ciravg, abs(cir_avg), '+-'); 
+            %subplot(4,1,1:2)
+            plot(1E9*t_ciravg, abs(cir_avg)); 
             str = '$$\mid{h(t)}\mid$$';ylabel(str, 'Interpreter', 'Latex')
-            hold on; 
-            stem(1E9*t_ciravg(r_t+1), abs(r_h),'d-');
-            set(gca,'XTickLabel','')
-            xlim([0 1000]); 
-            hold off
+            xlabel('time (ns)')
+            %set(gca,'XTickLabel','')
+            xlim([0 1000]);             
+            if OPTS(OPT_NTAP_APPROX)
+                hold on; 
+                stem(1E9*t_ciravg(r_t+1), abs(r_h),'d-');
+                legend('Avg CIR','N-tap approx.')
+                hold off
+            end
             setCommonAxisProps();
             set(gca,'OuterPosition',get(gca,'OuterPosition').*[1 1 0.95 0.95]+[0.05 0.05 0 0])
             
+            if 0
             subplot(4,1,3:4)
-            stem(1E9*t_ciravg, angle(cir_avg), '+-');
+            plot(1E9*t_ciravg, angle(cir_avg));
             str = '$$\angle{h(t)}$$';ylabel(str, 'Interpreter', 'Latex')
             xlabel('time (ns)')
             set(gca,...
@@ -473,8 +486,9 @@ for fk = 1:Nfiles
             hold off
             setCommonAxisProps();
             set(gca,'OuterPosition',get(gca,'OuterPosition').*[1 1 0.95 0.95]+[0.05 0.05 0 0])
+            end
 
-            cir_avg_st(cir_class_ii).time = t_ciravg(r_t);
+            cir_avg_st(cir_class_ii).time = t_ciravg(r_t+1);
             cir_avg_st(cir_class_ii).mag = r_h;
             cir_avg_st(cir_class_ii).angle = r_ph;     
 
@@ -487,21 +501,23 @@ for fk = 1:Nfiles
         end
 
         
-    end % OPTS(OPT_AVGCIR_NTap)
+    end % OPTS(OPT_AVGCIR_NTAP)
     
-    % save the metrics
-    stats = struct(...
-        'meta',meta,...
-        'path_gain_dB',path_gain_dB,...
-        'path_gain_dB_poly',path_gain_dB_poly,...
-        'K',K,...
-        'los', LOS, ...
-        'rms_delay_spread_sec',rms_delay_spread_sec, ...
-        'mean_delay_sec',mean_delay_sec, ...
-        'cir_duration_sec',cir_duration, ...
-        'avg_cir_st', cir_avg_st);
-    
-    save([stats_dir '\' mat_fname(1:end-4) '__channel_stats.mat'], 'stats')
+    if OPT_WRITE_STATS
+        % save the metrics
+        stats = struct(...
+            'meta',meta,...
+            'path_gain_dB',path_gain_dB,...
+            'path_gain_dB_poly',path_gain_dB_poly,...
+            'K',K,...
+            'los', LOS, ...
+            'rms_delay_spread_sec',rms_delay_spread_sec, ...
+            'mean_delay_sec',mean_delay_sec, ...
+            'cir_duration_sec',cir_duration, ...
+            'avg_cir_st', cir_avg_st);
+
+        save([stats_dir '\' mat_fname(1:end-4) '__channel_stats.mat'], 'stats')
+    end
 
     % save the stats for this measurement run
     RxPol = 'U';
@@ -537,17 +553,23 @@ for fk = 1:Nfiles
 end
 
 % add entry to the stats text file
-writeStatsToFile(Cstats);
+if OPT_WRITE_STATS
+    writeStatsToFile(Cstats);
+end
 
 %
 % Create summary data
 %
 
 % create the aggregate polynomial for path loss
-cmp_pl_poly( '*_stats.mat', '.\stats', '.\figs', '.\png' )
+if OPT_PATH_GAIN
+    cmp_pl_poly( '*_stats.mat', '.\stats', '.\figs', '.\png' )
+end
 
 % create the delay profile files for RF emulator
-stats2rfnestdp( '*_stats.mat', '.\stats', '.\emu' )
+if OPT_AVGCIR_NTAP
+    stats2rfnestdp( '*_stats.mat', '.\stats', '.\emu' )
+end
 
 end % function
 
@@ -555,7 +577,7 @@ function setCommonAxisProps()
 
     alw = 0.75;    % AxesLineWidth
     fsz = 10;      % Fontsize
-    lw = 1.5;      % LineWidth
+    lw = 0.75;      % LineWidth
     msz = 3.5;       % MarkerSize
     
 %    grid on

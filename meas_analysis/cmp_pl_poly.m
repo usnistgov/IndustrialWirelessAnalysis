@@ -13,7 +13,7 @@ if nargin < 2
     stats_dir_path = '.';
 end
 if nargin < 1
-    file_filter = '*.mat'
+    file_filter = '*.mat';
 end
 
 files = dir([stats_dir_path '\' file_filter]);
@@ -32,7 +32,26 @@ for jj = 1:length(files)
 end
 freqs = unique(freqs);
 
+% frequency by frequency
 for ff = freqs(:)'
+    plotByFreq(ff, files, stats_dir_path, fig_dir_path, png_dir_path);
+end
+
+% all frequencies together
+plotByFreq(freqs, files, stats_dir_path, fig_dir_path, png_dir_path, 'Channel Gain: All Freqs');
+
+end
+
+function plotByFreq(ff, files, stats_dir_path, fig_dir_path, png_dir_path, title_str, show_traces)
+
+    if nargin < 7
+        show_traces = true;
+    end
+
+    if nargin < 6
+        title_str = [];
+    end
+
     run_names = {};
     d = linspace(1,300,100);
     polys_str = {};
@@ -46,7 +65,7 @@ for ff = freqs(:)'
         stats = stats.stats;
         meta = stats.meta;
         freq = meta.Frequency_GHz_num;
-        if freq == ff
+        if any(freq == ff)
             jj = jj + 1;
             run_names{jj} = meta.MatFile_str; %#ok<*AGROW>
             disp(run_names{jj})
@@ -64,21 +83,32 @@ for ff = freqs(:)'
     run_names{end+1} = sprintf('p=%0.2fx + %0.2f',p_all);
 
     h = figure(gcf);
-    semilogx(d, pv_arr, 'color', [0,0,0]+0.7);
+    if show_traces
+        semilogx(d, pv_arr, 'color', [0,0,0]+0.7);
+    end
     hold on
     semilogx(d, pv_all, 'k+-')
     hold off
     text(2,max(pv_all)-40,run_names{end});
+    if isempty(title_str)
+        title(['Channel Gain for ' sprintf('%0.3f GHz ', ff)])
+    else
+        title(title_str)
+    end
     xlabel('distance (m)')
     ylabel('Gain (dB)')
 
     setCommonAxisProps();
-    savefig(h, [fig_dir_path '\zCombined_' num2str(ff) 'GHz__pathloss.fig']);
-    setFigureForPrinting();
-    print(h, [png_dir_path '\zCombined_' num2str(ff) 'GHz__pathloss.png'],'-dpng')
+    if isempty(title_str)
+        savefig(h, [fig_dir_path '\zCombined_' num2str(ff) 'GHz__pathloss.fig']);
+        setFigureForPrinting();
+        print(h, [png_dir_path '\zCombined_' num2str(ff) 'GHz__pathloss.png'],'-dpng')
+    else
+        savefig(h, [fig_dir_path '\zCombined_allfreqs_pathloss.fig']);
+        setFigureForPrinting();
+        print(h, [png_dir_path '\zCombined_allfreqs_pathloss.png'],'-dpng')        
+    end
     close(h) 
-    
-end
 
 end
 
@@ -98,7 +128,7 @@ function setCommonAxisProps()
     alw = 0.75;    % AxesLineWidth
     fsz = 10;      % Fontsize
     lw = 1.5;      % LineWidth
-    msz = 3.5;       % MarkerSize
+    msz = 3.5;     % MarkerSize
     
 %    grid on
     set(gca,'XGrid','on')
