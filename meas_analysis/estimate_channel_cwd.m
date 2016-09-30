@@ -177,6 +177,16 @@ for fk = 1:Nfiles
             continue
         end
         USE(kk) = 1;
+        
+        % compute delay spread parameters of the CIR 
+        % because of the wrapping of energy in the FFT-based
+        % correlation we must remove the trailing edge.
+        if OPTS(OPT_DELAY_SPREAD)
+            if pk_pwr > -100;
+                [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
+                    compute_delay_spread(Ts, cir);
+            end
+        end        
 
         % Compute the path loss in the cir
         % note that the CIR contains antenna gains.  We must remove the
@@ -212,18 +222,8 @@ for fk = 1:Nfiles
                     cir_sum_nlos(inds) = cir_sum_nlos(inds) + cir0(k_pks);
                 end      
             end
-        end          
-
-        % compute delay spread parameters of the CIR 
-        % because of the wrapping of energy in the FFT-based
-        % correlation we must remove the trailing edge.
-        if OPTS(OPT_DELAY_SPREAD)
-            if pk_pwr > -100;
-                [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
-                    compute_delay_spread(t, cir);
-            end
-        end
-
+        end      
+        
     end
     
     
@@ -292,6 +292,8 @@ for fk = 1:Nfiles
         h = figure();      
         [du_counts,du_centers] = hist(1e9*mean_delay_sec,50000);
         du_probs = cumsum(du_counts/sum(du_counts));
+        du_centers = du_centers(ds_probs < 0.995);
+        du_probs = du_probs(ds_probs < 0.995);        
         plot(du_centers, du_probs, 'k');
         ylim([0 1]);
         xlim([0 max(du_centers(du_probs<0.995))]);
@@ -311,6 +313,8 @@ for fk = 1:Nfiles
         h = figure();      
         [ds_counts,ds_centers] = hist(1e9*rms_delay_spread_sec,5000);
         ds_probs = cumsum(ds_counts/sum(ds_counts));
+        ds_centers = ds_centers(ds_probs < 0.995);
+        ds_probs = ds_probs(ds_probs < 0.995);
         plot(ds_centers, ds_probs, 'k');
         ylim([0 1]);
         %xlabel('rms delay spread, S (ns)')

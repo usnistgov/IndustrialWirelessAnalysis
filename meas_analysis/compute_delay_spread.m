@@ -1,13 +1,13 @@
-function [ tau_u, tau_s, T ] = compute_delay_spread( t, cir )
+function [ tau_u, tau_s, T ] = compute_delay_spread( Ts, cir )
 % COMPUTE_DELAY_SPREAD Compute the delay spread of the input CIR
 %
 % Outputs:
 %   tau_u is the mean excess delay
 %   tau_s is the rms excess delay
-%   T is the duration of the CIR
+%   T is the delay interval
 %
 % Inputs:
-%   t is the time vector
+%   Ts is the sample interval of the cir
 %   cir is the real or complex valued channel impulse response
 %
 % Time and CIR vectors must have the same length.
@@ -41,9 +41,9 @@ a_k = abs(cir);
 a_k = a_k/max(a_k);
 
 % compute the peaks
-findpeaks(a_k),xlim([1 45])
+%findpeaks(a_k),xlim([1 45])
 [pks, k_pks] = findpeaks(a_k);
-t_k = t(k_pks);
+t_k = Ts*k_pks;
 t_k = t_k - t_k(1);  % remove propagation delay
 
 % compute the mean excess delay
@@ -51,10 +51,10 @@ tau_u = sum(pks(:)'*t_k(:))/sum(pks.^2);
 
 % compute second moment, rms delay spread
 % tau_s = sqrt(sum(pks(:)'*t_k(:).^2)/sum(pks) - tau_u);
-tau_s = sqrt( sum(pks(:)' * (t_k(:)-tau_u).^2) /  sum(pks)  );
+tau_s = sqrt( sum(pks(:)' * (t_k(:)-tau_u).^2) /  sum(pks.^2)  );
 
-% compute the duration
-T = t_k(end) - t_k(1);
+% compute the delay interval
+T = t_k(end);
 
 end
 
