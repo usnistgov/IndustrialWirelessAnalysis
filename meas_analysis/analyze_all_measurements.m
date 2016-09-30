@@ -7,11 +7,13 @@ clear;
 clc;
 
 %% cloud/stationary measurements
-cd('Boulder_c')
-estimate_cloud_cwd('*.mat', [1 1 1 0 1]')
-cd('..')
+% cd('Boulder_c')
+% delete('cloud_stats.mat')
+% estimate_cloud_cwd('*.mat', [1 1 1 0 1]')
+% cd('..')
 
 %% mobile measurements
+delete('stats.mat')
 top_dirs = { 'AAplant', 'Boulder', 'GBurg'};
 doall = true;
 figvis = false;

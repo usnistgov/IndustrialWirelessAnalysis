@@ -1,10 +1,7 @@
- function [ K, LOS, klos ] = compute_k_factor( t, cir, ns )
+ function [ K, LOS, k_pks ] = compute_k_factor( cir, ns )
 %COMPUTE_K_FACTOR Computes the K-factor of the impulse response
 %   Computes the K factor of the CIR using all components of magnitude
-%   greater than the noise floor times L.  The range, r, in meters guides
-%   the extraction of the LOS power component.  It is assumed that the
-%   select_cir_samples() function has been used to remove unwanted samples
-%   withing the cir
+%   greater than the noise floor times 10.
 %
 %   Outputs:
 %       K:      The K factor in dB
@@ -12,10 +9,9 @@
 %           -1 for NLOS
 %            0 for unknown
 %           +1 for LOS
-%       k0 is the index of the first peak
+%       k_pks are the peak indices
 %
 %   Inputs:
-%       t:      time in seconds
 %       cir:    the channel impulse response
 %       ns:    oversample rate
 % 
@@ -25,47 +21,44 @@
 
 K = NaN;
 LOS = 0;
-klos = nan;
+k_pks = nan;
 if isempty(cir)
     return
 end
 
+% normalize the cir
+cir = cir/max(abs(cir));
+
 % calculate the peak value and the time of its occurrance
-cir_mag = abs(cir);
-cir_max = max(cir_mag);
+cir_mag2 = abs(cir).^2;
+cir_max2 = max(cir_mag2);
 
 % Time-based determination.  The first peak must be greater in magnitude
 % than all of the other peaks in the cir.
-[pks, k_pks] = findpeaks(cir_mag,1:length(cir_mag));  % requires the signal processing toolbox
+[pks, k_pks] = findpeaks(cir_mag2,1:length(cir_mag2)); 
 if isempty(pks)
     return
 end
-klos = k_pks(1);
-cir_los = cir_mag(klos);
-if cir_los ~= cir_max
+
+% the los peak must be at or after the PN oversample factor
+[~, max_i] = max(pks);
+if max_i > 1
     LOS = -1;  % max is not the first peak, so NLOS
-    return;
+    return;    
 end
+% kpeak = k_pks(1);
+% cir_los = cir_mag2(kpeak);
+% if cir_los ~= cir_max2
+%     LOS = -1;  % max is not the first peak, so NLOS
+%     return;
+% end
 
-% form the diffuse components to estimate non-los power.  This is done by
-% removing the local samples related to peak magnitude value
-dfuse_mag = cir_mag; 
-if klos > ns/2
-    kklos = klos-1:klos+1;
-    dfuse_mag(kklos) = NaN;
-else
-    kklos = klos:klos+1;
-    dfuse_mag(kklos) = NaN;
-end
-dfuse_mag = dfuse_mag(~isnan(dfuse_mag));
-dfuse_pwr = var(dfuse_mag);
-
-% A. Doukas and G. Kalivas, "Rician K Factor Estimation for Wireless
-% Communication Systems," 2006 International Conference on Wireless and
-% Mobile Communications (ICWMC'06), Bucharest, 2006, pp. 69-69.  
-% doi: 10.1109/ICWMC.2006.81  
-LOS = 1;
-K = 10*log10(cir_los^2/(2*dfuse_pwr));  
+% JPL's Wireless Communication Reference Website
+% Chapter: Wireless Channels
+% Section Rician Channels, Indoor Channels
+% URL http://www.wirelesscommunication.nl/reference/chaptr03/ricepdf/measrice.htm
+K = 10*log10(pks(1)/mean(pks(2:end)));
+LOS = +1;
                 
 end
 

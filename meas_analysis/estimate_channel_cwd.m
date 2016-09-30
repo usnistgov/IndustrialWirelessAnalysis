@@ -102,6 +102,9 @@ for fk = 1:Nfiles
     
     %NN = apf*rpa;
     NN = size(cir_file.IQdata,2);
+    
+    % truncate the last section so not to emphasize the end of the run
+    NN = round(NN*0.9); 
 
     % Initialize memory for the metrics
     USE = nan(NN,1);  
@@ -116,7 +119,7 @@ for fk = 1:Nfiles
     % Memory for calculation of average cir
     klos = 0; 
     wla = 2*wl+1;   % size of cir avg calculation buffer
-    mla = ceil(wla/2);  %mid-point of cir avg calculation buffer
+    mla = floor(wla/2)+1;  %mid-point of cir avg calculation buffer
     cir_sum_los = zeros(wla,1);
     num_los = 0;
     cir_sum_nlos = zeros(wla,1);
@@ -169,13 +172,9 @@ for fk = 1:Nfiles
 
         % select the sample of the cir that meet threshold criteria
         % also compute the noise floor
-        [k_sel, nf] = select_cir_samples(r, cir);
+        [k_sel, nf, cir, pk_pwr] = select_cir_samples(r, cir);
         if isempty(k_sel)
             continue
-        else
-            if length(k_sel) < 8
-                continue
-            end
         end
         USE(kk) = 1;
         
@@ -199,36 +198,24 @@ for fk = 1:Nfiles
         % we only consider components 10 dB above the noise floor and
         % where the peak occurs within 8 samples of beginning of the CIR 
         if OPTS(OPT_KFACTOR) || OPTS(OPT_AVGCIR_NTAP)
-            [K(kk), LOS(kk), klos] = compute_k_factor(t_k, cir_k, ns);
+            [K(kk), LOS(kk), k_pks] = compute_k_factor(cir, ns);
         end
         
         % Aggregate the sums for later computation of avg CIR
         % LOS and NLOS are considered as separate classes of CIR's
         if OPTS(OPT_AVGCIR_NTAP)
-            
-            [pks,pks_k] = findpeaks(abs(cir));
-            pks_k0 = pks_k(1);
-            %inds = pks_k0:length(c_k);                
-            inds = mla-pks_k0+1:wla-pks_k0;
-            if LOS(kk) == 1
-                num_los = num_los + 1;
-                cir_sum_los(inds) = cir_sum_los(inds) + cir;
-                % subplot(2,1,1),plot(10*log10(abs(cir_sum_los))), xlim([mla-30 mla+300]), hold on, drawnow
-            elseif LOS(kk) == -1
-                num_nlos = num_nlos + 1;
-                cir_sum_nlos(inds) = cir_sum_nlos(inds) + cir;
-                % subplot(2,1,2),plot(10*log10(abs(cir_sum_nlos))), xlim([mla-30 mla+300]), hold on, drawnow
-            end      
-                
-%             inds = mlos-klos+1:wla-klos;
-%             if LOS(kk) == 1
-%                 num_los = num_los + 1;
-%                 cir_sum_los(inds) = cir_sum_los(inds) + cir;
-%             elseif LOS(kk) == -1
-%                 num_nlos = num_nlos + 1;
-%                 cir_sum_nlos(inds) = cir_sum_nlos(inds) + cir;
-%             end
-
+            if pk_pwr > -100;
+                cir0 = cir/max(abs(cir));
+                if LOS(kk) == 1
+                    num_los = num_los + 1;
+                    inds = k_pks-k_pks(1)+1;
+                    cir_sum_los(inds) = cir_sum_los(inds) + cir0(k_pks);
+                elseif LOS(kk) == -1
+                    num_nlos = num_nlos + 1;
+                    inds = k_pks-k_pks(1)+1;
+                    cir_sum_nlos(inds) = cir_sum_nlos(inds) + cir0(k_pks);
+                end      
+            end
         end          
 
         % compute delay spread parameters of the CIR 
@@ -236,7 +223,7 @@ for fk = 1:Nfiles
         % correlation we must remove the trailing edge.
         if OPTS(OPT_DELAY_SPREAD)
             [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
-                compute_delay_spread(t_k, cir_k, nf);
+                compute_delay_spread(t, cir, nf);
         end
 
     end
@@ -255,7 +242,8 @@ for fk = 1:Nfiles
     %
     % Extract range data for off-line analysis
     %
-    r = cir_file.IQdata_Range_m(:,3);
+    rA = cir_file.IQdata_Range_m(1:NN,3);
+    r = rA;
     path_gain_dB = path_gain_dB(r~=r(1));
     r = r(r~=r(1));
     
@@ -382,7 +370,8 @@ for fk = 1:Nfiles
         % Analyze the Rician K Factor Estimates CDF
         % 
         h = figure();      
-        [counts,centers] = hist(K,30);
+        Kx = K(~isinf(K));
+        [counts,centers] = hist(Kx,300);
         plot(centers, cumsum(counts/sum(counts)), 'k');
         ylim([0 1]);
         str = '$$K$$ (dB)'; xlabel(str,'Interpreter','Latex');
@@ -399,18 +388,19 @@ for fk = 1:Nfiles
         % Analyze the Rician K Factor Estimates Versus Distance
         % 
         h = figure();     
-        r = cir_file.IQdata_Range_m(:,3);
+        r = rA;
         k_lfit = find(r>3);
         r_lfit = r(k_lfit);
         r_p = r_lfit;  K_p = K(k_lfit);
-        r_p(isnan(K_p)) = [];
-        K_p(isnan(K_p)) = [];
+        not_these = isnan(K_p) | isinf(K_p);
+        r_p(not_these) = [];
+        K_p(not_these) = [];
         plot(r_p, K_p, 'color', [0,0,0]+0.7, 'marker', '.', 'linestyle' , 'none');
         hold on 
         KdB_poly = polyfit(r_p,K_p,1);
         r_p_plot = linspace(min(r_p), max(r_p), 10);
         KdB_poly_vals = polyval(KdB_poly, r_p_plot);
-        stdK = std(K(~isnan(K)));
+        stdK = std(K_p);
         plot(r_p_plot, KdB_poly_vals, 'k-', ...
            r_p_plot, repmat(KdB_poly_vals(:),1,2)+2*stdK*[ones(10,1) -ones(10,1)], ...
             'k--', 'LineWidth', 1.0);
@@ -447,7 +437,6 @@ for fk = 1:Nfiles
             % now remove leading zeros
             cir_avg(1:find(cir_avg, 1,'first')-1) = [];
             cir_avg = cir_avg(1:wl);
-            cir_avg = select_for_avg_cir(cir_avg);
             cir_avg = cir_avg/max(abs(cir_avg));
             Ncir_avg = length(cir_avg);
             t_ciravg = t(1:Ncir_avg);
@@ -462,7 +451,7 @@ for fk = 1:Nfiles
             xlabel('time (ns)')
             %set(gca,'XTickLabel','')
             xlim([0 1000]);             
-            if OPTS(OPT_NTAP_APPROX)
+            if 0
                 hold on; 
                 stem(1E9*t_ciravg(r_t+1), abs(r_h),'d-');
                 legend('Avg CIR','N-tap approx.')
@@ -577,15 +566,15 @@ function setCommonAxisProps()
 
     alw = 0.75;    % AxesLineWidth
     fsz = 10;      % Fontsize
-    lw = 0.75;      % LineWidth
-    msz = 3.5;       % MarkerSize
+    lw = 1.25;      % LineWidth
+    msz = 6.0;       % MarkerSize
     
 %    grid on
     set(gca,'XGrid','on')
     set(gca,'XMinorGrid','off')
     set(gca,'YGrid','on')
     set(gca,'YMinorGrid','off')
-    set(gca,'GridAlpha',0.5)
+    set(gca,'GridAlpha',0.25)
     set(gca,'MinorGridAlpha',0.4)
     set(gca,'Fontsize',fsz)
     set(gca,'LineWidth',alw);
