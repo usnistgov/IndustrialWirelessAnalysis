@@ -19,6 +19,7 @@ if nargin < 1 || isempty(OPTS)
         0; ...  % K factor
         0; ...  % delay spread
         1; ...  % compute average CIR from data
+        0; ...  % NTAP estimation
         0; ...  % write stats file
     ]; 
     disp('using the following options')

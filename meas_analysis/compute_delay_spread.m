@@ -1,4 +1,4 @@
-function [ tau_u, tau_s, T ] = compute_delay_spread( t, cir, nf )
+function [ tau_u, tau_s, T ] = compute_delay_spread( t, cir )
 % COMPUTE_DELAY_SPREAD Compute the delay spread of the input CIR
 %
 % Outputs:
@@ -9,7 +9,6 @@ function [ tau_u, tau_s, T ] = compute_delay_spread( t, cir, nf )
 % Inputs:
 %   t is the time vector
 %   cir is the real or complex valued channel impulse response
-%   nf is the linear domain measured noise floor
 %
 % Time and CIR vectors must have the same length.
 %
@@ -38,33 +37,21 @@ end
 
 a_k = abs(cir);
 
-% only consider cir's with GT 20 dB SNR peak to noise floor
-% if 10*log10(max(a_k.^2)/nf) < 20
-%     tau_u = NaN;
-%     tau_s = NaN;
-%     T = NaN;
-%     return
-% end
-
 % normalize the cir for computation
 a_k = a_k/max(a_k);
-t_k = t;
+
+% compute the peaks
+findpeaks(a_k),xlim([1 45])
+[pks, k_pks] = findpeaks(a_k);
+t_k = t(k_pks);
 t_k = t_k - t_k(1);  % remove propagation delay
 
-% remove spurious outliers
-t_k_x = 3*median(t_k);
-a_k = a_k(t_k<t_k_x);
-t_k = t_k(t_k<t_k_x);
-
-% compute the power in the signal
-% P_k = abs(a_k).^2;
-P_k = a_k.^2;
-
 % compute the mean excess delay
-tau_u = sum(P_k(:)'*t_k(:))/sum(P_k);  
+tau_u = sum(pks(:)'*t_k(:))/sum(pks.^2);
 
 % compute second moment, rms delay spread
-tau_s = sqrt(sum(P_k(:)'*t_k(:).^2)/sum(P_k) - tau_u^2);
+% tau_s = sqrt(sum(pks(:)'*t_k(:).^2)/sum(pks) - tau_u);
+tau_s = sqrt( sum(pks(:)' * (t_k(:)-tau_u).^2) /  sum(pks)  );
 
 % compute the duration
 T = t_k(end) - t_k(1);

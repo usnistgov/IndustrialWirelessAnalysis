@@ -172,15 +172,11 @@ for fk = 1:Nfiles
 
         % select the sample of the cir that meet threshold criteria
         % also compute the noise floor
-        [k_sel, nf, cir, pk_pwr] = select_cir_samples(r, cir);
+        [k_sel, ~, cir, pk_pwr] = select_cir_samples(r, cir);
         if isempty(k_sel)
             continue
         end
         USE(kk) = 1;
-        
-        % extract the data at selected indicies
-        t_k = t(k_sel);
-        cir_k = cir(k_sel);
 
         % Compute the path loss in the cir
         % note that the CIR contains antenna gains.  We must remove the
@@ -189,7 +185,7 @@ for fk = 1:Nfiles
         % this is not the true case, but without ray-tracing it is the
         % only option.
         if OPTS(OPT_PATH_GAIN)
-            path_gain_dB(kk) = compute_path_gain(cir_k, ...
+            path_gain_dB(kk) = compute_path_gain(cir, ...
                 TransmitterAntennaGain_dBi, ...
                 ReceiverAntennaGain_dBi);           
         end
@@ -204,7 +200,7 @@ for fk = 1:Nfiles
         % Aggregate the sums for later computation of avg CIR
         % LOS and NLOS are considered as separate classes of CIR's
         if OPTS(OPT_AVGCIR_NTAP)
-            if pk_pwr > -100;
+            if pk_pwr > -100
                 cir0 = cir/max(abs(cir));
                 if LOS(kk) == 1
                     num_los = num_los + 1;
@@ -222,8 +218,10 @@ for fk = 1:Nfiles
         % because of the wrapping of energy in the FFT-based
         % correlation we must remove the trailing edge.
         if OPTS(OPT_DELAY_SPREAD)
-            [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
-                compute_delay_spread(t, cir, nf);
+            if pk_pwr > -100;
+                [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
+                    compute_delay_spread(t, cir);
+            end
         end
 
     end
@@ -451,7 +449,7 @@ for fk = 1:Nfiles
             xlabel('time (ns)')
             %set(gca,'XTickLabel','')
             xlim([0 1000]);             
-            if 0
+            if OPTS(OPT_NTAP_APPROX)
                 hold on; 
                 stem(1E9*t_ciravg(r_t+1), abs(r_h),'d-');
                 legend('Avg CIR','N-tap approx.')
