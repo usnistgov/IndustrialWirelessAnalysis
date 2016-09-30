@@ -23,7 +23,7 @@ if nargin < 2
             1; ...  % K factor
             1; ...  % delay spread
             1; ...  % compute average CIR from data
-            0; ...  % compute ntap approximation
+            1; ...  % compute ntap approximation
             1; ...  % write stats file    
         ]; 
 end
@@ -292,8 +292,8 @@ for fk = 1:Nfiles
         h = figure();      
         [du_counts,du_centers] = hist(1e9*mean_delay_sec,50000);
         du_probs = cumsum(du_counts/sum(du_counts));
-        du_centers = du_centers(ds_probs < 0.995);
-        du_probs = du_probs(ds_probs < 0.995);        
+        du_centers = du_centers(du_probs < 0.995);
+        du_probs = du_probs(du_probs < 0.995);        
         plot(du_centers, du_probs, 'k');
         ylim([0 1]);
         xlim([0 max(du_centers(du_probs<0.995))]);
@@ -452,11 +452,12 @@ for fk = 1:Nfiles
             str = '$$\mid{h(t)}\mid$$';ylabel(str, 'Interpreter', 'Latex')
             xlabel('time (ns)')
             %set(gca,'XTickLabel','')
-            xlim([0 1000]);             
+            xlim([-20 1000]);  
+            ylim([0 1.1])
             if OPTS(OPT_NTAP_APPROX)
                 hold on; 
                 stem(1E9*t_ciravg(r_t+1), abs(r_h),'d-');
-                legend('Avg CIR','N-tap approx.')
+                legend('Avg CIR',[num2str(NtapApprox_N) '-tap approx.'])
                 hold off
             end
             setCommonAxisProps();
