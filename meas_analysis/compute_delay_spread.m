@@ -16,10 +16,11 @@ function [ tau_u, tau_s, T ] = compute_delay_spread( Ts, cir )
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
 
+tau_u = NaN;
+tau_s = NaN;
+T = NaN;
+
 if isempty(cir)
-    tau_u = NaN;
-    tau_s = NaN;
-    T = NaN;
     return
 end
 
@@ -29,9 +30,6 @@ end
 % factor estimation.  A better method could be to use the delay spread to
 % determine candidacy for K estimation.
 if length(cir) < 12
-    tau_u = NaN;
-    tau_s = NaN;
-    T = NaN;
     return
 end
 
@@ -43,6 +41,9 @@ a_k = a_k/max(a_k);
 % compute the peaks
 %findpeaks(a_k),xlim([1 45])
 [pks, k_pks] = findpeaks(a_k);
+if isempty(pks)
+    return;
+end
 t_k = Ts*k_pks;
 t_k = t_k - t_k(1);  % remove propagation delay
 

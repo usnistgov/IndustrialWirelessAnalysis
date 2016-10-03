@@ -11,7 +11,7 @@ end
 
 OPT_PATH_GAIN = 1;
 OPT_DELAY_SPREAD = 2;
-OPT_AVGCIR_NTAP = 3;
+OPT_AVGCIR = 3;
 OPT_NTAP_APPROX = 4;
 OPT_WRITE_STATS = 5;
 if nargin < 2
@@ -172,9 +172,7 @@ for fk = 1:Nfiles
         cir = cir_file.IQdata(:,kk);
         
         % compute the magnitude of the CIR samples
-        cir_mag2 = abs(cir).^2;
-        
-        % ignore record if it is empty or the length is less than the
+        cir_mag2 = abs(cir).^2;        % ignore record if it is empty or the length is less than the
         % expected codeword length.  This indicates that something went
         % wrong with the instrumentation.
         if isempty(cir_mag2)
@@ -185,19 +183,21 @@ for fk = 1:Nfiles
 
         % select the sample of the cir that meet threshold criteria
         % also compute the noise floor
-        [k_sel, nf] = select_cir_samples(cir);
+        [k_sel, ~, cir, pk_pwr] = select_cir_samples(r, cir);
         if isempty(k_sel)
             continue
-        else
-            if length(k_sel) < 8
-                continue
-            end
         end
         USE(kk) = 1;
         
-        % extract the data at selected indicies
-        t_k = t(k_sel);
-        cir_k = cir(k_sel);
+        % compute delay spread parameters of the CIR 
+        % because of the wrapping of energy in the FFT-based
+        % correlation we must remove the trailing edge.
+        if OPTS(OPT_DELAY_SPREAD)
+            if pk_pwr > -100;
+                [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
+                    compute_delay_spread(Ts, cir);
+            end
+        end          
 
         % Compute the path loss in the cir
         % note that the CIR contains antenna gains.  We must remove the
@@ -206,29 +206,23 @@ for fk = 1:Nfiles
         % this is not the true case, but without ray-tracing it is the
         % only option.
         if OPTS(OPT_PATH_GAIN)
-            path_gain_dB(kk) = compute_path_gain(cir_k, ...
+            path_gain_dB(kk) = compute_path_gain(cir, ...
                 TransmitterAntennaGain_dBi, ...
                 ReceiverAntennaGain_dBi);           
         end
         
         % Aggregate the sums for later computation of avg CIR
         % LOS and NLOS are considered as separate classes of CIR's
-        if OPTS(OPT_AVGCIR_NTAP)
-            [K(kk), LOS(kk), klos] = compute_k_factor(t_k, cir_k, ns);
-            if ~isnan(klos)
-                inds = mlos-klos+1:wla-klos;
+        if OPTS(OPT_AVGCIR)
+            [~, ~, k_pks] = compute_k_factor(cir, ns);
+            if pk_pwr > -100  && ~isempty(k_pks)
+                cir0 = cir/max(abs(cir));
                 num_los = num_los + 1;
-                cir_sum(inds) = cir_sum(inds) + cir;
+                inds = k_pks-k_pks(1)+1;
+                cir_sum(inds) = cir_sum(inds) + cir0(k_pks);
+                %stem(abs(cir_sum)), xlim([0 60]), drawnow
             end
-        end        
-
-        % compute delay spread parameters of the CIR 
-        % because of the wrapping of energy in the FFT-based
-        % correlation we must remove the trailing edge.
-        if OPTS(OPT_DELAY_SPREAD)
-            [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
-                compute_delay_spread(t_k, cir_k, nf);
-        end
+        end         
 
     end
     
@@ -335,7 +329,7 @@ for fk = 1:Nfiles
     end %if OPTS(OPT_DELAY_SPREAD)
     
     % approximate an N-tap CIR from the measured CIR's
-    if OPTS(OPT_AVGCIR_NTAP)
+    if OPTS(OPT_AVGCIR)
         
         NtapApprox_N = 13;
         
@@ -356,7 +350,11 @@ for fk = 1:Nfiles
 
         hold off
         %subplot(4,1,1:2)
-        plot(1E9*t_ciravg, abs(cir_avg)); 
+        if OPTS(OPT_NTAP_APPROX)
+            plot(1E9*t_ciravg, abs(cir_avg)); 
+        else
+            stem(1E9*t_ciravg, abs(cir_avg)); 
+        end
         str = '$$\mid{h(t)}\mid$$';ylabel(str, 'Interpreter', 'Latex')
         %set(gca,'XTickLabel','')
         xlabel('time (ns)')
@@ -396,7 +394,7 @@ for fk = 1:Nfiles
         print(h,[png_dir '\' mat_fname(1:end-4) '__avgcir_' cell2mat(cir_class_name) '.png'],'-dpng','-r300')    
         close(gcf)   
         
-    end % OPTS(OPT_AVGCIR_NTap)
+    end % OPTS(OPT_AVGCIR)
     
     % save the metrics
     stats = struct(...
@@ -446,7 +444,7 @@ if OPT_WRITE_STATS
 end
 
 % create the delay profile files for RF emulator
-if OPT_AVGCIR_NTAP
+if OPT_AVGCIR
     stats2rfnestdp( '*_stats.mat', '.\stats', '.\emu' )
 end
 
@@ -515,38 +513,38 @@ end
 
 
 
-function [ k, nf ] = select_cir_samples( cir )
-% SELECT_CIR_SAMPLES Compute the delay spread of the input CIR
-%
-% Outputs:
-%   k is an array of the selected indices
-%   nf is the noise floor
-%
-% Inputs:
-%   r is the range in meters from transmitter to receiver
-%   cir is the real or complex valued channel impulse response
-%
-% Time and CIR vectors must have the same length.
-%
-% Author: Rick Candell
-% Organization: National Institute of Standards and Technology
-% Email: rick.candell@nist.gov
-
-% linear domain thresholds
-nft = 10;           % 10 dB above noise floor
-pkt = 1/31.6228;    % 15 dB from peak
-
-% eliminate the anomalous tail components (last 8 samples)
-cir = cir(1:round(length(cir)*0.5));
-% cir = cir(1:end-8);
-
-% compute the magnitude squared of the cir normailzed to the peak value
-cir_mag2 = (abs(cir).^2);
-cir_max = max(cir_mag2);
-cir_mag2 = (abs(cir).^2)/cir_max;
-
-% select the cir sample for use in average cir estimation
-nf = mean(cir_mag2(round(length(cir)*0.8):round(length(cir)*0.9)));
-k = find( cir_mag2 > nf*nft );
-
-end
+% function [ k, nf ] = select_cir_samples( cir )
+% % SELECT_CIR_SAMPLES Compute the delay spread of the input CIR
+% %
+% % Outputs:
+% %   k is an array of the selected indices
+% %   nf is the noise floor
+% %
+% % Inputs:
+% %   r is the range in meters from transmitter to receiver
+% %   cir is the real or complex valued channel impulse response
+% %
+% % Time and CIR vectors must have the same length.
+% %
+% % Author: Rick Candell
+% % Organization: National Institute of Standards and Technology
+% % Email: rick.candell@nist.gov
+% 
+% % linear domain thresholds
+% nft = 10;           % 10 dB above noise floor
+% pkt = 1/31.6228;    % 15 dB from peak
+% 
+% % eliminate the anomalous tail components (last 8 samples)
+% cir = cir(1:round(length(cir)*0.5));
+% % cir = cir(1:end-8);
+% 
+% % compute the magnitude squared of the cir normailzed to the peak value
+% cir_mag2 = (abs(cir).^2);
+% cir_max = max(cir_mag2);
+% cir_mag2 = (abs(cir).^2)/cir_max;
+% 
+% % select the cir sample for use in average cir estimation
+% nf = mean(cir_mag2(round(length(cir)*0.8):round(length(cir)*0.9)));
+% k = find( cir_mag2 > nf*nft );
+% 
+% end

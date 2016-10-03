@@ -448,7 +448,11 @@ for fk = 1:Nfiles
 
             hold off
             %subplot(4,1,1:2)
-            plot(1E9*t_ciravg, abs(cir_avg)); 
+            if OPTS(OPT_NTAP_APPROX)
+                plot(1E9*t_ciravg, abs(cir_avg)); 
+            else
+                stem(1E9*t_ciravg, abs(cir_avg)); 
+            end
             str = '$$\mid{h(t)}\mid$$';ylabel(str, 'Interpreter', 'Latex')
             xlabel('time (ns)')
             %set(gca,'XTickLabel','')
