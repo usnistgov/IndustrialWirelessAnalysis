@@ -252,7 +252,7 @@ for fk = 1:Nfiles
     r_p = r;  pl_p = path_gain_dB;
     r_p = r_p(~isnan(pl_p));
     pl_p = pl_p(~isnan(pl_p));
-    r_min_fit = 10;
+    r_min_fit = 3;
     r_max_fit = 0.9*max(r_p);    
     k_lfit = find(r_p>r_min_fit & r_p<r_max_fit);
     r_p_fit = r_p(k_lfit);
@@ -267,7 +267,7 @@ for fk = 1:Nfiles
     hold on
     plot(r_p_plot, pl_poly_vals, 'k-', ...
        r_p_plot, repmat(pl_poly_vals(:),1,2)+stdPathGain*[ones(10,1) -ones(10,1)], ...
-        'k--', 'LineWidth', 1.0);
+        'k--', 'LineWidth', 1.0);    
     hold off
     legend({'measured', ...
         sprintf('%0.2fx + %0.1f',path_gain_dB_poly), ...

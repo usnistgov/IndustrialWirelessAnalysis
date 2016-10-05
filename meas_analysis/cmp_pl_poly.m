@@ -53,7 +53,7 @@ function plotByFreq(ff, files, stats_dir_path, fig_dir_path, png_dir_path, title
     end
 
     run_names = {};
-    d = linspace(1,300,100);
+    d = linspace(1,150,100);
     polys_str = {};
     pv_arr = [];
     d_all = [];
@@ -87,9 +87,19 @@ function plotByFreq(ff, files, stats_dir_path, fig_dir_path, png_dir_path, title
         semilogx(d, pv_arr, 'color', [0,0,0]+0.7);
     end
     hold on
+    % plot the traces
     semilogx(d, pv_all, 'k+-')
+    text(2,max(pv_all)-20,run_names{end});
+    
+    % frii as reference
+    if length(ff) == 1
+    c = physconst('LightSpeed');
+    frii_fspl_dB = 10*log10(d.^2) + 20*log10(ff) + 20*log10(1e9) + 20*log10(4*pi/c);
+    semilogx(d, -frii_fspl_dB, 'b+-')
+    text(d(floor(length(d)/4)),-frii_fspl_dB(floor(length(d)/4))+5,'FSPL','Color','blue');
+    end
+    
     hold off
-    text(2,max(pv_all)-40,run_names{end});
     if isempty(title_str)
         title(['Channel Gain for ' sprintf('%0.3f GHz ', ff)])
     else
@@ -132,9 +142,9 @@ function setCommonAxisProps()
     
 %    grid on
     set(gca,'XGrid','on')
-    set(gca,'XMinorGrid','on')
+    set(gca,'XMinorGrid','off')
     set(gca,'YGrid','on')
-    set(gca,'YMinorGrid','on')
+    set(gca,'YMinorGrid','off')
     set(gca,'GridAlpha',0.5)
     set(gca,'MinorGridAlpha',0.4)
     set(gca,'Fontsize',fsz)
