@@ -13,7 +13,7 @@ if nargin < 2
     stats_dir_path = '.';
 end
 if nargin < 1
-    file_filter = '*.mat';
+    file_filter = '*_stats.mat';
 end
 
 files = dir([stats_dir_path '\' file_filter]);
@@ -37,9 +37,6 @@ for ff = freqs(:)'
     plotByFreq(ff, files, stats_dir_path, fig_dir_path, png_dir_path);
 end
 
-% all frequencies together
-plotByFreq(freqs, files, stats_dir_path, fig_dir_path, png_dir_path, 'Channel Gain: All Freqs');
-
 end
 
 function plotByFreq(ff, files, stats_dir_path, fig_dir_path, png_dir_path, title_str, show_traces)
@@ -53,7 +50,8 @@ function plotByFreq(ff, files, stats_dir_path, fig_dir_path, png_dir_path, title
     end
 
     run_names = {};
-    d = linspace(1,150,100);
+    %d = linspace(1,150,100);
+    d = logspace(0,2,10);
     polys_str = {};
     pv_arr = [];
     d_all = [];
@@ -95,16 +93,16 @@ function plotByFreq(ff, files, stats_dir_path, fig_dir_path, png_dir_path, title
     if length(ff) == 1
     c = physconst('LightSpeed');
     frii_fspl_dB = 10*log10(d.^2) + 20*log10(ff) + 20*log10(1e9) + 20*log10(4*pi/c);
-    semilogx(d, -frii_fspl_dB, 'b+-')
+    semilogx(d, -frii_fspl_dB, 'b-')
     text(d(floor(length(d)/4)),-frii_fspl_dB(floor(length(d)/4))+5,'FSPL','Color','blue');
     end
     
     hold off
-    if isempty(title_str)
-        title(['Channel Gain for ' sprintf('%0.3f GHz ', ff)])
-    else
-        title(title_str)
-    end
+%     if isempty(title_str)
+%         title(['Channel Gain for ' sprintf('%0.3f GHz ', ff)])
+%     else
+%         title(title_str)
+%     end
     xlabel('distance (m)')
     ylabel('Gain (dB)')
 
