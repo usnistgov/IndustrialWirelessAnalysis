@@ -33,29 +33,28 @@ if length(cir) < 12
     return
 end
 
-a_k = abs(cir);
+t = Ts*(0:length(cir)-1);
+t = t - t(1);  
 
-% normalize the cir for computation
-a_k = a_k/max(a_k);
+% compute the cir magnitude
+cir_mag = abs(cir);
+p = cir_mag.^2;
+p = p/max(p);
 
-% compute the peaks
-%findpeaks(a_k),xlim([1 45])
-[pks, k_pks] = findpeaks(a_k);
-if isempty(pks)
-    return;
-end
-t_k = Ts*k_pks;
-t_k = t_k - t_k(1);  % remove propagation delay
+% delay spread sensitivity to spurious outliers
+pkt = 1/31.6;    % 15 dB from peak is ITU-R 1407-5 recommendation
+p(p<pkt) = 0.0;
 
 % compute the mean excess delay
-tau_u = sum(pks(:)'*t_k(:))/sum(pks.^2);
+tau_u = sum(p(:)'*t(:))/sum(p);
 
 % compute second moment, rms delay spread
 % tau_s = sqrt(sum(pks(:)'*t_k(:).^2)/sum(pks) - tau_u);
-tau_s = sqrt( sum(pks(:)' * (t_k(:)-tau_u).^2) /  sum(pks.^2)  );
+tau_s = sqrt( sum(p(:)' * (t(:)-tau_u).^2) /  sum(p)  );
 
 % compute the delay interval
-T = t_k(end);
+k_t = find(cir_mag>0);
+T = t(k_t(end));
 
 end
 
