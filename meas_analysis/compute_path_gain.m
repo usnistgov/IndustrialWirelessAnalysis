@@ -1,4 +1,4 @@
-function [ G ] = compute_path_gain( cir, Ga_tx, Ga_rx )
+function [ g_dB, g ] = compute_path_gain( cir, Ga_tx, Ga_rx )
 % COMPUTE_PATH_GAIN Compute the path gain of the transmission
 %
 % Outputs:
@@ -14,13 +14,15 @@ function [ G ] = compute_path_gain( cir, Ga_tx, Ga_rx )
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
 
+g_dB = NaN;
+g = NaN;
 if isempty(cir)
-    G = NaN;
     return
 end
 
-cir_mag2 = abs(cir).^2;
-G = 10*log10(sum(cir_mag2)) - Ga_tx - Ga_rx; 
+cir_mag2 = cir(:)'*cir(:);
+g_dB = 10*log10(cir_mag2) - Ga_tx - Ga_rx;
+g = power(10, g_dB/10);
 
 end
 
