@@ -20,7 +20,7 @@
 % Email: rick.candell@nist.gov
 
 K = NaN;
-LOS = 0;
+LOS = NaN;
 k_pks = nan;
 if isempty(cir)
     return
@@ -31,7 +31,6 @@ cir = cir/max(abs(cir));
 
 % calculate the peak value and the time of its occurrance
 cir_mag2 = abs(cir).^2;
-cir_max2 = max(cir_mag2);
 
 % Time-based determination.  The first peak must be greater in magnitude
 % than all of the other peaks in the cir.
@@ -43,22 +42,16 @@ end
 % the los peak must be at or after the PN oversample factor
 [~, max_i] = max(pks);
 if max_i > 1
-    LOS = -1;  % max is not the first peak, so NLOS
-    return;    
+    LOS = -1;  % max is not the first peak, so NLOS  
+else
+    LOS = +1;
 end
-% kpeak = k_pks(1);
-% cir_los = cir_mag2(kpeak);
-% if cir_los ~= cir_max2
-%     LOS = -1;  % max is not the first peak, so NLOS
-%     return;
-% end
 
 % JPL's Wireless Communication Reference Website
 % Chapter: Wireless Channels
 % Section Rician Channels, Indoor Channels
 % URL http://www.wirelesscommunication.nl/reference/chaptr03/ricepdf/measrice.htm
 K = 10*log10(pks(1)/mean(pks(2:end)));
-LOS = +1;
                 
 end
 
