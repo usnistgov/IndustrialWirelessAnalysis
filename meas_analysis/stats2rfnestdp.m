@@ -32,6 +32,10 @@ for ii = 1:length(files)
     stats = load(stats_file_path);
     stats = stats.stats;
     meta = stats.meta;
+    
+    % extract the sample rate
+    Fs = meta.SampleRate_MHz_num*1e6;
+    Ts = 1/Fs;
  
     % extract the average cir struct and write delay profile file
     fout_root = [emu_path '\' file_name(1:end-4)];
@@ -60,7 +64,7 @@ function write_delay_profile(acir_st, ntaps, fout_root)
     end
     
     % open file for writing
-    outfile_path = [fout_root '_' cir_class '.txt'];
+    outfile_path = [fout_root '_' cir_class '.csv'];
     f = fopen(outfile_path,'w');
     if f == -1
         warning(['problem opending file for writing ' outfile_path])
@@ -78,7 +82,7 @@ function write_delay_profile(acir_st, ntaps, fout_root)
     fwrite(f, line);
     
     % line 2: Gain
-    linev = round(32767*cir_mag);
+    linev = floor(32767*cir_mag/sum(cir_mag));
     line = sprintf('%i,', linev);
     line(end) = '';
     line = [line 13 10];
@@ -102,10 +106,11 @@ function write_delay_profile(acir_st, ntaps, fout_root)
     % line 5: Delay
     cir_t = 1e9*cir_t;
     linev = zeros(ntaps,1);
-    linev(1) = cir_t(1);
+    linev(1) = cir_t(1); 
     for ii = 2:ntaps
         linev(ii) = cir_t(ii) - sum(linev(1:ii-1));
     end
+    linev(1) = 16; %+16 is a work around for a HW bug in RFNest
     
     plot([cir_t(:) linev(:)],'+-'), legend('t','d')
     title(['delay ' cir_class ': ' fout_root],'interpreter','none')
@@ -127,6 +132,7 @@ end
 z = round(x/y)*y;
 
 end
+
 
 
 
