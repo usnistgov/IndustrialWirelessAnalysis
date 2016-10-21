@@ -1,0 +1,1685 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ScenarioProps xmlns="http://rfnest.i-a-i.com/rfnest-scenario-beans-v3_2_0.xsd" xmlns:ns2="http://rfnest.i-a-i.com/rfnest-common-types-v3_2_0.xsd" xmlns:ns3="http://rfnest.i-a-i.com/rfnest-scenario-routeinputs-beans-v3_2_0.xsd" xmlns:ns4="http://rfnest.i-a-i.com/rfnest-scenario-routepath-beans-v3_2_0.xsd" xmlns:ns5="http://rfnest.i-a-i.com/rfnest-scenario-alerts-beans-v3_2_0.xsd" xmlns:ns6="http://rfnest.i-a-i.com/rfnest-scenario-scriptevents-beans-v3_2_0.xsd" xmlns:ns7="http://rfnest.i-a-i.com/rfnest-scenario-plugin-beans-v3_2_0.xsd" id="isa100_001" scenarioEndTime="600.0" resourceProfileId="8" external="false">
+    <PlatformType id="sensor" icon="Sensor.png" kinematics_data_set="">
+        <PlatformCategory>Ground</PlatformCategory>
+        <MobilityType>Fixed</MobilityType>
+    </PlatformType>
+    <PlatformType id="test_device" icon="Unknown.png" kinematics_data_set="">
+        <PlatformCategory>Ground</PlatformCategory>
+        <MobilityType>Fixed</MobilityType>
+    </PlatformType>
+    <RadioType id="Wi-Fi" txPower="10.0" centerFrequency="2.4E9" gain="0.0" antennaType="Antenna1.pat" virtual="false" bandwidth="0.0">
+        <ns2:Position x="0.0" y="0.0" z="0.0"/>
+        <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+    </RadioType>
+    <RadioType id="ieee802154" txPower="10.0" centerFrequency="2.4E9" gain="0.0" antennaType="Antenna1.pat" virtual="false" bandwidth="4.0E7">
+        <ns2:Position x="0.0" y="0.0" z="0.0"/>
+        <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+    </RadioType>
+    <RadioType id="vecsig" txPower="0.0" centerFrequency="2.4E9" gain="0.0" antennaType="Antenna1.pat" virtual="false" bandwidth="1.0E8">
+        <ns2:Position x="0.0" y="0.0" z="0.0"/>
+        <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+    </RadioType>
+    <RadioType id="speca" txPower="-50.0" centerFrequency="2.4E9" gain="0.0" antennaType="Antenna1.pat" virtual="false" bandwidth="1.0E7">
+        <ns2:Position x="0.0" y="0.0" z="0.0"/>
+        <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+    </RadioType>
+    <PlatformProps id="PLATFORM.0000015525f4e9e8" displayName="sensor0">
+        <PlatformType id="sensor" icon="Sensor.png" kinematics_data_set="">
+            <PlatformCategory>Ground</PlatformCategory>
+            <MobilityType>Fixed</MobilityType>
+        </PlatformType>
+        <RadioProps id="sensor0" port_num="0">
+            <RadioType id="ieee802154" txPower="10.0" centerFrequency="2.4E9" gain="0.0" antennaType="Antenna1.pat" virtual="false" bandwidth="4.0E7">
+                <ns2:Position x="0.0" y="0.0" z="0.0"/>
+                <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+            </RadioType>
+            <PortProps rfFrequency="2.4E9" samplingOffset="0" configuration="0" fixedPower="20" outputGain="0" noiseGain="32767"/>
+        </RadioProps>
+        <ns3:RouteInputs cruiseSpeed="0.0" loops="false" routeHue="0">
+            <ns2:Position x="2.1919608116149902E-4" y="5.972500278759382E-4" z="1.0"/>
+            <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+        </ns3:RouteInputs>
+        <ns4:RoutePath loops="false" loopStartTime="0.0" startingSpeed="0.0">
+            <ns4:DataPoint time="0.0" speed="0.0" vi="0.0">
+                <ns2:Position x="2.1919608116149902E-4" y="5.972500278759382E-4" z="1.0"/>
+                <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+                <ns2:LocalPosition x="0.0" y="0.0" z="1.0"/>
+            </ns4:DataPoint>
+        </ns4:RoutePath>
+    </PlatformProps>
+    <PlatformProps id="PLATFORM.0000015525f8c837" displayName="sensor1">
+        <PlatformType id="sensor" icon="Sensor.png" kinematics_data_set="">
+            <PlatformCategory>Ground</PlatformCategory>
+            <MobilityType>Fixed</MobilityType>
+        </PlatformType>
+        <RadioProps id="sensor1" port_num="1">
+            <RadioType id="ieee802154" txPower="10.0" centerFrequency="2.4E9" gain="0.0" antennaType="Antenna1.pat" virtual="false" bandwidth="4.0E7">
+                <ns2:Position x="0.0" y="0.0" z="0.0"/>
+                <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+            </RadioType>
+            <PortProps rfFrequency="2.4E9" samplingOffset="0" configuration="0" fixedPower="20" outputGain="0" noiseGain="32767"/>
+        </RadioProps>
+        <ns3:RouteInputs cruiseSpeed="0.0" loops="false" routeHue="0">
+            <ns2:Position x="1.0520219802856445E-4" y="5.047138168697E-4" z="1.0"/>
+            <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+        </ns3:RouteInputs>
+        <ns4:RoutePath loops="false" loopStartTime="0.0" startingSpeed="0.0">
+            <ns4:DataPoint time="0.0" speed="0.0" vi="0.0">
+                <ns2:Position x="1.0520219802856445E-4" y="5.047138168697E-4" z="1.0"/>
+                <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+                <ns2:LocalPosition x="0.0" y="0.0" z="1.0"/>
+            </ns4:DataPoint>
+        </ns4:RoutePath>
+    </PlatformProps>
+    <PlatformProps id="PLATFORM.0000015525f92e5e" displayName="sensor2">
+        <PlatformType id="sensor" icon="Sensor.png" kinematics_data_set="">
+            <PlatformCategory>Ground</PlatformCategory>
+            <MobilityType>Fixed</MobilityType>
+        </PlatformType>
+        <RadioProps id="sensor2" port_num="2">
+            <RadioType id="ieee802154" txPower="10.0" centerFrequency="2.4E9" gain="0.0" antennaType="Antenna1.pat" virtual="false" bandwidth="4.0E7">
+                <ns2:Position x="0.0" y="0.0" z="0.0"/>
+                <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+            </RadioType>
+            <PortProps rfFrequency="2.4E9" samplingOffset="0" configuration="0" fixedPower="20" outputGain="0" noiseGain="32767"/>
+        </RadioProps>
+        <ns3:RouteInputs cruiseSpeed="0.0" loops="false" routeHue="0">
+            <ns2:Position x="6.268918514251709E-4" y="4.3631748699497075E-4" z="1.0"/>
+            <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+        </ns3:RouteInputs>
+        <ns4:RoutePath loops="false" loopStartTime="0.0" startingSpeed="0.0">
+            <ns4:DataPoint time="0.0" speed="0.0" vi="0.0">
+                <ns2:Position x="6.268918514251709E-4" y="4.3631748699497075E-4" z="1.0"/>
+                <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+                <ns2:LocalPosition x="0.0" y="0.0" z="1.0"/>
+            </ns4:DataPoint>
+        </ns4:RoutePath>
+    </PlatformProps>
+    <PlatformProps id="PLATFORM.0000015525f9ac2e" displayName="sensor3">
+        <PlatformType id="sensor" icon="Sensor.png" kinematics_data_set="">
+            <PlatformCategory>Ground</PlatformCategory>
+            <MobilityType>Fixed</MobilityType>
+        </PlatformType>
+        <RadioProps id="sensor3" port_num="3">
+            <RadioType id="ieee802154" txPower="10.0" centerFrequency="2.4E9" gain="0.0" antennaType="Antenna1.pat" virtual="false" bandwidth="4.0E7">
+                <ns2:Position x="0.0" y="0.0" z="0.0"/>
+                <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+            </RadioType>
+            <PortProps rfFrequency="2.4E9" samplingOffset="0" configuration="0" fixedPower="20" outputGain="0" noiseGain="32767"/>
+        </RadioProps>
+        <ns3:RouteInputs cruiseSpeed="0.0" loops="false" routeHue="0">
+            <ns2:Position x="6.537139415740967E-4" y="1.949186756544363E-4" z="1.0"/>
+            <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+        </ns3:RouteInputs>
+        <ns4:RoutePath loops="false" loopStartTime="0.0" startingSpeed="0.0">
+            <ns4:DataPoint time="0.0" speed="0.0" vi="0.0">
+                <ns2:Position x="6.537139415740967E-4" y="1.949186756544363E-4" z="1.0"/>
+                <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+                <ns2:LocalPosition x="0.0" y="0.0" z="1.0"/>
+            </ns4:DataPoint>
+        </ns4:RoutePath>
+    </PlatformProps>
+    <PlatformProps id="PLATFORM.00000155260de109" displayName="isa100_gw">
+        <PlatformType id="sensor" icon="Sensor.png" kinematics_data_set="">
+            <PlatformCategory>Ground</PlatformCategory>
+            <MobilityType>Fixed</MobilityType>
+        </PlatformType>
+        <RadioProps id="isa100_gw" port_num="4">
+            <RadioType id="ieee802154" txPower="10.0" centerFrequency="2.4E9" gain="0.0" antennaType="Antenna1.pat" virtual="false" bandwidth="4.0E7">
+                <ns2:Position x="0.0" y="0.0" z="0.0"/>
+                <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+            </RadioType>
+            <PortProps rfFrequency="2.4E9" samplingOffset="0" configuration="0" fixedPower="26" outputGain="0" noiseGain="32767"/>
+        </RadioProps>
+        <ns3:RouteInputs cruiseSpeed="0.0" loops="false" routeHue="0">
+            <ns2:Position x="4.538893699645996E-4" y="7.461126282102344E-4" z="1.0"/>
+            <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+        </ns3:RouteInputs>
+        <ns4:RoutePath loops="false" loopStartTime="0.0" startingSpeed="0.0">
+            <ns4:DataPoint time="0.0" speed="0.0" vi="0.0">
+                <ns2:Position x="4.538893699645996E-4" y="7.461126282102344E-4" z="1.0"/>
+                <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+                <ns2:LocalPosition x="0.0" y="0.0" z="1.0"/>
+            </ns4:DataPoint>
+        </ns4:RoutePath>
+    </PlatformProps>
+    <PlatformProps id="PLATFORM.00000155260e8a30" displayName="speca">
+        <PlatformType id="test_device" icon="Unknown.png" kinematics_data_set="">
+            <PlatformCategory>Ground</PlatformCategory>
+            <MobilityType>Fixed</MobilityType>
+        </PlatformType>
+        <RadioProps id="speca" port_num="7">
+            <RadioType id="speca" txPower="-50.0" centerFrequency="2.4E9" gain="0.0" antennaType="Antenna1.pat" virtual="false" bandwidth="1.0E7">
+                <ns2:Position x="0.0" y="0.0" z="0.0"/>
+                <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+            </RadioType>
+            <PortProps rfFrequency="2.4E9" samplingOffset="0" configuration="0" fixedPower="0" outputGain="0" noiseGain="32767"/>
+        </RadioProps>
+        <ns3:RouteInputs cruiseSpeed="0.0" loops="false" routeHue="0">
+            <ns2:Position x="4.5120716094970703E-4" y="6.897862388948986E-4" z="1.0"/>
+            <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+        </ns3:RouteInputs>
+        <ns4:RoutePath loops="false" loopStartTime="0.0" startingSpeed="0.0">
+            <ns4:DataPoint time="0.0" speed="0.0" vi="0.0">
+                <ns2:Position x="4.5120716094970703E-4" y="6.897862388948986E-4" z="1.0"/>
+                <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+                <ns2:LocalPosition x="0.0" y="0.0" z="1.0"/>
+            </ns4:DataPoint>
+        </ns4:RoutePath>
+    </PlatformProps>
+    <PlatformProps id="PLATFORM.00000155260ed798" displayName="vecsiggen">
+        <PlatformType id="test_device" icon="Unknown.png" kinematics_data_set="">
+            <PlatformCategory>Ground</PlatformCategory>
+            <MobilityType>Fixed</MobilityType>
+        </PlatformType>
+        <RadioProps id="vecsiggen" port_num="6">
+            <RadioType id="vecsig" txPower="0.0" centerFrequency="2.4E9" gain="0.0" antennaType="Antenna1.pat" virtual="false" bandwidth="1.0E8">
+                <ns2:Position x="0.0" y="0.0" z="0.0"/>
+                <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+            </RadioType>
+            <PortProps rfFrequency="2.4E9" samplingOffset="0" configuration="0" fixedPower="20" outputGain="0" noiseGain="32767"/>
+        </RadioProps>
+        <ns3:RouteInputs cruiseSpeed="0.0" loops="false" routeHue="0">
+            <ns2:Position x="3.7342309951782227E-4" y="2.324696018773824E-4" z="1.0"/>
+            <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+        </ns3:RouteInputs>
+        <ns4:RoutePath loops="false" loopStartTime="0.0" startingSpeed="0.0">
+            <ns4:DataPoint time="0.0" speed="0.0" vi="0.0">
+                <ns2:Position x="3.7342309951782227E-4" y="2.324696018773824E-4" z="1.0"/>
+                <ns2:Orientation roll="0.0" pitch="0.0" yaw="0.0"/>
+                <ns2:LocalPosition x="0.0" y="0.0" z="1.0"/>
+            </ns4:DataPoint>
+        </ns4:RoutePath>
+    </PlatformProps>
+    <GroupProps groupName="Group0" groupId="0" virtual="false" minPort="0" maxPort="7">
+        <disabledPorts>8</disabledPorts>
+        <disabledPorts>9</disabledPorts>
+        <disabledPorts>10</disabledPorts>
+        <disabledPorts>11</disabledPorts>
+        <disabledPorts>12</disabledPorts>
+        <disabledPorts>13</disabledPorts>
+        <disabledPorts>14</disabledPorts>
+        <disabledPorts>15</disabledPorts>
+        <disabledPorts>16</disabledPorts>
+        <disabledPorts>17</disabledPorts>
+        <disabledPorts>18</disabledPorts>
+        <disabledPorts>19</disabledPorts>
+        <disabledPorts>20</disabledPorts>
+        <disabledPorts>21</disabledPorts>
+        <disabledPorts>22</disabledPorts>
+        <disabledPorts>23</disabledPorts>
+        <FrequencyGroupProps frequency="2.4E9">
+            <AutomaticGainControlConfigurationProps enabled="false"/>
+            <GroupCalibrationProps outputAttenuation="0" actualTransmitPowerOffset="31" userTransmitPowerOffset="20" autoLevelDesiredPowerIndBm="0"/>
+            <ChannelModelProps name="1" frequency="2.4E9" delayFile="unknown">
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <LinkType>AirToAir</LinkType>
+            </ChannelModelProps>
+            <ChannelModelProps name="1" frequency="2.4E9" delayFile="unknown">
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <LinkType>AirToGround</LinkType>
+            </ChannelModelProps>
+            <ChannelModelProps name="1" frequency="2.4E9" delayFile="/home/sensor/rfnest/delay_profiles/rician_cir01.csv">
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <parameters>0</parameters>
+                <LinkType>GroundToGround</LinkType>
+            </ChannelModelProps>
+            <GainAndDistanceProps>
+                <LinkType>AirToAir</LinkType>
+                <GainAndDistanceThresholdProps gain="80.0" distance="102.53800525959798" color="120">
+                    <LinkQuality>Good</LinkQuality>
+                </GainAndDistanceThresholdProps>
+                <GainAndDistanceThresholdProps gain="90.0" distance="315.0446467455294" color="60">
+                    <LinkQuality>Fair</LinkQuality>
+                </GainAndDistanceThresholdProps>
+                <GainAndDistanceThresholdProps gain="100.0" distance="967.9643093478737" color="0">
+                    <LinkQuality>Poor</LinkQuality>
+                </GainAndDistanceThresholdProps>
+                <ns2:Point2d x="1.0" y="40.04632895285438"/>
+                <ns2:Point2d x="1.0357" y="40.350913691737155"/>
+                <ns2:Point2d x="1.07267449" y="40.65568524122689"/>
+                <ns2:Point2d x="1.110968969293" y="40.96026877153797"/>
+                <ns2:Point2d x="1.1506305614967602" y="41.26511280383161"/>
+                <ns2:Point2d x="1.1917080725421947" y="41.56940287466775"/>
+                <ns2:Point2d x="1.2342520507319512" y="41.87407434426981"/>
+                <ns2:Point2d x="1.278314848943082" y="42.17877435569142"/>
+                <ns2:Point2d x="1.32395068905035" y="42.48360797564638"/>
+                <ns2:Point2d x="1.3712157286494477" y="42.788194228448475"/>
+                <ns2:Point2d x="1.420168130162233" y="43.093177466168626"/>
+                <ns2:Point2d x="1.470868132409025" y="43.39765299295886"/>
+                <ns2:Point2d x="1.5233781247360272" y="43.702314234735994"/>
+                <ns2:Point2d x="1.5777627237891034" y="44.00737917847267"/>
+                <ns2:Point2d x="1.6340888530283746" y="44.31188224992022"/>
+                <ns2:Point2d x="1.6924258250814876" y="44.61663774757163"/>
+                <ns2:Point2d x="1.752845427036897" y="44.92127818418362"/>
+                <ns2:Point2d x="1.8154220087821142" y="45.22607751531836"/>
+                <ns2:Point2d x="1.8802325744956359" y="45.5306577053323"/>
+                <ns2:Point2d x="1.9473568774051302" y="45.83533094586765"/>
+                <ns2:Point2d x="2.0168775179284935" y="46.139712389816054"/>
+                <ns2:Point2d x="2.088880045318541" y="46.44494453305134"/>
+                <ns2:Point2d x="2.163453062936413" y="46.749099484375364"/>
+                <ns2:Point2d x="2.240688337283243" y="47.054188980626336"/>
+                <ns2:Point2d x="2.320680910924255" y="47.35904841860423"/>
+                <ns2:Point2d x="2.403529219444251" y="47.66325635942268"/>
+                <ns2:Point2d x="2.489335212578411" y="47.96821687377601"/>
+                <ns2:Point2d x="2.5782044796674604" y="48.27264894179096"/>
+                <ns2:Point2d x="2.670246379591589" y="48.577102487428526"/>
+                <ns2:Point2d x="2.765574175343009" y="48.88222413960919"/>
+                <ns2:Point2d x="2.8643051734027547" y="49.18661545524218"/>
+                <ns2:Point2d x="2.966560868093233" y="49.49202946639332"/>
+                <ns2:Point2d x="3.0724670910841616" y="49.795873866920985"/>
+                <ns2:Point2d x="3.1821541662358666" y="50.10116770258506"/>
+                <ns2:Point2d x="3.2957570699704872" y="50.40519879771725"/>
+                <ns2:Point2d x="3.413415597368434" y="50.709998128851986"/>
+                <ns2:Point2d x="3.535274534194487" y="51.01525527952573"/>
+                <ns2:Point2d x="3.6614838350652303" y="51.319248537417636"/>
+                <ns2:Point2d x="3.7921988079770594" y="51.624293408150976"/>
+                <ns2:Point2d x="3.9275803054218406" y="51.928634988911625"/>
+                <ns2:Point2d x="4.0677949223254" y="52.233328968216526"/>
+                <ns2:Point2d x="4.213015201052417" y="52.53801918630315"/>
+                <ns2:Point2d x="4.3634198437299885" y="52.84394868328921"/>
+                <ns2:Point2d x="4.51919393215115" y="53.14746044428166"/>
+                <ns2:Point2d x="4.680529155528946" y="53.453168997516656"/>
+                <ns2:Point2d x="4.84762404638133" y="53.75727774412647"/>
+                <ns2:Point2d x="5.020684224837144" y="54.062987402740745"/>
+                <ns2:Point2d x="5.19992265166383" y="54.366170503824975"/>
+                <ns2:Point2d x="5.38555989032823" y="54.6722252733004"/>
+                <ns2:Point2d x="5.577824378412948" y="54.97688012014815"/>
+                <ns2:Point2d x="5.77695270872229" y="55.28175427320289"/>
+                <ns2:Point2d x="5.983189920423676" y="55.586476110218115"/>
+                <ns2:Point2d x="6.196789800582802" y="55.890633373815746"/>
+                <ns2:Point2d x="6.4180151964636085" y="56.19618083285363"/>
+                <ns2:Point2d x="6.64713833897736" y="56.50037750035322"/>
+                <ns2:Point2d x="6.884441177678852" y="56.80526599847171"/>
+                <ns2:Point2d x="7.130215727721987" y="57.110527101845534"/>
+                <ns2:Point2d x="7.384764429201662" y="57.41303100758688"/>
+                <ns2:Point2d x="7.648400519324162" y="57.71783033872161"/>
+                <ns2:Point2d x="7.921448417864035" y="58.02478417554471"/>
+                <ns2:Point2d x="8.20424412638178" y="58.32756455787295"/>
+                <ns2:Point2d x="8.49713564169361" y="58.631703657958674"/>
+                <ns2:Point2d x="8.800483384102073" y="58.93695885755013"/>
+                <ns2:Point2d x="9.114660640914517" y="59.24305673087038"/>
+                <ns2:Point2d x="9.440054025795165" y="59.54614438801434"/>
+                <ns2:Point2d x="9.777063954516054" y="59.85284317382839"/>
+                <ns2:Point2d x="10.126105137692278" y="60.15554408382879"/>
+                <ns2:Point2d x="10.487607091107893" y="60.46129419922785"/>
+                <ns2:Point2d x="10.862014664260446" y="60.76595284653854"/>
+                <ns2:Point2d x="11.249788587774544" y="61.069003868840234"/>
+                <ns2:Point2d x="11.651406040358097" y="61.37425585332232"/>
+                <ns2:Point2d x="12.067361235998883" y="61.68155598045448"/>
+                <ns2:Point2d x="12.498166032124043" y="61.98603150724472"/>
+                <ns2:Point2d x="12.944350559470873" y="62.29183698425444"/>
+                <ns2:Point2d x="13.406463874443984" y="62.59368408711913"/>
+                <ns2:Point2d x="13.885074634761635" y="62.90118131845822"/>
+                <ns2:Point2d x="14.380771799222625" y="63.20374518705634"/>
+                <ns2:Point2d x="14.894165352454873" y="63.5116317368616"/>
+                <ns2:Point2d x="15.425887055537514" y="63.8134334183394"/>
+                <ns2:Point2d x="15.976591223420204" y="64.12009545292425"/>
+                <ns2:Point2d x="16.546955530096305" y="64.42553795302135"/>
+                <ns2:Point2d x="17.137681842520745" y="64.72922708186691"/>
+                <ns2:Point2d x="17.74949708429874" y="65.03057776105331"/>
+                <ns2:Point2d x="18.383154130208204" y="65.33585325311999"/>
+                <ns2:Point2d x="19.03943273265664" y="65.64509234052022"/>
+                <ns2:Point2d x="19.71914048121248" y="65.95091384166355"/>
+                <ns2:Point2d x="20.423113796391767" y="66.25253753825994"/>
+                <ns2:Point2d x="21.152218958922955" y="66.55706283631093"/>
+                <ns2:Point2d x="21.907353175756505" y="66.86441688263076"/>
+                <ns2:Point2d x="22.689445684131012" y="67.16598239517647"/>
+                <ns2:Point2d x="23.49945889505449" y="67.46956410667816"/>
+                <ns2:Point2d x="24.338389577607938" y="67.77499396952804"/>
+                <ns2:Point2d x="25.207270085528542" y="68.08207936190458"/>
+                <ns2:Point2d x="26.10716962758191" y="68.39060066134849"/>
+                <ns2:Point2d x="27.03919558328659" y="68.69014378074155"/>
+                <ns2:Point2d x="28.00449486560992" y="69.0003871043065"/>
+                <ns2:Point2d x="29.004255332312198" y="69.30029964738274"/>
+                <ns2:Point2d x="30.039707247675747" y="69.61093927927638"/>
+                <ns2:Point2d x="31.112124796417774" y="69.90968980009349"/>
+                <ns2:Point2d x="32.222827651649894" y="70.219082961949"/>
+                <ns2:Point2d x="33.3731825988138" y="70.51480138306886"/>
+                <ns2:Point2d x="34.564605217591456" y="70.82094371994853"/>
+                <ns2:Point2d x="35.79856162385947" y="71.12481571540332"/>
+                <ns2:Point2d x="37.07657027383126" y="71.43970514212161"/>
+                <ns2:Point2d x="38.40020383260703" y="71.73753625014851"/>
+                <ns2:Point2d x="39.771091109431104" y="72.04594342749837"/>
+                <ns2:Point2d x="41.1909190620378" y="72.35020885018177"/>
+                <ns2:Point2d x="42.661434872552555" y="72.64948034453727"/>
+                <ns2:Point2d x="44.18444809750268" y="72.95943229795951"/>
+                <ns2:Point2d x="45.76183289458353" y="73.26363851293176"/>
+                <ns2:Point2d x="47.39553032892016" y="73.56106963525079"/>
+                <ns2:Point2d x="49.08755076166261" y="73.86904793272707"/>
+                <ns2:Point2d x="50.83997632385397" y="74.18834901816291"/>
+                <ns2:Point2d x="52.65496347861556" y="74.48017567046256"/>
+                <ns2:Point2d x="54.53474567480214" y="74.78214894345035"/>
+                <ns2:Point2d x="56.48163609539258" y="75.09499991515816"/>
+                <ns2:Point2d x="58.4980305039981" y="75.3975241627758"/>
+                <ns2:Point2d x="60.58641019299084" y="75.7109665617926"/>
+                <ns2:Point2d x="62.74934503688062" y="76.01250970183463"/>
+                <ns2:Point2d x="64.98949665469726" y="76.32489901420311"/>
+                <ns2:Point2d x="67.30962168526996" y="76.62358367444958"/>
+                <ns2:Point2d x="69.7125751794341" y="76.93290619979061"/>
+                <ns2:Point2d x="72.2013141133399" y="77.22646650890687"/>
+                <ns2:Point2d x="74.77890102718614" y="77.5302964868083"/>
+                <ns2:Point2d x="77.44850779385669" y="77.84514079377989"/>
+                <ns2:Point2d x="80.21341952209738" y="78.14161632012038"/>
+                <ns2:Point2d x="83.07703859903626" y="78.44857015694348"/>
+                <ns2:Point2d x="86.04288887702185" y="78.76677019472922"/>
+                <ns2:Point2d x="89.11462000993154" y="79.06347079367995"/>
+                <ns2:Point2d x="92.29601194428611" y="79.37066590186424"/>
+                <ns2:Point2d x="95.59097957069713" y="79.68912522380762"/>
+                <ns2:Point2d x="99.00357754137103" y="79.98234765478462"/>
+                <ns2:Point2d x="102.53800525959798" y="80.28581571307774"/>
+                <ns2:Point2d x="106.19861204736563" y="80.6002713983344"/>
+                <ns2:Point2d x="109.98990249745658" y="80.8850801806266"/>
+                <ns2:Point2d x="113.9165420166158" y="81.17954531704073"/>
+                <ns2:Point2d x="117.98336256660899" y="81.48434464817547"/>
+                <ns2:Point2d x="122.19536861023694" y="81.8002299918401"/>
+                <ns2:Point2d x="126.5577432696224" y="82.1280383156035"/>
+                <ns2:Point2d x="131.07585470434793" y="82.419212719022"/>
+                <ns2:Point2d x="135.75526271729316" y="82.72048764773952"/>
+                <ns2:Point2d x="140.60172559630053" y="83.03258911435103"/>
+                <ns2:Point2d x="145.62120720008846" y="83.35632433621655"/>
+                <ns2:Point2d x="150.81988429713164" y="83.63563745895301"/>
+                <ns2:Point2d x="156.20415416653924" y="83.92423176740584"/>
+                <ns2:Point2d x="161.7806424702847" y="84.28369918764386"/>
+                <ns2:Point2d x="167.5562114064739" y="84.53188434728025"/>
+                <ns2:Point2d x="173.53796815368503" y="84.85243325596328"/>
+                <ns2:Point2d x="179.73327361677158" y="85.18526668234762"/>
+                <ns2:Point2d x="186.14975148489034" y="85.46103237206029"/>
+                <ns2:Point2d x="192.79529761290095" y="85.81852684745438"/>
+                <ns2:Point2d x="199.67808973768152" y="86.11550926823276"/>
+                <ns2:Point2d x="206.80659754131676" y="86.42300649957184"/>
+                <ns2:Point2d x="214.18959307354177" y="86.74179052160079"/>
+                <ns2:Point2d x="221.83616154626722" y="86.98879928932939"/>
+                <ns2:Point2d x="229.75571251346898" y="87.32946607530499"/>
+                <ns2:Point2d x="237.95799145019984" y="87.5940313899801"/>
+                <ns2:Point2d x="246.453091744972" y="87.9598071042263"/>
+                <ns2:Point2d x="255.2514671202675" y="88.24461588651849"/>
+                <ns2:Point2d x="264.36394449646104" y="88.53908102293263"/>
+                <ns2:Point2d x="273.80173731498473" y="88.84388035406735"/>
+                <ns2:Point2d x="283.57645933712973" y="89.159765697732"/>
+                <ns2:Point2d x="293.7001389354653" y="89.48757402149539"/>
+                <ns2:Point2d x="304.1852338954614" y="89.71319422968917"/>
+                <ns2:Point2d x="315.0446467455294" y="90.06300887289588"/>
+                <ns2:Point2d x="326.2917406343448" y="90.42750527501985"/>
+                <ns2:Point2d x="337.94035577499096" y="90.67928782118027"/>
+                <ns2:Point2d x="350.00482647615814" y="90.93858736446762"/>
+                <ns2:Point2d x="362.499998781357" y="91.34265508623335"/>
+                <ns2:Point2d x="375.4412487378515" y="91.62286937508965"/>
+                <ns2:Point2d x="388.8445013177928" y="91.91242584246211"/>
+                <ns2:Point2d x="402.726250014838" y="92.21196896185516"/>
+                <ns2:Point2d x="417.10357714036775" y="92.52221228542012"/>
+                <ns2:Point2d x="431.9941748442789" y="92.84394868328921"/>
+                <ns2:Point2d x="447.4163668862197" y="93.17806255334627"/>
+                <ns2:Point2d x="463.38913118405776" y="93.52554447473472"/>
+                <ns2:Point2d x="479.93212316732865" y="93.70464132779324"/>
+                <ns2:Point2d x="497.0656999644023" y="94.0743094416735"/>
+                <ns2:Point2d x="514.8109454531315" y="94.46041254558125"/>
+                <ns2:Point2d x="533.1896962058083" y="94.66009696371326"/>
+                <ns2:Point2d x="552.2245683603558" y="95.07378894091028"/>
+                <ns2:Point2d x="571.9389854508205" y="95.28826624874574"/>
+                <ns2:Point2d x="592.3572072314148" y="95.50817393477502"/>
+                <ns2:Point2d x="613.5043595295764" y="95.96543159396509"/>
+                <ns2:Point2d x="635.4064651647823" y="96.20341605995925"/>
+                <ns2:Point2d x="658.090475971165" y="96.44810518829948"/>
+                <ns2:Point2d x="681.5843059633356" y="96.95918727774725"/>
+                <ns2:Point2d x="705.9168656862267" y="97.22646650890688"/>
+                <ns2:Point2d x="731.1180977912251" y="97.50223219861954"/>
+                <ns2:Point2d x="757.2190138823719" y="97.78704098091175"/>
+                <ns2:Point2d x="784.2517326779727" y="98.08150611732587"/>
+                <ns2:Point2d x="812.2495195345763" y="98.38630544846062"/>
+                <ns2:Point2d x="841.2468273819607" y="98.70219079212525"/>
+                <ns2:Point2d x="871.2793391194967" y="99.02999911588864"/>
+                <ns2:Point2d x="902.3840115260629" y="99.37066590186424"/>
+                <ns2:Point2d x="934.5991207375433" y="99.72524124107288"/>
+                <ns2:Point2d x="967.9643093478737" y="100.09490935495315"/>
+                <ns2:Point2d x="1002.5206351915929" y="100.09490935495315"/>
+                <ns2:Point2d x="1038.3106218679327" y="100.48101245886087"/>
+                <ns2:Point2d x="1075.378311068618" y="100.88508018062662"/>
+                <ns2:Point2d x="1113.7693167737677" y="101.30886616202537"/>
+                <ns2:Point2d x="1153.5308813825914" y="101.30886616202537"/>
+                <ns2:Point2d x="1194.71193384795" y="101.75439405624842"/>
+                <ns2:Point2d x="1237.3631498863217" y="102.22401597323888"/>
+                <ns2:Point2d x="1281.5370143372634" y="102.22401597323888"/>
+                <ns2:Point2d x="1327.2878857491037" y="102.72048764773952"/>
+                <ns2:Point2d x="1374.6720632703468" y="103.2470664221865"/>
+                <ns2:Point2d x="1423.7478559290983" y="103.2470664221865"/>
+                <ns2:Point2d x="1474.5756543857672" y="103.80764089419137"/>
+                <ns2:Point2d x="1527.218005247339" y="103.80764089419137"/>
+                <ns2:Point2d x="1581.7396880346691" y="104.40690536174024"/>
+                <ns2:Point2d x="1638.207794897507" y="104.40690536174024"/>
+                <ns2:Point2d x="1696.6918131753482" y="105.05059902916827"/>
+                <ns2:Point2d x="1757.2637109057082" y="105.05059902916827"/>
+                <ns2:Point2d x="1819.9980253850422" y="105.7458411543525"/>
+                <ns2:Point2d x="1884.9719548912883" y="105.7458411543525"/>
+                <ns2:Point2d x="1952.2654536809075" y="106.5016123721405"/>
+                <ns2:Point2d x="2021.961330377316" y="106.5016123721405"/>
+                <ns2:Point2d x="2094.1453498717865" y="106.5016123721405"/>
+                <ns2:Point2d x="2168.9063388622094" y="107.32946607530499"/>
+                <ns2:Point2d x="2246.3362951595905" y="107.32946607530499"/>
+                <ns2:Point2d x="2326.530500896788" y="108.2446158865185"/>
+                <ns2:Point2d x="2409.5876397788034" y="108.2446158865185"/>
+                <ns2:Point2d x="2495.609918518907" y="108.2446158865185"/>
+                <ns2:Point2d x="2584.703192610032" y="109.26766633546613"/>
+                <ns2:Point2d x="2676.9770965862103" y="109.26766633546613"/>
+                <ns2:Point2d x="2772.5451789343383" y="109.26766633546613"/>
+                <ns2:Point2d x="2871.5250418222945" y="109.26766633546613"/>
+                <ns2:Point2d x="2974.0384858153507" y="110.42750527501985"/>
+                <ns2:Point2d x="3080.211659758959" y="110.42750527501985"/>
+                <ns2:Point2d x="3190.1752160123538" y="110.42750527501985"/>
+                <ns2:Point2d x="3304.064471223995" y="110.42750527501985"/>
+                <ns2:Point2d x="3422.019572846692" y="111.76644106763212"/>
+                <ns2:Point2d x="3544.185671597319" y="111.76644106763212"/>
+                <ns2:Point2d x="3670.7131000733434" y="111.76644106763212"/>
+                <ns2:Point2d x="3801.757557745962" y="111.76644106763212"/>
+                <ns2:Point2d x="3937.480302557493" y="113.35006598858462"/>
+                <ns2:Point2d x="4078.048349358796" y="113.35006598858462"/>
+                <ns2:Point2d x="4223.634675430905" y="113.35006598858462"/>
+                <ns2:Point2d x="4374.418433343789" y="113.35006598858462"/>
+                <ns2:Point2d x="4530.585171414163" y="113.35006598858462"/>
+                <ns2:Point2d x="4692.327062033649" y="115.28826624874574"/>
+                <ns2:Point2d x="4859.843138148251" y="115.28826624874574"/>
+                <ns2:Point2d x="5033.339538180144" y="115.28826624874574"/>
+                <ns2:Point2d x="5213.029759693175" y="115.28826624874574"/>
+                <ns2:Point2d x="5399.134922114222" y="115.28826624874574"/>
+                <ns2:Point2d x="5591.8840388337" y="115.28826624874574"/>
+                <ns2:Point2d x="5791.514299020064" y="117.78704098091174"/>
+                <ns2:Point2d x="5998.27135949508" y="117.78704098091174"/>
+                <ns2:Point2d x="6212.409647029055" y="117.78704098091174"/>
+                <ns2:Point2d x="6434.1926714279925" y="117.78704098091174"/>
+                <ns2:Point2d x="6663.893349797972" y="117.78704098091174"/>
+                <ns2:Point2d x="6901.7943423857605" y="117.78704098091174"/>
+                <ns2:Point2d x="7148.1884004089325" y="117.78704098091174"/>
+                <ns2:Point2d x="7403.378726303532" y="117.78704098091174"/>
+                <ns2:Point2d x="7667.679346832569" y="117.78704098091174"/>
+                <ns2:Point2d x="7941.415499514492" y="121.30886616202537"/>
+                <ns2:Point2d x="8224.92403284716" y="121.30886616202537"/>
+                <ns2:Point2d x="8518.553820819805" y="121.30886616202537"/>
+                <ns2:Point2d x="8822.666192223072" y="121.30886616202537"/>
+                <ns2:Point2d x="9137.635375285437" y="121.30886616202537"/>
+                <ns2:Point2d x="9463.848958183129" y="121.30886616202537"/>
+                <ns2:Point2d x="9801.708365990267" y="121.30886616202537"/>
+                <ns2:Point2d x="10151.629354656121" y="121.30886616202537"/>
+                <ns2:Point2d x="10514.042522617345" y="121.30886616202537"/>
+                <ns2:Point2d x="10889.393840674784" y="121.30886616202537"/>
+                <ns2:Point2d x="11278.145200786874" y="121.30886616202537"/>
+                <ns2:Point2d x="11680.774984454965" y="127.32946607530499"/>
+                <ns2:Point2d x="12097.778651400009" y="127.32946607530499"/>
+                <ns2:Point2d x="12529.66934925499" y="127.32946607530499"/>
+                <ns2:Point2d x="12976.978545023394" y="127.32946607530499"/>
+                <ns2:Point2d x="13440.25667908073" y="127.32946607530499"/>
+                <ns2:Point2d x="13920.073842523914" y="127.32946607530499"/>
+                <ns2:Point2d x="14417.02047870202" y="127.32946607530499"/>
+                <ns2:Point2d x="14931.708109791682" y="127.32946607530499"/>
+                <ns2:Point2d x="15464.770089311245" y="127.32946607530499"/>
+                <ns2:Point2d x="16016.862381499657" y="127.32946607530499"/>
+                <ns2:Point2d x="16588.664368519196" y="127.32946607530499"/>
+                <ns2:Point2d x="17180.87968647533" y="127.32946607530499"/>
+                <ns2:Point2d x="17794.237091282503" y="127.32946607530499"/>
+                <ns2:Point2d x="18429.49135544129" y="127.32946607530499"/>
+                <ns2:Point2d x="19087.424196830543" y="127.32946607530499"/>
+                <ns2:Point2d x="19768.845240657396" y="127.32946607530499"/>
+                <ns2:Point2d x="20474.593015748866" y="127.32946607530499"/>
+                <ns2:Point2d x="21205.5359864111" y="127.32946607530499"/>
+                <ns2:Point2d x="21962.57362112598" y="127.32946607530499"/>
+            </GainAndDistanceProps>
+            <GainAndDistanceProps>
+                <LinkType>AirToGround</LinkType>
+                <GainAndDistanceThresholdProps gain="80.0" distance="102.53800525959798" color="120">
+                    <LinkQuality>Good</LinkQuality>
+                </GainAndDistanceThresholdProps>
+                <GainAndDistanceThresholdProps gain="90.0" distance="315.0446467455294" color="60">
+                    <LinkQuality>Fair</LinkQuality>
+                </GainAndDistanceThresholdProps>
+                <GainAndDistanceThresholdProps gain="100.0" distance="967.9643093478737" color="0">
+                    <LinkQuality>Poor</LinkQuality>
+                </GainAndDistanceThresholdProps>
+                <ns2:Point2d x="1.0" y="40.04632895285438"/>
+                <ns2:Point2d x="1.0357" y="40.350913691737155"/>
+                <ns2:Point2d x="1.07267449" y="40.65568524122689"/>
+                <ns2:Point2d x="1.110968969293" y="40.96026877153797"/>
+                <ns2:Point2d x="1.1506305614967602" y="41.26511280383161"/>
+                <ns2:Point2d x="1.1917080725421947" y="41.56940287466775"/>
+                <ns2:Point2d x="1.2342520507319512" y="41.87407434426981"/>
+                <ns2:Point2d x="1.278314848943082" y="42.17877435569142"/>
+                <ns2:Point2d x="1.32395068905035" y="42.48360797564638"/>
+                <ns2:Point2d x="1.3712157286494477" y="42.788194228448475"/>
+                <ns2:Point2d x="1.420168130162233" y="43.093177466168626"/>
+                <ns2:Point2d x="1.470868132409025" y="43.39765299295886"/>
+                <ns2:Point2d x="1.5233781247360272" y="43.702314234735994"/>
+                <ns2:Point2d x="1.5777627237891034" y="44.00737917847267"/>
+                <ns2:Point2d x="1.6340888530283746" y="44.31188224992022"/>
+                <ns2:Point2d x="1.6924258250814876" y="44.61663774757163"/>
+                <ns2:Point2d x="1.752845427036897" y="44.92127818418362"/>
+                <ns2:Point2d x="1.8154220087821142" y="45.22607751531836"/>
+                <ns2:Point2d x="1.8802325744956359" y="45.5306577053323"/>
+                <ns2:Point2d x="1.9473568774051302" y="45.83533094586765"/>
+                <ns2:Point2d x="2.0168775179284935" y="46.139712389816054"/>
+                <ns2:Point2d x="2.088880045318541" y="46.44494453305134"/>
+                <ns2:Point2d x="2.163453062936413" y="46.749099484375364"/>
+                <ns2:Point2d x="2.240688337283243" y="47.054188980626336"/>
+                <ns2:Point2d x="2.320680910924255" y="47.35904841860423"/>
+                <ns2:Point2d x="2.403529219444251" y="47.66325635942268"/>
+                <ns2:Point2d x="2.489335212578411" y="47.96821687377601"/>
+                <ns2:Point2d x="2.5782044796674604" y="48.27264894179096"/>
+                <ns2:Point2d x="2.670246379591589" y="48.577102487428526"/>
+                <ns2:Point2d x="2.765574175343009" y="48.88222413960919"/>
+                <ns2:Point2d x="2.8643051734027547" y="49.18661545524218"/>
+                <ns2:Point2d x="2.966560868093233" y="49.49202946639332"/>
+                <ns2:Point2d x="3.0724670910841616" y="49.795873866920985"/>
+                <ns2:Point2d x="3.1821541662358666" y="50.10116770258506"/>
+                <ns2:Point2d x="3.2957570699704872" y="50.40519879771725"/>
+                <ns2:Point2d x="3.413415597368434" y="50.709998128851986"/>
+                <ns2:Point2d x="3.535274534194487" y="51.01525527952573"/>
+                <ns2:Point2d x="3.6614838350652303" y="51.319248537417636"/>
+                <ns2:Point2d x="3.7921988079770594" y="51.624293408150976"/>
+                <ns2:Point2d x="3.9275803054218406" y="51.928634988911625"/>
+                <ns2:Point2d x="4.0677949223254" y="52.233328968216526"/>
+                <ns2:Point2d x="4.213015201052417" y="52.53801918630315"/>
+                <ns2:Point2d x="4.3634198437299885" y="52.84394868328921"/>
+                <ns2:Point2d x="4.51919393215115" y="53.14746044428166"/>
+                <ns2:Point2d x="4.680529155528946" y="53.453168997516656"/>
+                <ns2:Point2d x="4.84762404638133" y="53.75727774412647"/>
+                <ns2:Point2d x="5.020684224837144" y="54.062987402740745"/>
+                <ns2:Point2d x="5.19992265166383" y="54.366170503824975"/>
+                <ns2:Point2d x="5.38555989032823" y="54.6722252733004"/>
+                <ns2:Point2d x="5.577824378412948" y="54.97688012014815"/>
+                <ns2:Point2d x="5.77695270872229" y="55.28175427320289"/>
+                <ns2:Point2d x="5.983189920423676" y="55.586476110218115"/>
+                <ns2:Point2d x="6.196789800582802" y="55.890633373815746"/>
+                <ns2:Point2d x="6.4180151964636085" y="56.19618083285363"/>
+                <ns2:Point2d x="6.64713833897736" y="56.50037750035322"/>
+                <ns2:Point2d x="6.884441177678852" y="56.80526599847171"/>
+                <ns2:Point2d x="7.130215727721987" y="57.110527101845534"/>
+                <ns2:Point2d x="7.384764429201662" y="57.41303100758688"/>
+                <ns2:Point2d x="7.648400519324162" y="57.71783033872161"/>
+                <ns2:Point2d x="7.921448417864035" y="58.02478417554471"/>
+                <ns2:Point2d x="8.20424412638178" y="58.32756455787295"/>
+                <ns2:Point2d x="8.49713564169361" y="58.631703657958674"/>
+                <ns2:Point2d x="8.800483384102073" y="58.93695885755013"/>
+                <ns2:Point2d x="9.114660640914517" y="59.24305673087038"/>
+                <ns2:Point2d x="9.440054025795165" y="59.54614438801434"/>
+                <ns2:Point2d x="9.777063954516054" y="59.85284317382839"/>
+                <ns2:Point2d x="10.126105137692278" y="60.15554408382879"/>
+                <ns2:Point2d x="10.487607091107893" y="60.46129419922785"/>
+                <ns2:Point2d x="10.862014664260446" y="60.76595284653854"/>
+                <ns2:Point2d x="11.249788587774544" y="61.069003868840234"/>
+                <ns2:Point2d x="11.651406040358097" y="61.37425585332232"/>
+                <ns2:Point2d x="12.067361235998883" y="61.68155598045448"/>
+                <ns2:Point2d x="12.498166032124043" y="61.98603150724472"/>
+                <ns2:Point2d x="12.944350559470873" y="62.29183698425444"/>
+                <ns2:Point2d x="13.406463874443984" y="62.59368408711913"/>
+                <ns2:Point2d x="13.885074634761635" y="62.90118131845822"/>
+                <ns2:Point2d x="14.380771799222625" y="63.20374518705634"/>
+                <ns2:Point2d x="14.894165352454873" y="63.5116317368616"/>
+                <ns2:Point2d x="15.425887055537514" y="63.8134334183394"/>
+                <ns2:Point2d x="15.976591223420204" y="64.12009545292425"/>
+                <ns2:Point2d x="16.546955530096305" y="64.42553795302135"/>
+                <ns2:Point2d x="17.137681842520745" y="64.72922708186691"/>
+                <ns2:Point2d x="17.74949708429874" y="65.03057776105331"/>
+                <ns2:Point2d x="18.383154130208204" y="65.33585325311999"/>
+                <ns2:Point2d x="19.03943273265664" y="65.64509234052022"/>
+                <ns2:Point2d x="19.71914048121248" y="65.95091384166355"/>
+                <ns2:Point2d x="20.423113796391767" y="66.25253753825994"/>
+                <ns2:Point2d x="21.152218958922955" y="66.55706283631093"/>
+                <ns2:Point2d x="21.907353175756505" y="66.86441688263076"/>
+                <ns2:Point2d x="22.689445684131012" y="67.16598239517647"/>
+                <ns2:Point2d x="23.49945889505449" y="67.46956410667816"/>
+                <ns2:Point2d x="24.338389577607938" y="67.77499396952804"/>
+                <ns2:Point2d x="25.207270085528542" y="68.08207936190458"/>
+                <ns2:Point2d x="26.10716962758191" y="68.39060066134849"/>
+                <ns2:Point2d x="27.03919558328659" y="68.69014378074155"/>
+                <ns2:Point2d x="28.00449486560992" y="69.0003871043065"/>
+                <ns2:Point2d x="29.004255332312198" y="69.30029964738274"/>
+                <ns2:Point2d x="30.039707247675747" y="69.61093927927638"/>
+                <ns2:Point2d x="31.112124796417774" y="69.90968980009349"/>
+                <ns2:Point2d x="32.222827651649894" y="70.219082961949"/>
+                <ns2:Point2d x="33.3731825988138" y="70.51480138306886"/>
+                <ns2:Point2d x="34.564605217591456" y="70.82094371994853"/>
+                <ns2:Point2d x="35.79856162385947" y="71.12481571540332"/>
+                <ns2:Point2d x="37.07657027383126" y="71.43970514212161"/>
+                <ns2:Point2d x="38.40020383260703" y="71.73753625014851"/>
+                <ns2:Point2d x="39.771091109431104" y="72.04594342749837"/>
+                <ns2:Point2d x="41.1909190620378" y="72.35020885018177"/>
+                <ns2:Point2d x="42.661434872552555" y="72.64948034453727"/>
+                <ns2:Point2d x="44.18444809750268" y="72.95943229795951"/>
+                <ns2:Point2d x="45.76183289458353" y="73.26363851293176"/>
+                <ns2:Point2d x="47.39553032892016" y="73.56106963525079"/>
+                <ns2:Point2d x="49.08755076166261" y="73.86904793272707"/>
+                <ns2:Point2d x="50.83997632385397" y="74.18834901816291"/>
+                <ns2:Point2d x="52.65496347861556" y="74.48017567046256"/>
+                <ns2:Point2d x="54.53474567480214" y="74.78214894345035"/>
+                <ns2:Point2d x="56.48163609539258" y="75.09499991515816"/>
+                <ns2:Point2d x="58.4980305039981" y="75.3975241627758"/>
+                <ns2:Point2d x="60.58641019299084" y="75.7109665617926"/>
+                <ns2:Point2d x="62.74934503688062" y="76.01250970183463"/>
+                <ns2:Point2d x="64.98949665469726" y="76.32489901420311"/>
+                <ns2:Point2d x="67.30962168526996" y="76.62358367444958"/>
+                <ns2:Point2d x="69.7125751794341" y="76.93290619979061"/>
+                <ns2:Point2d x="72.2013141133399" y="77.22646650890687"/>
+                <ns2:Point2d x="74.77890102718614" y="77.5302964868083"/>
+                <ns2:Point2d x="77.44850779385669" y="77.84514079377989"/>
+                <ns2:Point2d x="80.21341952209738" y="78.14161632012038"/>
+                <ns2:Point2d x="83.07703859903626" y="78.44857015694348"/>
+                <ns2:Point2d x="86.04288887702185" y="78.76677019472922"/>
+                <ns2:Point2d x="89.11462000993154" y="79.06347079367995"/>
+                <ns2:Point2d x="92.29601194428611" y="79.37066590186424"/>
+                <ns2:Point2d x="95.59097957069713" y="79.68912522380762"/>
+                <ns2:Point2d x="99.00357754137103" y="79.98234765478462"/>
+                <ns2:Point2d x="102.53800525959798" y="80.28581571307774"/>
+                <ns2:Point2d x="106.19861204736563" y="80.6002713983344"/>
+                <ns2:Point2d x="109.98990249745658" y="80.8850801806266"/>
+                <ns2:Point2d x="113.9165420166158" y="81.17954531704073"/>
+                <ns2:Point2d x="117.98336256660899" y="81.48434464817547"/>
+                <ns2:Point2d x="122.19536861023694" y="81.8002299918401"/>
+                <ns2:Point2d x="126.5577432696224" y="82.1280383156035"/>
+                <ns2:Point2d x="131.07585470434793" y="82.419212719022"/>
+                <ns2:Point2d x="135.75526271729316" y="82.72048764773952"/>
+                <ns2:Point2d x="140.60172559630053" y="83.03258911435103"/>
+                <ns2:Point2d x="145.62120720008846" y="83.35632433621655"/>
+                <ns2:Point2d x="150.81988429713164" y="83.63563745895301"/>
+                <ns2:Point2d x="156.20415416653924" y="83.92423176740584"/>
+                <ns2:Point2d x="161.7806424702847" y="84.28369918764386"/>
+                <ns2:Point2d x="167.5562114064739" y="84.53188434728025"/>
+                <ns2:Point2d x="173.53796815368503" y="84.85243325596328"/>
+                <ns2:Point2d x="179.73327361677158" y="85.18526668234762"/>
+                <ns2:Point2d x="186.14975148489034" y="85.46103237206029"/>
+                <ns2:Point2d x="192.79529761290095" y="85.81852684745438"/>
+                <ns2:Point2d x="199.67808973768152" y="86.11550926823276"/>
+                <ns2:Point2d x="206.80659754131676" y="86.42300649957184"/>
+                <ns2:Point2d x="214.18959307354177" y="86.74179052160079"/>
+                <ns2:Point2d x="221.83616154626722" y="86.98879928932939"/>
+                <ns2:Point2d x="229.75571251346898" y="87.32946607530499"/>
+                <ns2:Point2d x="237.95799145019984" y="87.5940313899801"/>
+                <ns2:Point2d x="246.453091744972" y="87.9598071042263"/>
+                <ns2:Point2d x="255.2514671202675" y="88.24461588651849"/>
+                <ns2:Point2d x="264.36394449646104" y="88.53908102293263"/>
+                <ns2:Point2d x="273.80173731498473" y="88.84388035406735"/>
+                <ns2:Point2d x="283.57645933712973" y="89.159765697732"/>
+                <ns2:Point2d x="293.7001389354653" y="89.48757402149539"/>
+                <ns2:Point2d x="304.1852338954614" y="89.71319422968917"/>
+                <ns2:Point2d x="315.0446467455294" y="90.06300887289588"/>
+                <ns2:Point2d x="326.2917406343448" y="90.42750527501985"/>
+                <ns2:Point2d x="337.94035577499096" y="90.67928782118027"/>
+                <ns2:Point2d x="350.00482647615814" y="90.93858736446762"/>
+                <ns2:Point2d x="362.499998781357" y="91.34265508623335"/>
+                <ns2:Point2d x="375.4412487378515" y="91.62286937508965"/>
+                <ns2:Point2d x="388.8445013177928" y="91.91242584246211"/>
+                <ns2:Point2d x="402.726250014838" y="92.21196896185516"/>
+                <ns2:Point2d x="417.10357714036775" y="92.52221228542012"/>
+                <ns2:Point2d x="431.9941748442789" y="92.84394868328921"/>
+                <ns2:Point2d x="447.4163668862197" y="93.17806255334627"/>
+                <ns2:Point2d x="463.38913118405776" y="93.52554447473472"/>
+                <ns2:Point2d x="479.93212316732865" y="93.70464132779324"/>
+                <ns2:Point2d x="497.0656999644023" y="94.0743094416735"/>
+                <ns2:Point2d x="514.8109454531315" y="94.46041254558125"/>
+                <ns2:Point2d x="533.1896962058083" y="94.66009696371326"/>
+                <ns2:Point2d x="552.2245683603558" y="95.07378894091028"/>
+                <ns2:Point2d x="571.9389854508205" y="95.28826624874574"/>
+                <ns2:Point2d x="592.3572072314148" y="95.50817393477502"/>
+                <ns2:Point2d x="613.5043595295764" y="95.96543159396509"/>
+                <ns2:Point2d x="635.4064651647823" y="96.20341605995925"/>
+                <ns2:Point2d x="658.090475971165" y="96.44810518829948"/>
+                <ns2:Point2d x="681.5843059633356" y="96.95918727774725"/>
+                <ns2:Point2d x="705.9168656862267" y="97.22646650890688"/>
+                <ns2:Point2d x="731.1180977912251" y="97.50223219861954"/>
+                <ns2:Point2d x="757.2190138823719" y="97.78704098091175"/>
+                <ns2:Point2d x="784.2517326779727" y="98.08150611732587"/>
+                <ns2:Point2d x="812.2495195345763" y="98.38630544846062"/>
+                <ns2:Point2d x="841.2468273819607" y="98.70219079212525"/>
+                <ns2:Point2d x="871.2793391194967" y="99.02999911588864"/>
+                <ns2:Point2d x="902.3840115260629" y="99.37066590186424"/>
+                <ns2:Point2d x="934.5991207375433" y="99.72524124107288"/>
+                <ns2:Point2d x="967.9643093478737" y="100.09490935495315"/>
+                <ns2:Point2d x="1002.5206351915929" y="100.09490935495315"/>
+                <ns2:Point2d x="1038.3106218679327" y="100.48101245886087"/>
+                <ns2:Point2d x="1075.378311068618" y="100.88508018062662"/>
+                <ns2:Point2d x="1113.7693167737677" y="101.30886616202537"/>
+                <ns2:Point2d x="1153.5308813825914" y="101.30886616202537"/>
+                <ns2:Point2d x="1194.71193384795" y="101.75439405624842"/>
+                <ns2:Point2d x="1237.3631498863217" y="102.22401597323888"/>
+                <ns2:Point2d x="1281.5370143372634" y="102.22401597323888"/>
+                <ns2:Point2d x="1327.2878857491037" y="102.72048764773952"/>
+                <ns2:Point2d x="1374.6720632703468" y="103.2470664221865"/>
+                <ns2:Point2d x="1423.7478559290983" y="103.2470664221865"/>
+                <ns2:Point2d x="1474.5756543857672" y="103.80764089419137"/>
+                <ns2:Point2d x="1527.218005247339" y="103.80764089419137"/>
+                <ns2:Point2d x="1581.7396880346691" y="104.40690536174024"/>
+                <ns2:Point2d x="1638.207794897507" y="104.40690536174024"/>
+                <ns2:Point2d x="1696.6918131753482" y="105.05059902916827"/>
+                <ns2:Point2d x="1757.2637109057082" y="105.05059902916827"/>
+                <ns2:Point2d x="1819.9980253850422" y="105.7458411543525"/>
+                <ns2:Point2d x="1884.9719548912883" y="105.7458411543525"/>
+                <ns2:Point2d x="1952.2654536809075" y="106.5016123721405"/>
+                <ns2:Point2d x="2021.961330377316" y="106.5016123721405"/>
+                <ns2:Point2d x="2094.1453498717865" y="106.5016123721405"/>
+                <ns2:Point2d x="2168.9063388622094" y="107.32946607530499"/>
+                <ns2:Point2d x="2246.3362951595905" y="107.32946607530499"/>
+                <ns2:Point2d x="2326.530500896788" y="108.2446158865185"/>
+                <ns2:Point2d x="2409.5876397788034" y="108.2446158865185"/>
+                <ns2:Point2d x="2495.609918518907" y="108.2446158865185"/>
+                <ns2:Point2d x="2584.703192610032" y="109.26766633546613"/>
+                <ns2:Point2d x="2676.9770965862103" y="109.26766633546613"/>
+                <ns2:Point2d x="2772.5451789343383" y="109.26766633546613"/>
+                <ns2:Point2d x="2871.5250418222945" y="109.26766633546613"/>
+                <ns2:Point2d x="2974.0384858153507" y="110.42750527501985"/>
+                <ns2:Point2d x="3080.211659758959" y="110.42750527501985"/>
+                <ns2:Point2d x="3190.1752160123538" y="110.42750527501985"/>
+                <ns2:Point2d x="3304.064471223995" y="110.42750527501985"/>
+                <ns2:Point2d x="3422.019572846692" y="111.76644106763212"/>
+                <ns2:Point2d x="3544.185671597319" y="111.76644106763212"/>
+                <ns2:Point2d x="3670.7131000733434" y="111.76644106763212"/>
+                <ns2:Point2d x="3801.757557745962" y="111.76644106763212"/>
+                <ns2:Point2d x="3937.480302557493" y="113.35006598858462"/>
+                <ns2:Point2d x="4078.048349358796" y="113.35006598858462"/>
+                <ns2:Point2d x="4223.634675430905" y="113.35006598858462"/>
+                <ns2:Point2d x="4374.418433343789" y="113.35006598858462"/>
+                <ns2:Point2d x="4530.585171414163" y="113.35006598858462"/>
+                <ns2:Point2d x="4692.327062033649" y="115.28826624874574"/>
+                <ns2:Point2d x="4859.843138148251" y="115.28826624874574"/>
+                <ns2:Point2d x="5033.339538180144" y="115.28826624874574"/>
+                <ns2:Point2d x="5213.029759693175" y="115.28826624874574"/>
+                <ns2:Point2d x="5399.134922114222" y="115.28826624874574"/>
+                <ns2:Point2d x="5591.8840388337" y="115.28826624874574"/>
+                <ns2:Point2d x="5791.514299020064" y="117.78704098091174"/>
+                <ns2:Point2d x="5998.27135949508" y="117.78704098091174"/>
+                <ns2:Point2d x="6212.409647029055" y="117.78704098091174"/>
+                <ns2:Point2d x="6434.1926714279925" y="117.78704098091174"/>
+                <ns2:Point2d x="6663.893349797972" y="117.78704098091174"/>
+                <ns2:Point2d x="6901.7943423857605" y="117.78704098091174"/>
+                <ns2:Point2d x="7148.1884004089325" y="117.78704098091174"/>
+                <ns2:Point2d x="7403.378726303532" y="117.78704098091174"/>
+                <ns2:Point2d x="7667.679346832569" y="117.78704098091174"/>
+                <ns2:Point2d x="7941.415499514492" y="121.30886616202537"/>
+                <ns2:Point2d x="8224.92403284716" y="121.30886616202537"/>
+                <ns2:Point2d x="8518.553820819805" y="121.30886616202537"/>
+                <ns2:Point2d x="8822.666192223072" y="121.30886616202537"/>
+                <ns2:Point2d x="9137.635375285437" y="121.30886616202537"/>
+                <ns2:Point2d x="9463.848958183129" y="121.30886616202537"/>
+                <ns2:Point2d x="9801.708365990267" y="121.30886616202537"/>
+                <ns2:Point2d x="10151.629354656121" y="121.30886616202537"/>
+                <ns2:Point2d x="10514.042522617345" y="121.30886616202537"/>
+                <ns2:Point2d x="10889.393840674784" y="121.30886616202537"/>
+                <ns2:Point2d x="11278.145200786874" y="121.30886616202537"/>
+                <ns2:Point2d x="11680.774984454965" y="127.32946607530499"/>
+                <ns2:Point2d x="12097.778651400009" y="127.32946607530499"/>
+                <ns2:Point2d x="12529.66934925499" y="127.32946607530499"/>
+                <ns2:Point2d x="12976.978545023394" y="127.32946607530499"/>
+                <ns2:Point2d x="13440.25667908073" y="127.32946607530499"/>
+                <ns2:Point2d x="13920.073842523914" y="127.32946607530499"/>
+                <ns2:Point2d x="14417.02047870202" y="127.32946607530499"/>
+                <ns2:Point2d x="14931.708109791682" y="127.32946607530499"/>
+                <ns2:Point2d x="15464.770089311245" y="127.32946607530499"/>
+                <ns2:Point2d x="16016.862381499657" y="127.32946607530499"/>
+                <ns2:Point2d x="16588.664368519196" y="127.32946607530499"/>
+                <ns2:Point2d x="17180.87968647533" y="127.32946607530499"/>
+                <ns2:Point2d x="17794.237091282503" y="127.32946607530499"/>
+                <ns2:Point2d x="18429.49135544129" y="127.32946607530499"/>
+                <ns2:Point2d x="19087.424196830543" y="127.32946607530499"/>
+                <ns2:Point2d x="19768.845240657396" y="127.32946607530499"/>
+                <ns2:Point2d x="20474.593015748866" y="127.32946607530499"/>
+                <ns2:Point2d x="21205.5359864111" y="127.32946607530499"/>
+                <ns2:Point2d x="21962.57362112598" y="127.32946607530499"/>
+            </GainAndDistanceProps>
+            <GainAndDistanceProps>
+                <LinkType>GroundToGround</LinkType>
+                <GainAndDistanceThresholdProps gain="80.0" distance="102.53800525959798" color="120">
+                    <LinkQuality>Good</LinkQuality>
+                </GainAndDistanceThresholdProps>
+                <GainAndDistanceThresholdProps gain="90.0" distance="315.0446467455294" color="60">
+                    <LinkQuality>Fair</LinkQuality>
+                </GainAndDistanceThresholdProps>
+                <GainAndDistanceThresholdProps gain="100.0" distance="967.9643093478737" color="0">
+                    <LinkQuality>Poor</LinkQuality>
+                </GainAndDistanceThresholdProps>
+                <ns2:Point2d x="1.0" y="40.04632895285438"/>
+                <ns2:Point2d x="1.0357" y="40.350913691737155"/>
+                <ns2:Point2d x="1.07267449" y="40.65568524122689"/>
+                <ns2:Point2d x="1.110968969293" y="40.96026877153797"/>
+                <ns2:Point2d x="1.1506305614967602" y="41.26511280383161"/>
+                <ns2:Point2d x="1.1917080725421947" y="41.56940287466775"/>
+                <ns2:Point2d x="1.2342520507319512" y="41.87407434426981"/>
+                <ns2:Point2d x="1.278314848943082" y="42.17877435569142"/>
+                <ns2:Point2d x="1.32395068905035" y="42.48360797564638"/>
+                <ns2:Point2d x="1.3712157286494477" y="42.788194228448475"/>
+                <ns2:Point2d x="1.420168130162233" y="43.093177466168626"/>
+                <ns2:Point2d x="1.470868132409025" y="43.39765299295886"/>
+                <ns2:Point2d x="1.5233781247360272" y="43.702314234735994"/>
+                <ns2:Point2d x="1.5777627237891034" y="44.00737917847267"/>
+                <ns2:Point2d x="1.6340888530283746" y="44.31188224992022"/>
+                <ns2:Point2d x="1.6924258250814876" y="44.61663774757163"/>
+                <ns2:Point2d x="1.752845427036897" y="44.92127818418362"/>
+                <ns2:Point2d x="1.8154220087821142" y="45.22607751531836"/>
+                <ns2:Point2d x="1.8802325744956359" y="45.5306577053323"/>
+                <ns2:Point2d x="1.9473568774051302" y="45.83533094586765"/>
+                <ns2:Point2d x="2.0168775179284935" y="46.139712389816054"/>
+                <ns2:Point2d x="2.088880045318541" y="46.44494453305134"/>
+                <ns2:Point2d x="2.163453062936413" y="46.749099484375364"/>
+                <ns2:Point2d x="2.240688337283243" y="47.054188980626336"/>
+                <ns2:Point2d x="2.320680910924255" y="47.35904841860423"/>
+                <ns2:Point2d x="2.403529219444251" y="47.66325635942268"/>
+                <ns2:Point2d x="2.489335212578411" y="47.96821687377601"/>
+                <ns2:Point2d x="2.5782044796674604" y="48.27264894179096"/>
+                <ns2:Point2d x="2.670246379591589" y="48.577102487428526"/>
+                <ns2:Point2d x="2.765574175343009" y="48.88222413960919"/>
+                <ns2:Point2d x="2.8643051734027547" y="49.18661545524218"/>
+                <ns2:Point2d x="2.966560868093233" y="49.49202946639332"/>
+                <ns2:Point2d x="3.0724670910841616" y="49.795873866920985"/>
+                <ns2:Point2d x="3.1821541662358666" y="50.10116770258506"/>
+                <ns2:Point2d x="3.2957570699704872" y="50.40519879771725"/>
+                <ns2:Point2d x="3.413415597368434" y="50.709998128851986"/>
+                <ns2:Point2d x="3.535274534194487" y="51.01525527952573"/>
+                <ns2:Point2d x="3.6614838350652303" y="51.319248537417636"/>
+                <ns2:Point2d x="3.7921988079770594" y="51.624293408150976"/>
+                <ns2:Point2d x="3.9275803054218406" y="51.928634988911625"/>
+                <ns2:Point2d x="4.0677949223254" y="52.233328968216526"/>
+                <ns2:Point2d x="4.213015201052417" y="52.53801918630315"/>
+                <ns2:Point2d x="4.3634198437299885" y="52.84394868328921"/>
+                <ns2:Point2d x="4.51919393215115" y="53.14746044428166"/>
+                <ns2:Point2d x="4.680529155528946" y="53.453168997516656"/>
+                <ns2:Point2d x="4.84762404638133" y="53.75727774412647"/>
+                <ns2:Point2d x="5.020684224837144" y="54.062987402740745"/>
+                <ns2:Point2d x="5.19992265166383" y="54.366170503824975"/>
+                <ns2:Point2d x="5.38555989032823" y="54.6722252733004"/>
+                <ns2:Point2d x="5.577824378412948" y="54.97688012014815"/>
+                <ns2:Point2d x="5.77695270872229" y="55.28175427320289"/>
+                <ns2:Point2d x="5.983189920423676" y="55.586476110218115"/>
+                <ns2:Point2d x="6.196789800582802" y="55.890633373815746"/>
+                <ns2:Point2d x="6.4180151964636085" y="56.19618083285363"/>
+                <ns2:Point2d x="6.64713833897736" y="56.50037750035322"/>
+                <ns2:Point2d x="6.884441177678852" y="56.80526599847171"/>
+                <ns2:Point2d x="7.130215727721987" y="57.110527101845534"/>
+                <ns2:Point2d x="7.384764429201662" y="57.41303100758688"/>
+                <ns2:Point2d x="7.648400519324162" y="57.71783033872161"/>
+                <ns2:Point2d x="7.921448417864035" y="58.02478417554471"/>
+                <ns2:Point2d x="8.20424412638178" y="58.32756455787295"/>
+                <ns2:Point2d x="8.49713564169361" y="58.631703657958674"/>
+                <ns2:Point2d x="8.800483384102073" y="58.93695885755013"/>
+                <ns2:Point2d x="9.114660640914517" y="59.24305673087038"/>
+                <ns2:Point2d x="9.440054025795165" y="59.54614438801434"/>
+                <ns2:Point2d x="9.777063954516054" y="59.85284317382839"/>
+                <ns2:Point2d x="10.126105137692278" y="60.15554408382879"/>
+                <ns2:Point2d x="10.487607091107893" y="60.46129419922785"/>
+                <ns2:Point2d x="10.862014664260446" y="60.76595284653854"/>
+                <ns2:Point2d x="11.249788587774544" y="61.069003868840234"/>
+                <ns2:Point2d x="11.651406040358097" y="61.37425585332232"/>
+                <ns2:Point2d x="12.067361235998883" y="61.68155598045448"/>
+                <ns2:Point2d x="12.498166032124043" y="61.98603150724472"/>
+                <ns2:Point2d x="12.944350559470873" y="62.29183698425444"/>
+                <ns2:Point2d x="13.406463874443984" y="62.59368408711913"/>
+                <ns2:Point2d x="13.885074634761635" y="62.90118131845822"/>
+                <ns2:Point2d x="14.380771799222625" y="63.20374518705634"/>
+                <ns2:Point2d x="14.894165352454873" y="63.5116317368616"/>
+                <ns2:Point2d x="15.425887055537514" y="63.8134334183394"/>
+                <ns2:Point2d x="15.976591223420204" y="64.12009545292425"/>
+                <ns2:Point2d x="16.546955530096305" y="64.42553795302135"/>
+                <ns2:Point2d x="17.137681842520745" y="64.72922708186691"/>
+                <ns2:Point2d x="17.74949708429874" y="65.03057776105331"/>
+                <ns2:Point2d x="18.383154130208204" y="65.33585325311999"/>
+                <ns2:Point2d x="19.03943273265664" y="65.64509234052022"/>
+                <ns2:Point2d x="19.71914048121248" y="65.95091384166355"/>
+                <ns2:Point2d x="20.423113796391767" y="66.25253753825994"/>
+                <ns2:Point2d x="21.152218958922955" y="66.55706283631093"/>
+                <ns2:Point2d x="21.907353175756505" y="66.86441688263076"/>
+                <ns2:Point2d x="22.689445684131012" y="67.16598239517647"/>
+                <ns2:Point2d x="23.49945889505449" y="67.46956410667816"/>
+                <ns2:Point2d x="24.338389577607938" y="67.77499396952804"/>
+                <ns2:Point2d x="25.207270085528542" y="68.08207936190458"/>
+                <ns2:Point2d x="26.10716962758191" y="68.39060066134849"/>
+                <ns2:Point2d x="27.03919558328659" y="68.69014378074155"/>
+                <ns2:Point2d x="28.00449486560992" y="69.0003871043065"/>
+                <ns2:Point2d x="29.004255332312198" y="69.30029964738274"/>
+                <ns2:Point2d x="30.039707247675747" y="69.61093927927638"/>
+                <ns2:Point2d x="31.112124796417774" y="69.90968980009349"/>
+                <ns2:Point2d x="32.222827651649894" y="70.219082961949"/>
+                <ns2:Point2d x="33.3731825988138" y="70.51480138306886"/>
+                <ns2:Point2d x="34.564605217591456" y="70.82094371994853"/>
+                <ns2:Point2d x="35.79856162385947" y="71.12481571540332"/>
+                <ns2:Point2d x="37.07657027383126" y="71.43970514212161"/>
+                <ns2:Point2d x="38.40020383260703" y="71.73753625014851"/>
+                <ns2:Point2d x="39.771091109431104" y="72.04594342749837"/>
+                <ns2:Point2d x="41.1909190620378" y="72.35020885018177"/>
+                <ns2:Point2d x="42.661434872552555" y="72.64948034453727"/>
+                <ns2:Point2d x="44.18444809750268" y="72.95943229795951"/>
+                <ns2:Point2d x="45.76183289458353" y="73.26363851293176"/>
+                <ns2:Point2d x="47.39553032892016" y="73.56106963525079"/>
+                <ns2:Point2d x="49.08755076166261" y="73.86904793272707"/>
+                <ns2:Point2d x="50.83997632385397" y="74.18834901816291"/>
+                <ns2:Point2d x="52.65496347861556" y="74.48017567046256"/>
+                <ns2:Point2d x="54.53474567480214" y="74.78214894345035"/>
+                <ns2:Point2d x="56.48163609539258" y="75.09499991515816"/>
+                <ns2:Point2d x="58.4980305039981" y="75.3975241627758"/>
+                <ns2:Point2d x="60.58641019299084" y="75.7109665617926"/>
+                <ns2:Point2d x="62.74934503688062" y="76.01250970183463"/>
+                <ns2:Point2d x="64.98949665469726" y="76.32489901420311"/>
+                <ns2:Point2d x="67.30962168526996" y="76.62358367444958"/>
+                <ns2:Point2d x="69.7125751794341" y="76.93290619979061"/>
+                <ns2:Point2d x="72.2013141133399" y="77.22646650890687"/>
+                <ns2:Point2d x="74.77890102718614" y="77.5302964868083"/>
+                <ns2:Point2d x="77.44850779385669" y="77.84514079377989"/>
+                <ns2:Point2d x="80.21341952209738" y="78.14161632012038"/>
+                <ns2:Point2d x="83.07703859903626" y="78.44857015694348"/>
+                <ns2:Point2d x="86.04288887702185" y="78.76677019472922"/>
+                <ns2:Point2d x="89.11462000993154" y="79.06347079367995"/>
+                <ns2:Point2d x="92.29601194428611" y="79.37066590186424"/>
+                <ns2:Point2d x="95.59097957069713" y="79.68912522380762"/>
+                <ns2:Point2d x="99.00357754137103" y="79.98234765478462"/>
+                <ns2:Point2d x="102.53800525959798" y="80.28581571307774"/>
+                <ns2:Point2d x="106.19861204736563" y="80.6002713983344"/>
+                <ns2:Point2d x="109.98990249745658" y="80.8850801806266"/>
+                <ns2:Point2d x="113.9165420166158" y="81.17954531704073"/>
+                <ns2:Point2d x="117.98336256660899" y="81.48434464817547"/>
+                <ns2:Point2d x="122.19536861023694" y="81.8002299918401"/>
+                <ns2:Point2d x="126.5577432696224" y="82.1280383156035"/>
+                <ns2:Point2d x="131.07585470434793" y="82.419212719022"/>
+                <ns2:Point2d x="135.75526271729316" y="82.72048764773952"/>
+                <ns2:Point2d x="140.60172559630053" y="83.03258911435103"/>
+                <ns2:Point2d x="145.62120720008846" y="83.35632433621655"/>
+                <ns2:Point2d x="150.81988429713164" y="83.63563745895301"/>
+                <ns2:Point2d x="156.20415416653924" y="83.92423176740584"/>
+                <ns2:Point2d x="161.7806424702847" y="84.28369918764386"/>
+                <ns2:Point2d x="167.5562114064739" y="84.53188434728025"/>
+                <ns2:Point2d x="173.53796815368503" y="84.85243325596328"/>
+                <ns2:Point2d x="179.73327361677158" y="85.18526668234762"/>
+                <ns2:Point2d x="186.14975148489034" y="85.46103237206029"/>
+                <ns2:Point2d x="192.79529761290095" y="85.81852684745438"/>
+                <ns2:Point2d x="199.67808973768152" y="86.11550926823276"/>
+                <ns2:Point2d x="206.80659754131676" y="86.42300649957184"/>
+                <ns2:Point2d x="214.18959307354177" y="86.74179052160079"/>
+                <ns2:Point2d x="221.83616154626722" y="86.98879928932939"/>
+                <ns2:Point2d x="229.75571251346898" y="87.32946607530499"/>
+                <ns2:Point2d x="237.95799145019984" y="87.5940313899801"/>
+                <ns2:Point2d x="246.453091744972" y="87.9598071042263"/>
+                <ns2:Point2d x="255.2514671202675" y="88.24461588651849"/>
+                <ns2:Point2d x="264.36394449646104" y="88.53908102293263"/>
+                <ns2:Point2d x="273.80173731498473" y="88.84388035406735"/>
+                <ns2:Point2d x="283.57645933712973" y="89.159765697732"/>
+                <ns2:Point2d x="293.7001389354653" y="89.48757402149539"/>
+                <ns2:Point2d x="304.1852338954614" y="89.71319422968917"/>
+                <ns2:Point2d x="315.0446467455294" y="90.06300887289588"/>
+                <ns2:Point2d x="326.2917406343448" y="90.42750527501985"/>
+                <ns2:Point2d x="337.94035577499096" y="90.67928782118027"/>
+                <ns2:Point2d x="350.00482647615814" y="90.93858736446762"/>
+                <ns2:Point2d x="362.499998781357" y="91.34265508623335"/>
+                <ns2:Point2d x="375.4412487378515" y="91.62286937508965"/>
+                <ns2:Point2d x="388.8445013177928" y="91.91242584246211"/>
+                <ns2:Point2d x="402.726250014838" y="92.21196896185516"/>
+                <ns2:Point2d x="417.10357714036775" y="92.52221228542012"/>
+                <ns2:Point2d x="431.9941748442789" y="92.84394868328921"/>
+                <ns2:Point2d x="447.4163668862197" y="93.17806255334627"/>
+                <ns2:Point2d x="463.38913118405776" y="93.52554447473472"/>
+                <ns2:Point2d x="479.93212316732865" y="93.70464132779324"/>
+                <ns2:Point2d x="497.0656999644023" y="94.0743094416735"/>
+                <ns2:Point2d x="514.8109454531315" y="94.46041254558125"/>
+                <ns2:Point2d x="533.1896962058083" y="94.66009696371326"/>
+                <ns2:Point2d x="552.2245683603558" y="95.07378894091028"/>
+                <ns2:Point2d x="571.9389854508205" y="95.28826624874574"/>
+                <ns2:Point2d x="592.3572072314148" y="95.50817393477502"/>
+                <ns2:Point2d x="613.5043595295764" y="95.96543159396509"/>
+                <ns2:Point2d x="635.4064651647823" y="96.20341605995925"/>
+                <ns2:Point2d x="658.090475971165" y="96.44810518829948"/>
+                <ns2:Point2d x="681.5843059633356" y="96.95918727774725"/>
+                <ns2:Point2d x="705.9168656862267" y="97.22646650890688"/>
+                <ns2:Point2d x="731.1180977912251" y="97.50223219861954"/>
+                <ns2:Point2d x="757.2190138823719" y="97.78704098091175"/>
+                <ns2:Point2d x="784.2517326779727" y="98.08150611732587"/>
+                <ns2:Point2d x="812.2495195345763" y="98.38630544846062"/>
+                <ns2:Point2d x="841.2468273819607" y="98.70219079212525"/>
+                <ns2:Point2d x="871.2793391194967" y="99.02999911588864"/>
+                <ns2:Point2d x="902.3840115260629" y="99.37066590186424"/>
+                <ns2:Point2d x="934.5991207375433" y="99.72524124107288"/>
+                <ns2:Point2d x="967.9643093478737" y="100.09490935495315"/>
+                <ns2:Point2d x="1002.5206351915929" y="100.09490935495315"/>
+                <ns2:Point2d x="1038.3106218679327" y="100.48101245886087"/>
+                <ns2:Point2d x="1075.378311068618" y="100.88508018062662"/>
+                <ns2:Point2d x="1113.7693167737677" y="101.30886616202537"/>
+                <ns2:Point2d x="1153.5308813825914" y="101.30886616202537"/>
+                <ns2:Point2d x="1194.71193384795" y="101.75439405624842"/>
+                <ns2:Point2d x="1237.3631498863217" y="102.22401597323888"/>
+                <ns2:Point2d x="1281.5370143372634" y="102.22401597323888"/>
+                <ns2:Point2d x="1327.2878857491037" y="102.72048764773952"/>
+                <ns2:Point2d x="1374.6720632703468" y="103.2470664221865"/>
+                <ns2:Point2d x="1423.7478559290983" y="103.2470664221865"/>
+                <ns2:Point2d x="1474.5756543857672" y="103.80764089419137"/>
+                <ns2:Point2d x="1527.218005247339" y="103.80764089419137"/>
+                <ns2:Point2d x="1581.7396880346691" y="104.40690536174024"/>
+                <ns2:Point2d x="1638.207794897507" y="104.40690536174024"/>
+                <ns2:Point2d x="1696.6918131753482" y="105.05059902916827"/>
+                <ns2:Point2d x="1757.2637109057082" y="105.05059902916827"/>
+                <ns2:Point2d x="1819.9980253850422" y="105.7458411543525"/>
+                <ns2:Point2d x="1884.9719548912883" y="105.7458411543525"/>
+                <ns2:Point2d x="1952.2654536809075" y="106.5016123721405"/>
+                <ns2:Point2d x="2021.961330377316" y="106.5016123721405"/>
+                <ns2:Point2d x="2094.1453498717865" y="106.5016123721405"/>
+                <ns2:Point2d x="2168.9063388622094" y="107.32946607530499"/>
+                <ns2:Point2d x="2246.3362951595905" y="107.32946607530499"/>
+                <ns2:Point2d x="2326.530500896788" y="108.2446158865185"/>
+                <ns2:Point2d x="2409.5876397788034" y="108.2446158865185"/>
+                <ns2:Point2d x="2495.609918518907" y="108.2446158865185"/>
+                <ns2:Point2d x="2584.703192610032" y="109.26766633546613"/>
+                <ns2:Point2d x="2676.9770965862103" y="109.26766633546613"/>
+                <ns2:Point2d x="2772.5451789343383" y="109.26766633546613"/>
+                <ns2:Point2d x="2871.5250418222945" y="109.26766633546613"/>
+                <ns2:Point2d x="2974.0384858153507" y="110.42750527501985"/>
+                <ns2:Point2d x="3080.211659758959" y="110.42750527501985"/>
+                <ns2:Point2d x="3190.1752160123538" y="110.42750527501985"/>
+                <ns2:Point2d x="3304.064471223995" y="110.42750527501985"/>
+                <ns2:Point2d x="3422.019572846692" y="111.76644106763212"/>
+                <ns2:Point2d x="3544.185671597319" y="111.76644106763212"/>
+                <ns2:Point2d x="3670.7131000733434" y="111.76644106763212"/>
+                <ns2:Point2d x="3801.757557745962" y="111.76644106763212"/>
+                <ns2:Point2d x="3937.480302557493" y="113.35006598858462"/>
+                <ns2:Point2d x="4078.048349358796" y="113.35006598858462"/>
+                <ns2:Point2d x="4223.634675430905" y="113.35006598858462"/>
+                <ns2:Point2d x="4374.418433343789" y="113.35006598858462"/>
+                <ns2:Point2d x="4530.585171414163" y="113.35006598858462"/>
+                <ns2:Point2d x="4692.327062033649" y="115.28826624874574"/>
+                <ns2:Point2d x="4859.843138148251" y="115.28826624874574"/>
+                <ns2:Point2d x="5033.339538180144" y="115.28826624874574"/>
+                <ns2:Point2d x="5213.029759693175" y="115.28826624874574"/>
+                <ns2:Point2d x="5399.134922114222" y="115.28826624874574"/>
+                <ns2:Point2d x="5591.8840388337" y="115.28826624874574"/>
+                <ns2:Point2d x="5791.514299020064" y="117.78704098091174"/>
+                <ns2:Point2d x="5998.27135949508" y="117.78704098091174"/>
+                <ns2:Point2d x="6212.409647029055" y="117.78704098091174"/>
+                <ns2:Point2d x="6434.1926714279925" y="117.78704098091174"/>
+                <ns2:Point2d x="6663.893349797972" y="117.78704098091174"/>
+                <ns2:Point2d x="6901.7943423857605" y="117.78704098091174"/>
+                <ns2:Point2d x="7148.1884004089325" y="117.78704098091174"/>
+                <ns2:Point2d x="7403.378726303532" y="117.78704098091174"/>
+                <ns2:Point2d x="7667.679346832569" y="117.78704098091174"/>
+                <ns2:Point2d x="7941.415499514492" y="121.30886616202537"/>
+                <ns2:Point2d x="8224.92403284716" y="121.30886616202537"/>
+                <ns2:Point2d x="8518.553820819805" y="121.30886616202537"/>
+                <ns2:Point2d x="8822.666192223072" y="121.30886616202537"/>
+                <ns2:Point2d x="9137.635375285437" y="121.30886616202537"/>
+                <ns2:Point2d x="9463.848958183129" y="121.30886616202537"/>
+                <ns2:Point2d x="9801.708365990267" y="121.30886616202537"/>
+                <ns2:Point2d x="10151.629354656121" y="121.30886616202537"/>
+                <ns2:Point2d x="10514.042522617345" y="121.30886616202537"/>
+                <ns2:Point2d x="10889.393840674784" y="121.30886616202537"/>
+                <ns2:Point2d x="11278.145200786874" y="121.30886616202537"/>
+                <ns2:Point2d x="11680.774984454965" y="127.32946607530499"/>
+                <ns2:Point2d x="12097.778651400009" y="127.32946607530499"/>
+                <ns2:Point2d x="12529.66934925499" y="127.32946607530499"/>
+                <ns2:Point2d x="12976.978545023394" y="127.32946607530499"/>
+                <ns2:Point2d x="13440.25667908073" y="127.32946607530499"/>
+                <ns2:Point2d x="13920.073842523914" y="127.32946607530499"/>
+                <ns2:Point2d x="14417.02047870202" y="127.32946607530499"/>
+                <ns2:Point2d x="14931.708109791682" y="127.32946607530499"/>
+                <ns2:Point2d x="15464.770089311245" y="127.32946607530499"/>
+                <ns2:Point2d x="16016.862381499657" y="127.32946607530499"/>
+                <ns2:Point2d x="16588.664368519196" y="127.32946607530499"/>
+                <ns2:Point2d x="17180.87968647533" y="127.32946607530499"/>
+                <ns2:Point2d x="17794.237091282503" y="127.32946607530499"/>
+                <ns2:Point2d x="18429.49135544129" y="127.32946607530499"/>
+                <ns2:Point2d x="19087.424196830543" y="127.32946607530499"/>
+                <ns2:Point2d x="19768.845240657396" y="127.32946607530499"/>
+                <ns2:Point2d x="20474.593015748866" y="127.32946607530499"/>
+                <ns2:Point2d x="21205.5359864111" y="127.32946607530499"/>
+                <ns2:Point2d x="21962.57362112598" y="127.32946607530499"/>
+            </GainAndDistanceProps>
+        </FrequencyGroupProps>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group1" groupId="1" virtual="true" minPort="24" maxPort="47">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group2" groupId="2" virtual="true" minPort="48" maxPort="71">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group3" groupId="3" virtual="true" minPort="72" maxPort="95">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group4" groupId="4" virtual="true" minPort="96" maxPort="145">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group5" groupId="5" virtual="true" minPort="146" maxPort="195">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group6" groupId="6" virtual="true" minPort="196" maxPort="245">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group7" groupId="7" virtual="true" minPort="246" maxPort="295">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group8" groupId="8" virtual="true" minPort="296" maxPort="345">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group9" groupId="9" virtual="true" minPort="346" maxPort="395">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group10" groupId="10" virtual="true" minPort="396" maxPort="445">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group11" groupId="11" virtual="true" minPort="446" maxPort="495">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group12" groupId="12" virtual="true" minPort="496" maxPort="545">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group13" groupId="13" virtual="true" minPort="546" maxPort="595">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group14" groupId="14" virtual="true" minPort="596" maxPort="645">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group15" groupId="15" virtual="true" minPort="646" maxPort="695">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group16" groupId="16" virtual="true" minPort="696" maxPort="745">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group17" groupId="17" virtual="true" minPort="746" maxPort="795">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group18" groupId="18" virtual="true" minPort="796" maxPort="845">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group19" groupId="19" virtual="true" minPort="846" maxPort="895">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group20" groupId="20" virtual="true" minPort="896" maxPort="945">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group21" groupId="21" virtual="true" minPort="946" maxPort="995">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group22" groupId="22" virtual="true" minPort="996" maxPort="1045">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+    <GroupProps groupName="Group23" groupId="23" virtual="true" minPort="1046" maxPort="1095">
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+        <longDelays>0</longDelays>
+    </GroupProps>
+	
+	<ns7:PluginProps pluginId="com.iai.rfnest.cir.core" version="3.0.0">
+        <ns7:xmlString>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;yes&quot;?&gt;
+&lt;Scenario xmlns=&quot;http://rfnest.i-a-i.com/rfnest-cir-beans-v3_0_0.xsd&quot;&gt;
+    &lt;version&gt;3.0.0&lt;/version&gt;
+    &lt;enabled&gt;true&lt;/enabled&gt;
+    &lt;updateRate&gt;30.0&lt;/updateRate&gt;
+    &lt;seed&gt;12&lt;/seed&gt;
+    &lt;classModels&gt;
+        &lt;classModel&gt;
+            &lt;id&gt;0&lt;/id&gt;
+            &lt;parameters/&gt;
+        &lt;/classModel&gt;
+        &lt;classModel&gt;
+            &lt;id&gt;1&lt;/id&gt;
+            &lt;parameters/&gt;
+        &lt;/classModel&gt;
+        &lt;classModel&gt;
+            &lt;id&gt;2&lt;/id&gt;
+            &lt;parameters&gt;
+                &lt;parameter&gt;
+                    &lt;name&gt;2.0&lt;/name&gt;
+                    &lt;value&gt;11&lt;/value&gt;
+                &lt;/parameter&gt;
+            &lt;/parameters&gt;
+        &lt;/classModel&gt;
+    &lt;/classModels&gt;
+&lt;/Scenario&gt;
+</ns7:xmlString>
+    </ns7:PluginProps>
+
+	
+    <appLayoutXml>&lt;?xml version='1.0'?&gt;
+&lt;layout&gt;
+	&lt;current&gt;
+		&lt;roots&gt;
+			&lt;root name=&quot;center&quot;&gt;
+				&lt;layout factory=&quot;predefined&quot;&gt;
+					&lt;replacement id=&quot;rootcenter&quot;/&gt;
+					&lt;delegate id=&quot;delegate_SplitDockStationFactory&quot;&gt;
+						&lt;fullscreen-action&gt;true&lt;/fullscreen-action&gt;
+						&lt;node nodeId=&quot;1465220413531&quot; orientation=&quot;HORIZONTAL&quot; divider=&quot;0.22570123939986952&quot;&gt;
+							&lt;node nodeId=&quot;1465220413533&quot; orientation=&quot;VERTICAL&quot; divider=&quot;0.35224274406332456&quot;&gt;
+								&lt;leaf id=&quot;0&quot; nodeId=&quot;1465220413588&quot;&gt;
+									&lt;placeholder-map&gt;
+										&lt;version&gt;0&lt;/version&gt;
+										&lt;format&gt;dock.PlaceholderList&lt;/format&gt;
+									&lt;/placeholder-map&gt;
+								&lt;/leaf&gt;
+								&lt;leaf id=&quot;2&quot; nodeId=&quot;1465220413590&quot;&gt;
+									&lt;placeholder-map&gt;
+										&lt;version&gt;0&lt;/version&gt;
+										&lt;format&gt;dock.PlaceholderList&lt;/format&gt;
+									&lt;/placeholder-map&gt;
+								&lt;/leaf&gt;
+							&lt;/node&gt;
+							&lt;node nodeId=&quot;1465220413592&quot; orientation=&quot;VERTICAL&quot; divider=&quot;0.841688654353562&quot;&gt;
+								&lt;leaf id=&quot;1&quot; nodeId=&quot;1465220413596&quot;&gt;
+									&lt;placeholder-map&gt;
+										&lt;version&gt;0&lt;/version&gt;
+										&lt;format&gt;dock.PlaceholderList&lt;/format&gt;
+									&lt;/placeholder-map&gt;
+								&lt;/leaf&gt;
+								&lt;leaf id=&quot;3&quot; nodeId=&quot;1465220413604&quot;&gt;
+									&lt;placeholder-map&gt;
+										&lt;version&gt;0&lt;/version&gt;
+										&lt;format&gt;dock.PlaceholderList&lt;/format&gt;
+									&lt;/placeholder-map&gt;
+								&lt;/leaf&gt;
+							&lt;/node&gt;
+						&lt;/node&gt;
+					&lt;/delegate&gt;
+				&lt;/layout&gt;
+				&lt;children ignore=&quot;false&quot;&gt;
+					&lt;child&gt;
+						&lt;layout factory=&quot;delegate_StackDockStationFactory&quot;&gt;
+							&lt;selected&gt;1&lt;/selected&gt;
+							&lt;placeholders&gt;
+								&lt;version&gt;0&lt;/version&gt;
+								&lt;format&gt;dock.PlaceholderList&lt;/format&gt;
+								&lt;entry&gt;
+									&lt;key shared=&quot;false&quot;/&gt;
+									&lt;item key=&quot;convert&quot; type=&quot;b&quot;&gt;true&lt;/item&gt;
+									&lt;item key=&quot;convert-keys&quot; type=&quot;a&quot;&gt;
+										&lt;item type=&quot;s&quot;&gt;id&lt;/item&gt;
+										&lt;item type=&quot;s&quot;&gt;index&lt;/item&gt;
+									&lt;/item&gt;
+									&lt;item key=&quot;dock.id&quot; type=&quot;i&quot;&gt;0&lt;/item&gt;
+									&lt;item key=&quot;dock.index&quot; type=&quot;i&quot;&gt;0&lt;/item&gt;
+								&lt;/entry&gt;
+								&lt;entry&gt;
+									&lt;key shared=&quot;false&quot;/&gt;
+									&lt;item key=&quot;convert&quot; type=&quot;b&quot;&gt;true&lt;/item&gt;
+									&lt;item key=&quot;convert-keys&quot; type=&quot;a&quot;&gt;
+										&lt;item type=&quot;s&quot;&gt;id&lt;/item&gt;
+										&lt;item type=&quot;s&quot;&gt;index&lt;/item&gt;
+									&lt;/item&gt;
+									&lt;item key=&quot;dock.id&quot; type=&quot;i&quot;&gt;1&lt;/item&gt;
+									&lt;item key=&quot;dock.index&quot; type=&quot;i&quot;&gt;1&lt;/item&gt;
+								&lt;/entry&gt;
+								&lt;entry&gt;
+									&lt;key shared=&quot;false&quot;/&gt;
+									&lt;item key=&quot;convert&quot; type=&quot;b&quot;&gt;true&lt;/item&gt;
+									&lt;item key=&quot;convert-keys&quot; type=&quot;a&quot;&gt;
+										&lt;item type=&quot;s&quot;&gt;id&lt;/item&gt;
+										&lt;item type=&quot;s&quot;&gt;index&lt;/item&gt;
+									&lt;/item&gt;
+									&lt;item key=&quot;dock.id&quot; type=&quot;i&quot;&gt;2&lt;/item&gt;
+									&lt;item key=&quot;dock.index&quot; type=&quot;i&quot;&gt;2&lt;/item&gt;
+								&lt;/entry&gt;
+							&lt;/placeholders&gt;
+						&lt;/layout&gt;
+						&lt;children ignore=&quot;false&quot;&gt;
+							&lt;child&gt;
+								&lt;layout factory=&quot;predefined&quot;&gt;
+									&lt;replacement id=&quot;dockablePlatforms&quot;/&gt;
+									&lt;delegate id=&quot;delegate_serializing_dock_factory&quot;&gt;
+										&lt;serialized_view&gt;aced0005740009506c6174666f726d7374002b636f6d2e6961692e72666e6573742e776f726b62656e63682e76696577732e506c6174666f726d56696577&lt;/serialized_view&gt;
+									&lt;/delegate&gt;
+								&lt;/layout&gt;
+								&lt;children ignore=&quot;false&quot;/&gt;
+							&lt;/child&gt;
+							&lt;child&gt;
+								&lt;layout factory=&quot;predefined&quot;&gt;
+									&lt;replacement id=&quot;dockableGroups&quot;/&gt;
+									&lt;delegate id=&quot;delegate_serializing_dock_factory&quot;&gt;
+										&lt;serialized_view&gt;aced000574000647726f757073740028636f6d2e6961692e72666e6573742e776f726b62656e63682e76696577732e47726f757056696577&lt;/serialized_view&gt;
+									&lt;/delegate&gt;
+								&lt;/layout&gt;
+								&lt;children ignore=&quot;false&quot;/&gt;
+							&lt;/child&gt;
+							&lt;child&gt;
+								&lt;layout factory=&quot;predefined&quot;&gt;
+									&lt;replacement id=&quot;dockableLinks&quot;/&gt;
+									&lt;delegate id=&quot;delegate_serializing_dock_factory&quot;&gt;
+										&lt;serialized_view&gt;aced00057400054c696e6b73740027636f6d2e6961692e72666e6573742e776f726b62656e63682e76696577732e4c696e6b56696577&lt;/serialized_view&gt;
+									&lt;/delegate&gt;
+								&lt;/layout&gt;
+								&lt;children ignore=&quot;false&quot;/&gt;
+							&lt;/child&gt;
+						&lt;/children&gt;
+					&lt;/child&gt;
+					&lt;child&gt;
+						&lt;layout factory=&quot;delegate_StackDockStationFactory&quot;&gt;
+							&lt;selected&gt;2&lt;/selected&gt;
+							&lt;placeholders&gt;
+								&lt;version&gt;0&lt;/version&gt;
+								&lt;format&gt;dock.PlaceholderList&lt;/format&gt;
+								&lt;entry&gt;
+									&lt;key shared=&quot;false&quot;/&gt;
+									&lt;item key=&quot;convert&quot; type=&quot;b&quot;&gt;true&lt;/item&gt;
+									&lt;item key=&quot;convert-keys&quot; type=&quot;a&quot;&gt;
+										&lt;item type=&quot;s&quot;&gt;id&lt;/item&gt;
+										&lt;item type=&quot;s&quot;&gt;index&lt;/item&gt;
+									&lt;/item&gt;
+									&lt;item key=&quot;dock.id&quot; type=&quot;i&quot;&gt;0&lt;/item&gt;
+									&lt;item key=&quot;dock.index&quot; type=&quot;i&quot;&gt;0&lt;/item&gt;
+								&lt;/entry&gt;
+								&lt;entry&gt;
+									&lt;key shared=&quot;false&quot;/&gt;
+									&lt;item key=&quot;convert&quot; type=&quot;b&quot;&gt;true&lt;/item&gt;
+									&lt;item key=&quot;convert-keys&quot; type=&quot;a&quot;&gt;
+										&lt;item type=&quot;s&quot;&gt;id&lt;/item&gt;
+										&lt;item type=&quot;s&quot;&gt;index&lt;/item&gt;
+									&lt;/item&gt;
+									&lt;item key=&quot;dock.id&quot; type=&quot;i&quot;&gt;1&lt;/item&gt;
+									&lt;item key=&quot;dock.index&quot; type=&quot;i&quot;&gt;1&lt;/item&gt;
+								&lt;/entry&gt;
+								&lt;entry&gt;
+									&lt;key shared=&quot;false&quot;/&gt;
+									&lt;item key=&quot;convert&quot; type=&quot;b&quot;&gt;true&lt;/item&gt;
+									&lt;item key=&quot;convert-keys&quot; type=&quot;a&quot;&gt;
+										&lt;item type=&quot;s&quot;&gt;id&lt;/item&gt;
+										&lt;item type=&quot;s&quot;&gt;index&lt;/item&gt;
+									&lt;/item&gt;
+									&lt;item key=&quot;dock.id&quot; type=&quot;i&quot;&gt;2&lt;/item&gt;
+									&lt;item key=&quot;dock.index&quot; type=&quot;i&quot;&gt;2&lt;/item&gt;
+								&lt;/entry&gt;
+							&lt;/placeholders&gt;
+						&lt;/layout&gt;
+						&lt;children ignore=&quot;false&quot;&gt;
+							&lt;child&gt;
+								&lt;layout factory=&quot;predefined&quot;&gt;
+									&lt;replacement id=&quot;dockableMap&quot;/&gt;
+									&lt;delegate id=&quot;delegate_serializing_dock_factory&quot;&gt;
+										&lt;serialized_view&gt;aced00057400034d6170740028636f6d2e6961692e72666e6573742e776f726b62656e63682e6d61702e446f636b61626c654d617073720031636f6d2e6961692e72666e6573742e776f726b62656e63682e6d61702e446f636b61626c654d6170244d61705374617465da37ccfdc7ee304b02000249000a7a6f6f6d5f6c6576656c4c0008746f705f6c6566747400174c6a6176612f6177742f67656f6d2f506f696e7432443b7870000000147372001c6a6176612e6177742e67656f6d2e506f696e74324424446f75626c65555bf8ca09a31d5f02000244000178440001797870bf349d80000000003f4d9718ab278195&lt;/serialized_view&gt;
+									&lt;/delegate&gt;
+								&lt;/layout&gt;
+								&lt;children ignore=&quot;false&quot;/&gt;
+							&lt;/child&gt;
+							&lt;child&gt;
+								&lt;layout factory=&quot;predefined&quot;&gt;
+									&lt;replacement id=&quot;dockablePort Status&quot;/&gt;
+									&lt;delegate id=&quot;delegate_serializing_dock_factory&quot;&gt;
+										&lt;serialized_view&gt;aced000574000b506f727420537461747573740037636f6d2e6961692e72666e6573742e776f726b62656e63682e706f72747374617475732e506f7274537461747573436861727456696577&lt;/serialized_view&gt;
+									&lt;/delegate&gt;
+								&lt;/layout&gt;
+								&lt;children ignore=&quot;false&quot;/&gt;
+							&lt;/child&gt;
+							&lt;child&gt;
+								&lt;layout factory=&quot;predefined&quot;&gt;
+									&lt;replacement id=&quot;dockableSignalTool_Group0_0&quot;/&gt;
+									&lt;delegate id=&quot;delegate_com.iai.rfnest.workbench.views.signalTool&quot;&gt;
+										&lt;note&gt;Group0,0&lt;/note&gt;
+									&lt;/delegate&gt;
+								&lt;/layout&gt;
+								&lt;children ignore=&quot;false&quot;/&gt;
+							&lt;/child&gt;
+						&lt;/children&gt;
+					&lt;/child&gt;
+					&lt;child&gt;
+						&lt;layout factory=&quot;delegate_StackDockStationFactory&quot;&gt;
+							&lt;selected&gt;0&lt;/selected&gt;
+							&lt;placeholders&gt;
+								&lt;version&gt;0&lt;/version&gt;
+								&lt;format&gt;dock.PlaceholderList&lt;/format&gt;
+								&lt;entry&gt;
+									&lt;key shared=&quot;false&quot;/&gt;
+									&lt;item key=&quot;convert&quot; type=&quot;b&quot;&gt;true&lt;/item&gt;
+									&lt;item key=&quot;convert-keys&quot; type=&quot;a&quot;&gt;
+										&lt;item type=&quot;s&quot;&gt;id&lt;/item&gt;
+										&lt;item type=&quot;s&quot;&gt;index&lt;/item&gt;
+									&lt;/item&gt;
+									&lt;item key=&quot;dock.id&quot; type=&quot;i&quot;&gt;0&lt;/item&gt;
+									&lt;item key=&quot;dock.index&quot; type=&quot;i&quot;&gt;0&lt;/item&gt;
+								&lt;/entry&gt;
+								&lt;entry&gt;
+									&lt;key shared=&quot;false&quot;/&gt;
+									&lt;item key=&quot;convert&quot; type=&quot;b&quot;&gt;true&lt;/item&gt;
+									&lt;item key=&quot;convert-keys&quot; type=&quot;a&quot;&gt;
+										&lt;item type=&quot;s&quot;&gt;id&lt;/item&gt;
+										&lt;item type=&quot;s&quot;&gt;index&lt;/item&gt;
+									&lt;/item&gt;
+									&lt;item key=&quot;dock.id&quot; type=&quot;i&quot;&gt;1&lt;/item&gt;
+									&lt;item key=&quot;dock.index&quot; type=&quot;i&quot;&gt;1&lt;/item&gt;
+								&lt;/entry&gt;
+							&lt;/placeholders&gt;
+						&lt;/layout&gt;
+						&lt;children ignore=&quot;false&quot;&gt;
+							&lt;child&gt;
+								&lt;layout factory=&quot;predefined&quot;&gt;
+									&lt;replacement id=&quot;dockableOverlays&quot;/&gt;
+									&lt;delegate id=&quot;delegate_serializing_dock_factory&quot;&gt;
+										&lt;serialized_view&gt;aced00057400084f7665726c61797374002e636f6d2e6961692e72666e6573742e776f726b62656e63682e6d61702e4d61704f7665726c61794d616e616765727372003b636f6d2e6961692e72666e6573742e776f726b62656e63682e6d61702e4d61704f7665726c61794d616e61676572244f7665726c6179537461746511b172df20265ff20200034c000b636c6173735f6e616d65737400104c6a6176612f7574696c2f4c6973743b4c00086d656d656e746f7371007e00034c000776697369626c6571007e00037870737200136a6176612e7574696c2e41727261794c6973747881d21d99c7619d03000149000473697a6578700000000977040000000974003f636f6d2e6961692e72666e6573742e776f726b62656e63682e6d61702e7061636b6574726f7574696e672e5061636b6574526f7574696e674f7665726c617974002d636f6d2e6961692e72666e6573742e776f726b62656e63682e6d61702e506c6174666f726d734f7665726c6179740033636f6d2e6961692e72666e6573742e776f726b62656e63682e6d61702e4761696e416e6444697374616e63654f7665726c617974002f636f6d2e6961692e72666e6573742e726f757465732e75692e6c61796572732e576179706f696e744f7665726c6179740035636f6d2e6961692e72666e6573742e726f757465732e75692e6c61796572732e506c6174666f726d526f757465734f7665726c617974002f636f6d2e6961692e72666e6573742e776f726b62656e63682e6d61702e4c696e6b5175616c6974794f7665726c6179740033636f6d2e6961692e72666e6573742e776f726b62656e63682e6d61702e4e6574776f726b546f706f6c6f67794f7665726c6179740031636f6d2e6961692e72666e6573742e6e6f646570726f70732e6c61796572732e4e6f646550726f70657274794c6179657274002b636f6d2e6961692e72666e6573742e75692e6c61796572732e437573746f6d496d6167654f7665726c6179787371007e0005000000097704000000097372005b636f6d2e6961692e72666e6573742e776f726b62656e63682e6d61702e7061636b6574726f7574696e672e5061636b6574526f7574696e674f7665726c6179245061636b6574526f7574696e674f7665726c61794d656d656e746f00000000000000c80200025a000f69735f6c6567656e645f73686f776e4c0007706d5f6c69737471007e00037870017371007e0005000000007704000000007873720045636f6d2e6961692e72666e6573742e776f726b62656e63682e6d61702e506c6174666f726d734f7665726c617924506c6174666f726d4f7665726c617953657474696e677300000000000000c80200055a001773686f775f616e74656e6e615f646972656374696f6e735a001573686f775f706c6174666f726d5f68656164696e675a001373686f775f706c6174666f726d5f6e616d65735a001073686f775f7465616d5f636f6c6f72735a001773686f775f7669727475616c5f696e64696361746f72737870010101010070737200116a6176612e6c616e672e496e746567657212e2a0a4f781873802000149000576616c7565787200106a6176612e6c616e672e4e756d62657286ac951d0b94e08b020000787000000008740003416c6c74001966616c73652c66616c73652c747275652c3132302c36302c30707071007e000f787371007e000500000009770400000009737200116a6176612e6c616e672e426f6f6c65616ecd207280d59cfaee0200015a000576616c756578700171007e001d71007e001d71007e001d71007e001d71007e001d71007e001d71007e001d71007e001d78&lt;/serialized_view&gt;
+									&lt;/delegate&gt;
+								&lt;/layout&gt;
+								&lt;children ignore=&quot;false&quot;/&gt;
+							&lt;/child&gt;
+							&lt;child&gt;
+								&lt;layout factory=&quot;predefined&quot;&gt;
+									&lt;replacement id=&quot;dockableRoute Editor&quot;/&gt;
+									&lt;delegate id=&quot;delegate_serializing_dock_factory&quot;&gt;
+										&lt;serialized_view&gt;aced000574000c526f75746520456469746f7274002e636f6d2e6961692e72666e6573742e726f757465732e75692e76696577732e526f757465456469746f7256696577&lt;/serialized_view&gt;
+									&lt;/delegate&gt;
+								&lt;/layout&gt;
+								&lt;children ignore=&quot;false&quot;/&gt;
+							&lt;/child&gt;
+						&lt;/children&gt;
+					&lt;/child&gt;
+					&lt;child&gt;
+						&lt;layout factory=&quot;delegate_StackDockStationFactory&quot;&gt;
+							&lt;selected&gt;0&lt;/selected&gt;
+							&lt;placeholders&gt;
+								&lt;version&gt;0&lt;/version&gt;
+								&lt;format&gt;dock.PlaceholderList&lt;/format&gt;
+								&lt;entry&gt;
+									&lt;key shared=&quot;false&quot;/&gt;
+									&lt;item key=&quot;convert&quot; type=&quot;b&quot;&gt;true&lt;/item&gt;
+									&lt;item key=&quot;convert-keys&quot; type=&quot;a&quot;&gt;
+										&lt;item type=&quot;s&quot;&gt;id&lt;/item&gt;
+										&lt;item type=&quot;s&quot;&gt;index&lt;/item&gt;
+									&lt;/item&gt;
+									&lt;item key=&quot;dock.id&quot; type=&quot;i&quot;&gt;0&lt;/item&gt;
+									&lt;item key=&quot;dock.index&quot; type=&quot;i&quot;&gt;0&lt;/item&gt;
+								&lt;/entry&gt;
+								&lt;entry&gt;
+									&lt;key shared=&quot;false&quot;/&gt;
+									&lt;item key=&quot;convert&quot; type=&quot;b&quot;&gt;true&lt;/item&gt;
+									&lt;item key=&quot;convert-keys&quot; type=&quot;a&quot;&gt;
+										&lt;item type=&quot;s&quot;&gt;id&lt;/item&gt;
+										&lt;item type=&quot;s&quot;&gt;index&lt;/item&gt;
+									&lt;/item&gt;
+									&lt;item key=&quot;dock.id&quot; type=&quot;i&quot;&gt;1&lt;/item&gt;
+									&lt;item key=&quot;dock.index&quot; type=&quot;i&quot;&gt;1&lt;/item&gt;
+								&lt;/entry&gt;
+								&lt;entry&gt;
+									&lt;key shared=&quot;false&quot;/&gt;
+									&lt;item key=&quot;convert&quot; type=&quot;b&quot;&gt;true&lt;/item&gt;
+									&lt;item key=&quot;convert-keys&quot; type=&quot;a&quot;&gt;
+										&lt;item type=&quot;s&quot;&gt;id&lt;/item&gt;
+										&lt;item type=&quot;s&quot;&gt;index&lt;/item&gt;
+									&lt;/item&gt;
+									&lt;item key=&quot;dock.id&quot; type=&quot;i&quot;&gt;2&lt;/item&gt;
+									&lt;item key=&quot;dock.index&quot; type=&quot;i&quot;&gt;2&lt;/item&gt;
+								&lt;/entry&gt;
+							&lt;/placeholders&gt;
+						&lt;/layout&gt;
+						&lt;children ignore=&quot;false&quot;&gt;
+							&lt;child&gt;
+								&lt;layout factory=&quot;predefined&quot;&gt;
+									&lt;replacement id=&quot;dockableConsole&quot;/&gt;
+									&lt;delegate id=&quot;delegate_serializing_dock_factory&quot;&gt;
+										&lt;serialized_view&gt;aced0005740007436f6e736f6c6574002a636f6d2e6961692e72666e6573742e776f726b62656e63682e76696577732e436f6e736f6c6556696577&lt;/serialized_view&gt;
+									&lt;/delegate&gt;
+								&lt;/layout&gt;
+								&lt;children ignore=&quot;false&quot;/&gt;
+							&lt;/child&gt;
+							&lt;child&gt;
+								&lt;layout factory=&quot;predefined&quot;&gt;
+									&lt;replacement id=&quot;dockableChannel Properties Editor&quot;/&gt;
+									&lt;delegate id=&quot;delegate_serializing_dock_factory&quot;&gt;
+										&lt;serialized_view&gt;aced00057400194368616e6e656c2050726f7065727469657320456469746f72740031636f6d2e6961692e72666e6573742e776f726b62656e63682e63702e4368616e6e656c50726f7065727469657356696577&lt;/serialized_view&gt;
+									&lt;/delegate&gt;
+								&lt;/layout&gt;
+								&lt;children ignore=&quot;false&quot;/&gt;
+							&lt;/child&gt;
+							&lt;child&gt;
+								&lt;layout factory=&quot;predefined&quot;&gt;
+									&lt;replacement id=&quot;dockableAlerts&quot;/&gt;
+									&lt;delegate id=&quot;delegate_serializing_dock_factory&quot;&gt;
+										&lt;serialized_view&gt;aced0005740006416c6572747374002a636f6d2e6961692e72666e6573742e776f726b62656e63682e616c657274732e416c6572747356696577&lt;/serialized_view&gt;
+									&lt;/delegate&gt;
+								&lt;/layout&gt;
+								&lt;children ignore=&quot;false&quot;/&gt;
+							&lt;/child&gt;
+						&lt;/children&gt;
+					&lt;/child&gt;
+				&lt;/children&gt;
+			&lt;/root&gt;
+			&lt;root name=&quot;screen&quot;&gt;
+				&lt;layout factory=&quot;predefined&quot;&gt;
+					&lt;replacement id=&quot;rootscreen&quot;/&gt;
+					&lt;delegate id=&quot;delegate_screen dock&quot;&gt;
+						&lt;placeholders&gt;
+							&lt;version&gt;0&lt;/version&gt;
+							&lt;format&gt;dock.PlaceholderList&lt;/format&gt;
+						&lt;/placeholders&gt;
+					&lt;/delegate&gt;
+				&lt;/layout&gt;
+				&lt;children ignore=&quot;false&quot;/&gt;
+			&lt;/root&gt;
+		&lt;/roots&gt;
+		&lt;children/&gt;
+	&lt;/current&gt;
+&lt;/layout&gt;</appLayoutXml>
+</ScenarioProps>

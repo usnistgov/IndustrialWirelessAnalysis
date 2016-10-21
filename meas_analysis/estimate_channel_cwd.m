@@ -69,11 +69,16 @@ for fk = 1:Nfiles
     try 
         
         mat_fname = files(fk).name; 
+        
         cir_file_path = [arr_dir '\' mat_fname];       
         if TESTING
             disp('opening TEST_DATA');
             cir_file = TEST_DATA;
         else
+            if testForStatsFile(mat_fname(1:end-4));
+                disp(['skipping ' mat_fname])
+                continue;
+            end
             disp(['loading file ' mat_fname '  ...']);
             cir_file = load(cir_file_path);
         end
@@ -275,45 +280,57 @@ for fk = 1:Nfiles
         % Analyze path loss versus distance
         %
         
-        path_gain_calc = path_gain_dB;
-        r_p = r;  pl_p = path_gain_calc;
-        r_p = r_p(~isnan(pl_p));
-        pl_p = pl_p(~isnan(pl_p));
-        r_min_fit = 3;
-        r_max_fit = 0.9*max(r_p);    
-        k_lfit = find(r_p>r_min_fit & r_p<r_max_fit);
-        r_p_fit = r_p(k_lfit);
-        pl_p_fit = pl_p(k_lfit);
+        infpt = 30;
+        R = r;
+        G = path_gain_dB;
+        G = G(~isnan(R));
+        R = R(~isnan(R));
+        
+        % lower segment
+        Gfit1 = G(R<infpt);
+        Rfit1 = R(R<infpt);
+        if ~isempty(Rfit1)
+            p1 = polyfit(log10(Rfit1), Gfit1, 1);
+        else
+            p1 = [0 infpt];
+        end
 
-        path_gain_dB_poly = polyfit(r_p_fit,pl_p_fit,1);
-        this_path_gain_poly = path_gain_dB_poly;
+        % upper segment
+        Gfit2 = G(R>infpt);
+        Rfit2 = R(R>infpt);
+        p2 = polyfit(log10(Rfit2), Gfit2, 1);   
+        path_gain_dB_poly = p2;
 
-        h = figure();
-        stdPathGain = std(path_gain_calc(~isnan(path_gain_calc)));
-        r_p_plot = logspace(log10(min(r_p_fit)), log10(max(r_p_fit)), 10);
-        pl_poly_vals = polyval(this_path_gain_poly, r_p_plot);
-        semilogx(r_p, pl_p, 'color', [0,0,0]+0.7, 'marker', '.', 'linestyle' , 'none'); 
-        hold on
-        semilogx(r_p_plot, pl_poly_vals, 'k-', ...
-           r_p_plot, repmat(pl_poly_vals(:),1,2)+stdPathGain*[ones(10,1) -ones(10,1)], ...
-            'k--', 'LineWidth', 1.0);
+        % find draw points
+        if ~isempty(Rfit1)
+            x_intersect = fzero(@(x) polyval(p1-p2,x),log10(infpt));
+            %x_intersect = fzero(@(x) polyval(p1-p2,x),[log10(min(Rfit1)), log10(max(Rfit2))]);
+            d_val1 = log10(logspace(log10(min(Rfit1)), x_intersect, 20));
+            g_val1 = polyval(p1, d_val1);
+        else
+            x_intersect = log10(min(R));
+        end
+        d_val2 = log10(logspace(x_intersect, log10(max(Rfit2)), 20));
+        g_val2 = polyval(p2, d_val2);
         
         % frii as reference
-        if 1
-        d = r_p_plot;
+        d_frii = logspace(log10(min(R)), log10(max(R)), 20);
         ff = meta.Frequency_GHz_num;
         c = physconst('LightSpeed');
-        frii_fspl_dB = 10*log10(d.^2) + 20*log10(ff) + 20*log10(1e9) + 20*log10(4*pi/c);
-        semilogx(d, -frii_fspl_dB, 'b-')
-        text(d(floor(length(d)/4)),-frii_fspl_dB(floor(length(d)/4))+5,'FSPL','Color','blue');
-        end       
+        frii_fspl_dB = 10*log10(d_frii.^2) + 20*log10(ff) + 20*log10(1e9) + 20*log10(4*pi/c);         
         
-        hold off
-        if 0
-        legend({'measured', ...
-            sprintf('%0.2fx + %0.1f',path_gain_dB_poly), ...
-            '+/- \sigma'}, 'Location', 'best');
+        % plot the gains
+        h = figure();
+        semilogx(R,G, 'color', [0,0,0]+0.7, 'marker', '.', 'linestyle' , 'none')
+        hold on
+        if ~isempty(Rfit1)
+            semilogx(10.^d_val1,g_val1,'b+-')
         end
+        semilogx(10.^d_val2,g_val2,'b+-')
+        semilogx(d_frii, -frii_fspl_dB, 'b-')
+        text(d_frii(floor(length(d_frii)/4)),-frii_fspl_dB(floor(length(d_frii)/4))+5,'FSPL','Color','blue');         
+        hold off
+        
         setCommonAxisProps()    
         xlabel('distance (m)')
         ylabel('Path Gain (dB)')
@@ -321,7 +338,54 @@ for fk = 1:Nfiles
         savefig(h, [fig_dir '\' mat_fname(1:end-4) '__pl.fig']);
         setFigureForPrinting();
         print(h,[png_dir '\' mat_fname(1:end-4) '__pl.png'],'-dpng','-r300')
-        close(h)  
+        close(h) 
+
+%         path_gain_calc = path_gain_dB;
+%         r_p = r;  pl_p = path_gain_calc;
+%         r_p = r_p(~isnan(pl_p));
+%         pl_p = pl_p(~isnan(pl_p));
+%         r_min_fit = 3;
+%         r_max_fit = 0.9*max(r_p);    
+%         k_lfit = find(r_p>r_min_fit & r_p<r_max_fit);
+%         r_p_fit = r_p(k_lfit);
+%         pl_p_fit = pl_p(k_lfit);
+%         path_gain_dB_poly = polyfit(log10(r_p_fit),pl_p_fit,1);
+%         this_path_gain_poly = path_gain_dB_poly;
+% 
+%         h = figure();
+%         stdPathGain = std(path_gain_calc(~isnan(path_gain_calc)));
+%         r_p_plot = log10(logspace(log10(min(r_p_fit)), log10(max(r_p_fit)), 10));
+%         pl_poly_vals = polyval(this_path_gain_poly, r_p_plot);
+%         semilogx(r_p, pl_p, 'color', [0,0,0]+0.7, 'marker', '.', 'linestyle' , 'none'); 
+%         hold on
+%         semilogx(10.^r_p_plot, pl_poly_vals, 'k-', ...
+%            10.^r_p_plot, repmat(pl_poly_vals(:),1,2)+stdPathGain*[ones(10,1) -ones(10,1)], ...
+%             'k--', 'LineWidth', 1.0);
+%         
+%         % frii as reference
+%         if 1
+%         d = r_p_plot;
+%         ff = meta.Frequency_GHz_num;
+%         c = physconst('LightSpeed');
+%         frii_fspl_dB = 10*log10(d.^2) + 20*log10(ff) + 20*log10(1e9) + 20*log10(4*pi/c);
+%         semilogx(d, -frii_fspl_dB, 'b-')
+%         text(d(floor(length(d)/4)),-frii_fspl_dB(floor(length(d)/4))+5,'FSPL','Color','blue');
+%         end       
+%         
+%         hold off
+%         if 0
+%         legend({'measured', ...
+%             sprintf('%0.2fx + %0.1f',path_gain_dB_poly), ...
+%             '+/- \sigma'}, 'Location', 'best');
+%         end
+%         setCommonAxisProps()    
+%         xlabel('distance (m)')
+%         ylabel('Path Gain (dB)')
+%         drawnow
+%         savefig(h, [fig_dir '\' mat_fname(1:end-4) '__pl.fig']);
+%         setFigureForPrinting();
+%         print(h,[png_dir '\' mat_fname(1:end-4) '__pl.png'],'-dpng','-r300')
+%         close(h)  
         
     end % if OPTS(OPT_PATH_GAIN)
     
@@ -334,8 +398,8 @@ for fk = 1:Nfiles
         ds_th = nanmean(mean_delay_sec) + 3*nanstd(mean_delay_sec);
         [du_counts,du_centers] = hist(1e9*mean_delay_sec(mean_delay_sec<ds_th),50);
         du_probs = cumsum(du_counts/sum(du_counts));
-        du_centers = du_centers;%(du_probs < 0.995);
-        du_probs = du_probs;%(du_probs < 0.995);        
+        du_centers = du_centers(du_probs < 0.99);
+        du_probs = du_probs(du_probs < 0.99);        
         yyaxis left, area(du_centers, [0 diff(du_probs)],'FaceAlpha',0.5)
         str = 'average delay, $$\tau_D$$ (ns)';xlabel(str,'Interpreter','Latex')
         yyaxis right, plot(du_centers,du_probs)
@@ -356,8 +420,8 @@ for fk = 1:Nfiles
         ds_th = nanmean(rms_delay_spread_sec) + 3*nanstd(rms_delay_spread_sec);
         [ds_counts,ds_centers] = hist(1e9*rms_delay_spread_sec(rms_delay_spread_sec<ds_th),50);
         ds_probs = cumsum(ds_counts/sum(ds_counts));
-        ds_centers = ds_centers;%(ds_probs < 0.995);
-        ds_probs = ds_probs;%(ds_probs < 0.995);
+        ds_centers = ds_centers(ds_probs < 0.99);
+        ds_probs = ds_probs(ds_probs < 0.99);
         yyaxis left, area(ds_centers, [0 diff(ds_probs)],'FaceAlpha',0.5)
         str = 'Pr. $$\hat{S}$$'; ylabel(str,'Interpreter','Latex');
         yyaxis right, plot(ds_centers,ds_probs)
@@ -545,7 +609,7 @@ for fk = 1:Nfiles
         
     end % OPTS(OPT_AVGCIR_NTAP)
     
-    if OPT_WRITE_STATS
+    if OPTS(OPT_WRITE_STATS)
         % save the metrics
         stats = struct(...
             'meta',meta,...
@@ -596,7 +660,7 @@ for fk = 1:Nfiles
 end
 
 % add entry to the stats text file
-if OPT_WRITE_STATS
+if OPTS(OPT_WRITE_STATS)
     writeStatsToFile(Cstats);
 end
 
@@ -605,12 +669,12 @@ end
 %
 
 % create the aggregate polynomial for path loss
-if OPT_PATH_GAIN
+if OPTS(OPT_PATH_GAIN)
     cmp_pl_poly( '*_stats.mat', '.\stats', '.\figs', '.\png' )
 end
 
 % create the delay profile files for RF emulator
-if OPT_AVGCIR_NTAP
+if OPTS(OPT_NTAP_APPROX)
     stats2rfnestdp( '*_stats.mat', '.\stats', '..\emu' )
 end
 
@@ -681,6 +745,11 @@ function writeStatsToFile(X)
 end
 
 
-
+function b = testForStatsFile(mat_fname)
+    b = false;
+    if exist(['stats/' mat_fname '__channel_stats.mat'],'file')
+        b = true;
+    end
+end
 
 

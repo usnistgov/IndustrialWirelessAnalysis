@@ -15,7 +15,8 @@ clc;
 
 %% mobile measurements
 delete('stats.dat')
-top_dirs = { 'AAplant', 'Boulder', 'GBurg'};
+%top_dirs = { 'AAplant', 'Boulder', 'GBurg'};
+top_dirs = { '.'};
 doall = true;
 figvis = false;
 for ii = 1:length(top_dirs)

@@ -1,4 +1,4 @@
-function keep = testFile(meta, freq, location_str, loc_logic)
+function keep = keepFile(meta, freq, location_str, loc_logic)
 % Filter out this file
 % Author: Rick Candell
 % Organization: National Institute of Standards and Technology
@@ -20,7 +20,7 @@ if nargin <1
     error 'meta file not provided'
 end
 
-keep = false;
+keep = true;
 
 % filter
 if ~isnan(freq)

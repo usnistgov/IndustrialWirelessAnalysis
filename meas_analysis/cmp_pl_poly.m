@@ -51,7 +51,7 @@ function plotByFreq(ff, files, stats_dir_path, fig_dir_path, png_dir_path, title
 
     run_names = {};
     %d = linspace(1,150,100);
-    d = logspace(0,2,10);
+    d = log10(logspace(log10(30),log10(200),10));
     polys_str = {};
     pv_arr = [];
     d_all = [];
@@ -82,19 +82,20 @@ function plotByFreq(ff, files, stats_dir_path, fig_dir_path, png_dir_path, title
 
     h = figure(gcf);
     if show_traces
-        semilogx(d, pv_arr, 'color', [0,0,0]+0.7);
+        semilogx(10.^d, pv_arr, 'color', [0,0,0]+0.7);
     end
     hold on
     % plot the traces
-    semilogx(d, pv_all, 'k+-')
+    semilogx(10.^d, pv_all, 'k+-')
     text(2,max(pv_all)-20,run_names{end});
     
     % frii as reference
     if length(ff) == 1
-    c = physconst('LightSpeed');
-    frii_fspl_dB = 10*log10(d.^2) + 20*log10(ff) + 20*log10(1e9) + 20*log10(4*pi/c);
-    semilogx(d, -frii_fspl_dB, 'b-')
-    text(d(floor(length(d)/4)),-frii_fspl_dB(floor(length(d)/4))+5,'FSPL','Color','blue');
+        d_frii = logspace(min(d), max(d), 20);
+        c = physconst('LightSpeed');
+        frii_fspl_dB = 10*log10(d_frii.^2) + 20*log10(ff) + 20*log10(1e9) + 20*log10(4*pi/c);
+        semilogx(d_frii, -frii_fspl_dB, 'b-')
+        text(d_frii(floor(length(d)/4)),-frii_fspl_dB(floor(length(d_frii)/4))+5,'FSPL','Color','blue');
     end
     
     hold off
@@ -116,7 +117,7 @@ function plotByFreq(ff, files, stats_dir_path, fig_dir_path, png_dir_path, title
         setFigureForPrinting();
         print(h, [png_dir_path '\zCombined_allfreqs_pathloss.png'],'-dpng')        
     end
-    close(h) 
+%     close(h) 
 
 end
 
