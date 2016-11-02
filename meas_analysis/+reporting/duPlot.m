@@ -58,7 +58,7 @@ for fk = 1:Nfiles
         continue;
     end
     
-    disp(['Processing file: ' meta.MatFile_str])
+    disp(['Processing file: ' stats_file_path])
     
     % delay spread
     Tau = [Tau; stats.mean_delay_sec(:)];
@@ -76,17 +76,18 @@ Smax = max(Tau);
 Smin = min(Tau);
 
 % plot the histogram of S   
-ds_th = Tau + 3*std(Tau);
-[ds_counts,ds_centers] = hist(Tau(Tau<ds_th),length(Tau)/25);
+ds_th = Tau + 1*std(Tau);
+[ds_counts,ds_centers] = hist(Tau(Tau<ds_th),500);
 ds_probs = cumsum(ds_counts/sum(ds_counts));
-ds_centers = ds_centers(ds_probs < 0.99);
-ds_probs = ds_probs(ds_probs < 0.99);
+ds_centers = ds_centers(ds_probs < 0.9925);
+ds_probs = ds_probs(ds_probs < 0.9925);
 yyaxis left, area(ds_centers, [0 diff(ds_probs)],'FaceAlpha',0.25)
 str = 'Pr. $$\hat{\tau}$$'; ylabel(str,'Interpreter','Latex');
 yyaxis right, plot(ds_centers,ds_probs)
 str = 'Pr. $$\hat{\tau} < \tau$$'; ylabel(str,'Interpreter','Latex');
 str = 'mean delay, $$\tau$$ (ns)';xlabel(str,'Interpreter','Latex')
 reporting.setCommonAxisProps();   
+reporting.setFigureForPrinting(gcf);
 
 end
 

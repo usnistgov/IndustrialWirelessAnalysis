@@ -80,6 +80,9 @@ for fk = 1:Nfiles
             ~isempty(strfind(meta.TransmitterAntenna_str,'Long Pol'))
         TxPol = 'X';
     end    
+    
+    plot(stats.mean_delay_sec)
+    xyz = nanmean(stats.mean_delay_sec);
     Cstats(fk,:) = {   
         meta.MatFile_str, meta.Frequency_GHz_num, ...
         RxPol, meta.ReceiverAntennaGain_dBi_num, ...

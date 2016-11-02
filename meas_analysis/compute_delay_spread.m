@@ -29,9 +29,9 @@ end
 % Note that this is a rought estimate of the number of components for K
 % factor estimation.  A better method could be to use the delay spread to
 % determine candidacy for K estimation.
-if length(cir) < 12
-    return
-end
+% if length(cir) < 12
+%     return
+% end
 
 t = Ts*(0:length(cir)-1);
 t = t - t(1);  

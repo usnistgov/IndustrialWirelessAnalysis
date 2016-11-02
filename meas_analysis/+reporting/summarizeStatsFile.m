@@ -18,6 +18,8 @@ for ii = 1:size(stats,1)
         stats.Site(ii) = {'aaplant'};
     elseif strfind(lower(cell2mat(stats.Run(ii))),'gburg')
         stats.Site(ii) = {'shop'};
+    elseif strfind(lower(cell2mat(stats.Run(ii))),'oats')
+        stats.Site(ii) = {'oats'};        
     else
         stats.Site(ii) = {'steam'};
     end
@@ -36,6 +38,28 @@ disp('=================================================')
 disp(' ')
 
 disp('ALL ====================================')
+% matrix2latex(ds(:,[1 2 18 3 5 7 12 15 9]), '../pub/alldata.tex', 'columnLabels', ...
+%     {'Run','$f$ (GHz)','Route','RX Ant','TX Ant','Slope (dB/dec)', ...
+%         '$\bar{\tau}$ (ns)','$\bar{S}$ (ns)','$\bar{K}$ (dB)'}, ...
+%         'format', '%-.1f', 'alignment', 'c');
+
+statarray = grpstats(ds,{'Run'},'mean','DataVars',{'Freq','Path_Gain_Poly_Slope','Path_Gain_Poly_YInt', 'Mean_Delay_ns', 'Mean_Delay_Spread_ns', 'Mean_K','Max_K','Min_K'})
+for ii = 1:length(statarray.Run)
+    statarray.Run{ii} = strrep(statarray.Run{ii},'_',' ');
+end
+export(statarray,'XLSfile','all_data.xls')
+statarray1 = statarray(1:end,[1 3 4 6 7 8]);
+N = length(statarray1);
+N2 = round(N/2);
+matrix2latex(statarray1(1:N2,:), '../pub/allruns1.tex', 'columnLabels', ...
+    {'Run','$f$ (GHz)','Slope (dB/dec)', ...
+        '$\bar{\tau}$ (ns)','$\bar{S}$ (ns)','$\bar{K}$ (dB)',...
+        'Max K (dB)'}, 'format', '%-.1f', 'alignment', 'c');
+matrix2latex(statarray1(N2+1:N,:), '../pub/allruns2.tex', 'columnLabels', ...
+    {'Run','$f$ (GHz)','Slope (dB/dec)', ...
+        '$\bar{\tau}$ (ns)','$\bar{S}$ (ns)','$\bar{K}$ (dB)',...
+        'Max K (dB)'}, 'format', '%-.1f', 'alignment', 'c');
+    
 statarray = grpstats(ds,{'Site','Freq','RunType'},'mean','DataVars',{'Path_Gain_Poly_Slope','Path_Gain_Poly_YInt', 'Mean_Delay_ns', 'Mean_Delay_Spread_ns', 'Mean_K','Max_K','Min_K'})
 export(statarray,'XLSfile','mobile_gain.xls')
 matrix2latex(statarray(1:end,[1 2 3 5 6]), '../pub/all.tex', 'columnLabels', ...

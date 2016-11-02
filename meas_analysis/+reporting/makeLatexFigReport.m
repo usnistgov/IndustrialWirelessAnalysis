@@ -31,10 +31,10 @@ for jj = 1:NN
     meta = stats.meta;
     
     % add section title
-    addSubSection(f, meta.MatFile_str);
+    addSubSubSection(f, meta.MatFile_str);
 
     % summary table
-    addSubSubSection(f, 'Summary of Measurement Parameters')
+    %addParagraphSection(f, 'Summary of Measurement Parameters')
     addParametersTable(f, meta);
 
     % load PNG plots
@@ -72,7 +72,7 @@ for jj = 1:NN
     end
      
     % Figure setion header
-    addSubSubSection(f, 'Channel Estimation Analysis');
+    %addParagraphSection(f, 'Channel Estimation Analysis');
     
     % add each figure separately in the document
     for kk = 1:length(pngs)
@@ -104,6 +104,10 @@ function addSubSubSection(f, name)
     fprintf(f, '\\subsubsection{%s}\n', strrep(name,'_',' ') );
 end
 
+function addParagraphSection(f, name)
+    fprintf(f, '\\paragraph{%s}\n', strrep(name,'_',' ') );
+end
+
 function addNewPage(f)
     fprintf(f, '\\newpage\n');
 end
@@ -113,6 +117,7 @@ function addPngFigure(f, png_path, s_cap)
     fprintf(f, '\\centering\n');
     png_path = strrep(png_path,'\','/');
     png_path = strrep(png_path,'_','_');
+    fprintf(f,'\\label{fig:detailed:%s}\n',png_path);
     fprintf(f, '\\includegraphics[width=0.55\\columnwidth]{%s}\n', png_path);
     fprintf(f, '\\caption{%s}\n', s_cap);
     fprintf(f, '\\end{figure}%\n');

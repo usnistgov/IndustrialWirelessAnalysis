@@ -74,8 +74,9 @@ for fk = 1:Nfiles
         if TESTING
             disp('opening TEST_DATA');
             cir_file = TEST_DATA;
+            mat_fname = TEST_DATA.Strct_Metadata.MatFile_str;
         else
-            if testForStatsFile(mat_fname(1:end-4));
+            if testForStatsFile(mat_fname(1:end-4)) && OPTS(OPT_WRITE_STATS)
                 disp(['skipping ' mat_fname])
                 continue;
             end
@@ -98,6 +99,26 @@ for fk = 1:Nfiles
         continue;
     end
     
+    % enforce mat file str is correct, some are incorrect in the files
+    meta.MatFile_str = mat_fname;
+    
+    % determine the site
+    SITE_IND_OATS    = 0;
+    SITE_IND_AAPLANT    = 1;
+    SITE_IND_GBURG      = 2;
+    SITE_IND_STEAM      = 3;
+    if ~isempty(strfind(lower(mat_fname),'aaplant'))
+        SITE_IND = SITE_IND_AAPLANT;
+    elseif ~isempty(strfind(lower(mat_fname),'gburg'))
+        SITE_IND = SITE_IND_GBURG;
+    elseif ~isempty(strfind(lower(mat_fname),'oats'))
+        SITE_IND = SITE_IND_OATS;
+    else
+        SITE_IND = SITE_IND_STEAM;
+    end
+    
+    
+    
     % META DATA SECTION
     disp(meta)
     Ts = (1/meta.SampleRate_MHz_num)*1e-6;  % sample rate
@@ -117,7 +138,7 @@ for fk = 1:Nfiles
     LOS = nan(NN,1);  
     path_gain_dB = nan(NN,1);
     path_gain_range_m = nan(NN,1);
-    path_gain_dB_poly = 0;
+    path_gain_dB_poly = {};
     rms_delay_spread_sec = nan(NN,1);     
     mean_delay_sec = nan(NN,1); 
     cir_duration = nan(NN,1);    
@@ -188,10 +209,12 @@ for fk = 1:Nfiles
         % because of the wrapping of energy in the FFT-based
         % correlation we must remove the trailing edge.
         if OPTS(OPT_DELAY_SPREAD)
-            if pk_pwr > -100;
-                [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
-                    compute_delay_spread(Ts, cir);
-            end
+%           if pk_pwr > -110;
+            [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
+                compute_delay_spread(Ts, cir);
+%             else
+%                 nan;
+%             end
         end        
 
         % Compute the path loss in the cir
@@ -280,7 +303,16 @@ for fk = 1:Nfiles
         % Analyze path loss versus distance
         %
         
-        infpt = 30;
+        infpt = 0;
+        if SITE_IND == SITE_IND_AAPLANT
+            infpt = 30;
+        elseif SITE_IND == SITE_IND_GBURG
+        	infpt = 10;
+        elseif SITE_IND == SITE_IND_STEAM
+        	infpt = 5;
+        elseif SITE_IND == SITE_IND_OATS;
+            infpt = 5;
+        end
         R = r;
         G = path_gain_dB;
         G = G(~isnan(R));
@@ -294,27 +326,28 @@ for fk = 1:Nfiles
         else
             p1 = [0 infpt];
         end
+        path_gain_dB_poly{1} = p1;
 
         % upper segment
         Gfit2 = G(R>infpt);
         Rfit2 = R(R>infpt);
         p2 = polyfit(log10(Rfit2), Gfit2, 1);   
-        path_gain_dB_poly = p2;
+        path_gain_dB_poly{2} = p2;
 
         % find draw points
         if ~isempty(Rfit1)
             x_intersect = fzero(@(x) polyval(p1-p2,x),log10(infpt));
             %x_intersect = fzero(@(x) polyval(p1-p2,x),[log10(min(Rfit1)), log10(max(Rfit2))]);
-            d_val1 = log10(logspace(log10(min(Rfit1)), x_intersect, 20));
+            d_val1 = log10(logspace(log10(min(Rfit1)), x_intersect, 5));
             g_val1 = polyval(p1, d_val1);
         else
             x_intersect = log10(min(R));
         end
-        d_val2 = log10(logspace(x_intersect, log10(max(Rfit2)), 20));
+        d_val2 = log10(logspace(x_intersect, log10(max(Rfit2)), 5));
         g_val2 = polyval(p2, d_val2);
         
         % frii as reference
-        d_frii = logspace(log10(min(R)), log10(max(R)), 20);
+        d_frii = logspace(log10(min(R)), log10(max(R)), 5);
         ff = meta.Frequency_GHz_num;
         c = physconst('LightSpeed');
         frii_fspl_dB = 10*log10(d_frii.^2) + 20*log10(ff) + 20*log10(1e9) + 20*log10(4*pi/c);         
@@ -324,12 +357,17 @@ for fk = 1:Nfiles
         semilogx(R,G, 'color', [0,0,0]+0.7, 'marker', '.', 'linestyle' , 'none')
         hold on
         if ~isempty(Rfit1)
-            semilogx(10.^d_val1,g_val1,'b+-')
+            semilogx(10.^d_val1,g_val1,'bx-')
         end
-        semilogx(10.^d_val2,g_val2,'b+-')
-        semilogx(d_frii, -frii_fspl_dB, 'b-')
-        text(d_frii(floor(length(d_frii)/4)),-frii_fspl_dB(floor(length(d_frii)/4))+5,'FSPL','Color','blue');         
+        semilogx(10.^d_val2,g_val2,'bo-')
+        semilogx(d_frii, -frii_fspl_dB, 'k-')
+        %text(d_frii(floor(length(d_frii)/4)),-frii_fspl_dB(floor(length(d_frii)/4))+5,'FSPL','Color','blue');         
         hold off
+        if ~isempty(Rfit1) && ~isempty(Rfit2)
+            legend('data','fit1','fit2','fspl')
+        else
+            legend('data','fit','fspl')
+        end
         
         setCommonAxisProps()    
         xlabel('distance (m)')
@@ -339,53 +377,6 @@ for fk = 1:Nfiles
         setFigureForPrinting();
         print(h,[png_dir '\' mat_fname(1:end-4) '__pl.png'],'-dpng','-r300')
         close(h) 
-
-%         path_gain_calc = path_gain_dB;
-%         r_p = r;  pl_p = path_gain_calc;
-%         r_p = r_p(~isnan(pl_p));
-%         pl_p = pl_p(~isnan(pl_p));
-%         r_min_fit = 3;
-%         r_max_fit = 0.9*max(r_p);    
-%         k_lfit = find(r_p>r_min_fit & r_p<r_max_fit);
-%         r_p_fit = r_p(k_lfit);
-%         pl_p_fit = pl_p(k_lfit);
-%         path_gain_dB_poly = polyfit(log10(r_p_fit),pl_p_fit,1);
-%         this_path_gain_poly = path_gain_dB_poly;
-% 
-%         h = figure();
-%         stdPathGain = std(path_gain_calc(~isnan(path_gain_calc)));
-%         r_p_plot = log10(logspace(log10(min(r_p_fit)), log10(max(r_p_fit)), 10));
-%         pl_poly_vals = polyval(this_path_gain_poly, r_p_plot);
-%         semilogx(r_p, pl_p, 'color', [0,0,0]+0.7, 'marker', '.', 'linestyle' , 'none'); 
-%         hold on
-%         semilogx(10.^r_p_plot, pl_poly_vals, 'k-', ...
-%            10.^r_p_plot, repmat(pl_poly_vals(:),1,2)+stdPathGain*[ones(10,1) -ones(10,1)], ...
-%             'k--', 'LineWidth', 1.0);
-%         
-%         % frii as reference
-%         if 1
-%         d = r_p_plot;
-%         ff = meta.Frequency_GHz_num;
-%         c = physconst('LightSpeed');
-%         frii_fspl_dB = 10*log10(d.^2) + 20*log10(ff) + 20*log10(1e9) + 20*log10(4*pi/c);
-%         semilogx(d, -frii_fspl_dB, 'b-')
-%         text(d(floor(length(d)/4)),-frii_fspl_dB(floor(length(d)/4))+5,'FSPL','Color','blue');
-%         end       
-%         
-%         hold off
-%         if 0
-%         legend({'measured', ...
-%             sprintf('%0.2fx + %0.1f',path_gain_dB_poly), ...
-%             '+/- \sigma'}, 'Location', 'best');
-%         end
-%         setCommonAxisProps()    
-%         xlabel('distance (m)')
-%         ylabel('Path Gain (dB)')
-%         drawnow
-%         savefig(h, [fig_dir '\' mat_fname(1:end-4) '__pl.fig']);
-%         setFigureForPrinting();
-%         print(h,[png_dir '\' mat_fname(1:end-4) '__pl.png'],'-dpng','-r300')
-%         close(h)  
         
     end % if OPTS(OPT_PATH_GAIN)
     
@@ -395,14 +386,17 @@ for fk = 1:Nfiles
         % Analyze the average delay of the CIR's 
         %
         h = figure();      
-        ds_th = nanmean(mean_delay_sec) + 3*nanstd(mean_delay_sec);
-        [du_counts,du_centers] = hist(1e9*mean_delay_sec(mean_delay_sec<ds_th),50);
-        du_probs = cumsum(du_counts/sum(du_counts));
-        du_centers = du_centers(du_probs < 0.99);
-        du_probs = du_probs(du_probs < 0.99);        
-        yyaxis left, area(du_centers, [0 diff(du_probs)],'FaceAlpha',0.5)
+        ds_th = nanmean(mean_delay_sec) + 1.5*nanstd(mean_delay_sec);
+        [du_counts,du_centers] = hist(1e9*mean_delay_sec(mean_delay_sec<ds_th),100);
+        du_probs = cumsum(du_counts/sum(du_counts));     
+        du_pdf = [0 diff(du_probs)];
+        yyaxis left, harea = area(du_centers, du_pdf, 'FaceAlpha',0.5);
+        harea.EdgeColor = 'none';
+        ylim([0 max(du_pdf)]);
+        str = 'Pr. $$ \hat{\tau_D} $$'; ylabel(str,'Interpreter','Latex'); 
         str = 'average delay, $$\tau_D$$ (ns)';xlabel(str,'Interpreter','Latex')
         yyaxis right, plot(du_centers,du_probs)
+        ylim([0 1])
         str = 'Pr. $$ \hat{\tau_D} < {\tau_D} $$'; ylabel(str,'Interpreter','Latex'); 
         str = 'mean delay, $${\tau_D}$$ (ns)';xlabel(str,'Interpreter','Latex')
         setCommonAxisProps();
@@ -417,16 +411,18 @@ for fk = 1:Nfiles
         % Analyze the delay spread of the CIR's 
         %
         h = figure();      
-        ds_th = nanmean(rms_delay_spread_sec) + 3*nanstd(rms_delay_spread_sec);
-        [ds_counts,ds_centers] = hist(1e9*rms_delay_spread_sec(rms_delay_spread_sec<ds_th),50);
+        ds_th = nanmean(rms_delay_spread_sec) + 1.5*nanstd(rms_delay_spread_sec);
+        [ds_counts,ds_centers] = hist(1e9*rms_delay_spread_sec(rms_delay_spread_sec<ds_th),100);
         ds_probs = cumsum(ds_counts/sum(ds_counts));
-        ds_centers = ds_centers(ds_probs < 0.99);
-        ds_probs = ds_probs(ds_probs < 0.99);
-        yyaxis left, area(ds_centers, [0 diff(ds_probs)],'FaceAlpha',0.5)
+        ds_pdf = [0 diff(ds_probs)];
+        yyaxis left, harea = area(ds_centers, ds_pdf,'FaceAlpha',0.5);
+        harea.EdgeColor = 'none';
+        ylim([0 max(ds_pdf)]);
         str = 'Pr. $$\hat{S}$$'; ylabel(str,'Interpreter','Latex');
         yyaxis right, plot(ds_centers,ds_probs)
         str = 'Pr. $$\hat{S} < S$$'; ylabel(str,'Interpreter','Latex');
         str = 'rms delay spread, $$S$$ (ns)';xlabel(str,'Interpreter','Latex')
+        ylim([0 1]);
         setCommonAxisProps();
         drawnow
         savefig(h,[fig_dir '\' mat_fname(1:end-4) '__ds.fig']);
@@ -434,44 +430,6 @@ for fk = 1:Nfiles
         setFigureForPrinting();
         print(h,[png_dir '\' mat_fname(1:end-4) '__ds.png'],'-dpng','-r300')    
         close(h)
-
-        %
-        % Analyze the delay spread versus distance
-        %
-        if 0
-        h = figure();      
-        % remove nans from data
-        k_lfit = find(r>10);
-        r_lfit = r(k_lfit);
-        r_p = r_lfit;  
-        ds_p = rms_delay_spread_sec(k_lfit);
-        r_p(isnan(ds_p)) = [];
-        ds_p(isnan(ds_p)) = [];
-        plot(r_p,1e9*ds_p, 'color', [0,0,0]+0.7, ...
-            'marker', '.', 'linestyle' , 'none');
-        hold on;
-        stdS = 1e9*std(rms_delay_spread_sec(~isnan(rms_delay_spread_sec)));
-        ds_poly = polyfit(r_p,1e9*ds_p,1);
-        r_p_plot = linspace(min(r_p), max(r_p), 10);
-        ds_poly_vals = polyval(ds_poly, r_p_plot);
-        plot(r_p_plot, ds_poly_vals, 'k-', ...
-           r_p_plot, repmat(ds_poly_vals(:),1,2)+stdS*[ones(10,1) -ones(10,1)], ...
-            'k--', 'LineWidth', 1.0);
-        hold off;
-        setCommonAxisProps()
-        legend({'measured', ...
-            sprintf('%0.2fx + %0.1f',ds_poly), ...
-            '+/- \sigma'}, 'Location', 'best');        
-        xlabel('distance, d (m)')
-        ylabel('S (ns)')
-        grid off
-        %title({'RMS Delay Spread versus Distance', strrep(mat_fname,'_','-')})
-        drawnow
-        savefig(h,[fig_dir '\' mat_fname(1:end-4) '__ds2dist.fig']);
-        setFigureForPrinting();
-        print(h,[png_dir '\' mat_fname(1:end-4) '__ds2dist.png'],'-dpng','-r300')    
-        close(h)  
-        end
         
     end %if OPTS(OPT_DELAY_SPREAD)
 
@@ -493,42 +451,6 @@ for fk = 1:Nfiles
         setFigureForPrinting();
         print(h,[png_dir '\' mat_fname(1:end-4) '__Kcdf.png'],'-dpng','-r300')
         close(h)
-
-        % 
-        % Analyze the Rician K Factor Estimates Versus Distance
-        % 
-        if 0
-        h = figure();     
-        r = rA;
-        k_lfit = find(r>3);
-        r_lfit = r(k_lfit);
-        r_p = r_lfit;  K_p = K(k_lfit);
-        not_these = isnan(K_p) | isinf(K_p);
-        r_p(not_these) = [];
-        K_p(not_these) = [];
-        plot(r_p, K_p, 'color', [0,0,0]+0.7, 'marker', '.', 'linestyle' , 'none');
-        hold on 
-        KdB_poly = polyfit(r_p,K_p,1);
-        r_p_plot = linspace(min(r_p), max(r_p), 10);
-        KdB_poly_vals = polyval(KdB_poly, r_p_plot);
-        stdK = std(K_p);
-        plot(r_p_plot, KdB_poly_vals, 'k-', ...
-           r_p_plot, repmat(KdB_poly_vals(:),1,2)+2*stdK*[ones(10,1) -ones(10,1)], ...
-            'k--', 'LineWidth', 1.0);
-        hold off
-        setCommonAxisProps()
-        legend({'measured', ...
-            sprintf('%0.2fx + %0.1f',KdB_poly), ...
-        '+/- 2\sigma'},'FontSize',9);
-        xlabel('distance (m)')
-        ylabel('K (dB)')
-        %title({'Rician K versus Distance', strrep(mat_fname,'_','-')})
-        drawnow
-        savefig(h,[fig_dir '\' mat_fname(1:end-4) '__KvRange.fig']);
-        setFigureForPrinting();
-        print(h,[png_dir '\' mat_fname(1:end-4) '__KvRange.png'],'-dpng','-r300')    
-        close(h)   
-        end
     
     end % OPTS(OPT_KFACTOR)
     
@@ -615,7 +537,7 @@ for fk = 1:Nfiles
             'meta',meta,...
             'path_gain_range_m', path_gain_range_m, ...
             'path_gain_dB',path_gain_dB,...
-            'path_gain_dB_poly',path_gain_dB_poly,...
+            'path_gain_dB_poly',path_gain_dB_poly{2},...
             'K',K,...
             'los', LOS, ...
             'rms_delay_spread_sec',rms_delay_spread_sec, ...
