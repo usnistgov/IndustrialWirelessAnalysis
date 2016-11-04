@@ -64,6 +64,9 @@ reporting.makeLatexFigReport();                         % produces a latex sub-r
 ```
 
 
+# Contact Information
+Main author: Rick Candell, NIST <br>
+https://www.nist.gov/programs-projects/wireless-systems-industrial-environments
 
 
 
