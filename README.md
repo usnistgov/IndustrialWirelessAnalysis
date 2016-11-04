@@ -10,7 +10,8 @@ and the generation of wireless scenarios.
 ### Main components
 * meas_analysis:    Includes files for analyzing RF Sounder measurements of various factories. 
 Data may be found at http://doi.org/10.18434/T44S3N
-The main M code entry point is *estimate_channel_cwd.m*.
+* The main M code entry point is *estimate_channel_cwd.m*.
+
 * tap_reduction:    Library for generating an N-sampled impulse response for RF channel emulator integration
 
 ### Supporting capabilities
