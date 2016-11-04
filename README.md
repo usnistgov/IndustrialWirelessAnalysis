@@ -1,8 +1,10 @@
 # NIST Industrial Wireless Analysis
-![EM Wave](images/EMwave.jpg) This repository contains code for analyzing industrial wireless sounder measurements
+This repository contains code for analyzing industrial wireless sounder measurements
 and the generation of wireless scenarios.
 
 **DISCLAIMER**: Certain commercial equipment, instruments, or materials are identified in this paper in order to specify the experimental procedure adequately. Such identification is not intended to imply recommendation or endorsement by NIST, nor is it intended to imply that the materials or equipment identified are necessarily the best available for the purpose.
+
+![EM Wave](images/EMwave.jpg) 
 
 ## Repository Structure
 ### Main components
