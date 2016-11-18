@@ -1,4 +1,4 @@
-function [p1, p2] = gainPlot(pattern,freq, location_str, loc_logic, infpt)
+function [p1, p2] = gainPlot2(pattern,freq, location_str, loc_logic, infpt)
 % Analyze complex impulse responses from measurements
 % Author: Rick Candell
 % Organization: National Institute of Standards and Technology
@@ -102,13 +102,13 @@ try
     [g_val1, delta1] = polyval(p1, d_val1, S1);
     delta1 = mean(delta1);
     d_val2 = log10(logspace(x_intersect, log10(max(Rfit2)), 20));
-    [g_val2, delta2] = polyval(p2, d_val2, S2);
-    delta2 = mean(delta2);
+    [g_val2] = polyval(p2, d_val2, S2);
+    rmse = calcMse(R, G, legcnt, x_intersect, p1, p2);
 catch me
     legcnt = 2;
     d_val2 = log10(logspace(log10(infpt), log10(max(Rfit2)), 20));
-    [g_val2, delta2] = polyval(p2, d_val2, S2);
-    delta2 = mean(delta2);
+    [g_val2] = polyval(p2, d_val2, S2);
+    rmse = calcMse(R, G, legcnt, nan, p1, p2);
 end
 
 % plot the gains
@@ -119,14 +119,14 @@ if legcnt == 3
     semilogx(10.^d_val1,g_val1,'b+-')
     semilogx(10.^d_val2,g_val2,'b*-')
     hold off    
-    legend('Measured',sprintf('P1: %0.1fd + %0.1f, Erms %.1f dB',p1(2), p1(1),delta1), ...
-        sprintf('P2: %0.1fd + %0.1f, Erms %.1f dB',p2(2), p2(1), delta2), ...
+    legend('Measured',sprintf('P1: %0.1fd + %0.1f, rmse %.1f dB',p1(2), p1(1),rmse), ...
+        sprintf('P2: %0.1fd + %0.1f, Erms %.1f dB',p2(2), p2(1), rmse), ...
         'Location','southwest')
 else
     hold on
     semilogx(10.^d_val2,g_val2,'b*-')
     hold off
-    legend('Measured',sprintf('P2: %0.1fd + %0.1f, Erms %.1f dB',p2(2), p2(1), delta2),...
+    legend('Measured',sprintf('P2: %0.1f log10(d) + %0.1f, rmse %.1f dB',p2(2), p2(1), rmse),...
         'Location','southwest')
 end
 xlabel('Distance, d (m)','Interpreter','Latex')
@@ -138,4 +138,15 @@ reporting.setFigureForPrinting(h)
 end
 
 
+function e = calcMse(R, G, legcnt, x_intersect, p1, p2)
+    if legcnt ==3
+        G2_1=p1(1)*log10(R(R<x_intersect))+p1(2);
+        G2_2=p2(1)*log10(R(R>=x_intersect))+p2(2);
+        G2=[G2_1 G2_2];
+        e=sqrt(sum((G-G2).^2)/length(G));
+    else
+        G2=p2(1)*log10(R)+p2(2);
+        e=sqrt(sum((G-G2).^2)/length(G));
+    end 
+end
 

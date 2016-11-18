@@ -1,4 +1,4 @@
-function [p1, p2] = gainPlot(pattern,freq, location_str, loc_logic)
+function [p1, p2] = gainPlotCustom(pattern,freq, location_str, loc_logic)
 % Analyze complex impulse responses from measurements
 % Author: Rick Candell, Mohamed Hany
 % Organization: National Institute of Standards and Technology

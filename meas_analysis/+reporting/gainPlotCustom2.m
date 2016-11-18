@@ -1,12 +1,9 @@
-function [p1, p2] = gainPlot(pattern,freq, location_str, loc_logic, infpt)
+function p = gainPlotCustom2(pattern,freq, location_str, loc_logic)
 % Analyze complex impulse responses from measurements
-% Author: Rick Candell
+% Author: Rick Candell, Mohamed Hany
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
 
-if nargin < 5
-    infpt = 10;
-end
 if nargin < 4
     loc_logic = true;
 end
@@ -84,58 +81,39 @@ end
 G = G(~isnan(R));
 R = R(~isnan(R));
 
-% lower segment
-Gfit1 = G(R<infpt);
-Rfit1 = R(R<infpt);
-[p1, S1] = polyfit(log10(Rfit1), Gfit1, 1);
+%ft = fittype('A*exp(x)+B*x+C');
+ft = fittype('A*F^(x)+B*x+C');
+fo = fitoptions('Method','NonlinearLeastSquares',...
+                'Lower',[-10,0,-Inf,-Inf],...
+               'Upper',[0, 5, Inf, Inf]);
+p = fit(log10(R), G, ft, fo);
+d_val= log10(logspace(log10(min(R)), log10(max(R)), 20));
+g_val=feval(p,d_val);
 
-% upper segment
-Gfit2 = G(R>infpt);
-Rfit2 = R(R>infpt);
-[p2, S2] = polyfit(log10(Rfit2), Gfit2, 1);
-
-% find draw points
-legcnt = 3;
-try
-    x_intersect = fzero(@(x) polyval(p1-p2,x),[log10(min(Rfit1)), log10(max(Rfit2))]);
-    d_val1 = log10(logspace(log10(min(Rfit1)), x_intersect, 20));
-    [g_val1, delta1] = polyval(p1, d_val1, S1);
-    delta1 = mean(delta1);
-    d_val2 = log10(logspace(x_intersect, log10(max(Rfit2)), 20));
-    [g_val2, delta2] = polyval(p2, d_val2, S2);
-    delta2 = mean(delta2);
-catch me
-    legcnt = 2;
-    d_val2 = log10(logspace(log10(infpt), log10(max(Rfit2)), 20));
-    [g_val2, delta2] = polyval(p2, d_val2, S2);
-    delta2 = mean(delta2);
-end
+% calculate the RMS error
+rmse = calcMse(R, G, p);
 
 % plot the gains
 h = figure();
 semilogx(R,G, 'color', [0,0,0]+0.75, 'marker', '.', 'linestyle' , 'none')
-if legcnt == 3
+
     hold on
-    semilogx(10.^d_val1,g_val1,'b+-')
-    semilogx(10.^d_val2,g_val2,'b*-')
-    hold off    
-    legend('Measured',sprintf('P1: %0.1fd + %0.1f, Erms %.1f dB',p1(2), p1(1),delta1), ...
-        sprintf('P2: %0.1fd + %0.1f, Erms %.1f dB',p2(2), p2(1), delta2), ...
-        'Location','southwest')
-else
-    hold on
-    semilogx(10.^d_val2,g_val2,'b*-')
+    semilogx(10.^d_val,g_val,'b*-')
     hold off
-    legend('Measured',sprintf('P2: %0.1fd + %0.1f, Erms %.1f dB',p2(2), p2(1), delta2),...
-        'Location','southwest')
-end
-xlabel('Distance, d (m)','Interpreter','Latex')
-ylabel('$10\ log_{10}(G)$','Interpreter','Latex')
-ylim([-120 -40])
-reporting.setCommonAxisProps()
-reporting.setFigureForPrinting(h)
+    legend('Measured',...
+        sprintf('P: %0.1f*%0.1f^{log10(d)} + %0.1f*log10(d) %+0.1f, Erms %.1f dB',p.A, p.F, p.B, p.C, rmse), ...
+        'Location','southwest', 'Interpreter','Latex');
+xlabel('Distance, d (m)','Interpreter','Latex');
+ylabel('$10\ log_{10}(G)$','Interpreter','Latex');
+ylim([-120 -40]);
+reporting.setCommonAxisProps();
+reporting.setFigureForPrinting(h);
 
 end
 
 
+function e = calcMse(R, G, pcustom)
+G2=pcustom.A*pcustom.F.^(log10(R))+pcustom.B*log10(R)+pcustom.C;
+e=sqrt(sum((G-G2).^2)/length(G));
+end
 
