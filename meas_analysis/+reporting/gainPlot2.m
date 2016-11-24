@@ -1,27 +1,31 @@
-function [p1, p2] = gainPlot2(pattern,freq, location_str, loc_logic, infpt)
+function [p1, p2, rmse] = gainPlot2(root, pattern, freq, location_str, loc_logic, infpt)
 % Analyze complex impulse responses from measurements
 % Author: Rick Candell
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
 
-if nargin < 5
+if nargin < 6
     infpt = 10;
 end
-if nargin < 4
+if nargin < 5
     loc_logic = true;
 end
-if nargin < 3
+if nargin < 4
     location_str = NaN;
 end
-if nargin < 2
+if nargin < 3
     error 'frequency specification is required'
 end
+if nargin <2
+    error 'pattern is required'
+end
 if nargin <1
-    error 'patter is required'
+    error 'root folder is required'
 end
 
 p1 = [];
 p2 = [];
+rmse = nan;
 
 %
 % query the list of stats files
@@ -41,7 +45,7 @@ for fk = 1:Nfiles
     % use test data or the real thing
     try 
         
-        stats_file_path = files(fk).name;      
+        stats_file_path = [root '\' files(fk).name];      
         if strfind(stats_file_path,'Oats')
             continue;
         end
@@ -71,8 +75,8 @@ for fk = 1:Nfiles
     disp(['Processing file: ' meta.MatFile_str])
     
     % path gain
-    R = [R; stats.path_gain_range_m(:)];
-    G = [G; stats.path_gain_dB(:)];
+    R = [R; stats.path_gain_range_m(:)]; %#ok<AGROW>
+    G = [G; stats.path_gain_dB(:)]; %#ok<AGROW>
     
 end
 
@@ -83,6 +87,8 @@ end
 % compute the least squares fit of the gain data
 G = G(~isnan(R));
 R = R(~isnan(R));
+% G=G(R>=10);
+% R=R(R>=10);
 
 % lower segment
 Gfit1 = G(R<infpt);
@@ -92,6 +98,8 @@ Rfit1 = R(R<infpt);
 % upper segment
 Gfit2 = G(R>infpt);
 Rfit2 = R(R>infpt);
+
+% compute polynomial fit
 [p2, S2] = polyfit(log10(Rfit2), Gfit2, 1);
 
 % find draw points
@@ -99,8 +107,7 @@ legcnt = 3;
 try
     x_intersect = fzero(@(x) polyval(p1-p2,x),[log10(min(Rfit1)), log10(max(Rfit2))]);
     d_val1 = log10(logspace(log10(min(Rfit1)), x_intersect, 20));
-    [g_val1, delta1] = polyval(p1, d_val1, S1);
-    delta1 = mean(delta1);
+    [g_val1] = polyval(p1, d_val1, S1);
     d_val2 = log10(logspace(x_intersect, log10(max(Rfit2)), 20));
     [g_val2] = polyval(p2, d_val2, S2);
     rmse = calcMse(R, G, legcnt, x_intersect, p1, p2);
@@ -120,7 +127,7 @@ if legcnt == 3
     semilogx(10.^d_val2,g_val2,'b*-')
     hold off    
     legend('Measured',sprintf('P1: %0.1fd + %0.1f, rmse %.1f dB',p1(2), p1(1),rmse), ...
-        sprintf('P2: %0.1fd + %0.1f, Erms %.1f dB',p2(2), p2(1), rmse), ...
+        sprintf('P2: %0.1fd + %0.1f, rmse %.1f dB',p2(2), p2(1), rmse), ...
         'Location','southwest')
 else
     hold on

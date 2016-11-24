@@ -1,4 +1,4 @@
-function [p, rmse] = gainPlotCustom2(root, pattern, freq, location_str, loc_logic)
+function [p, rmse] = gainPlotCustom3(root, pattern, freq, location_str, loc_logic)
 % Analyze complex impulse responses from measurements
 % Author: Rick Candell, Mohamed Hany
 % Organization: National Institute of Standards and Technology
@@ -83,15 +83,17 @@ end
 % compute the least squares fit of the gain data
 G = G(~isnan(R));
 R = R(~isnan(R));
-G=G(R>=10);
-R=R(R>=10);
+% G=G(R>=10);
+% R=R(R>=10);
 
-ft = fittype('A*F^(x)+B*x+C');
+ft = fittype('A*U^(x+Y)+B*x+V*log10(x+Z)/log10(W)+C');
 ftvars = coeffnames(ft);
+dshift = 100;
 fo = fitoptions('Method','NonlinearLeastSquares',...
-        'Lower',[-50,-100, -100, 0],...
-        'Upper',[  0, 20, 100,   20], ...
-        'StartPoint',[-4 10 -50 exp(1)]);
+        'MaxFunEvals', 1e5, ...
+        'Lower',        [-Inf,  -Inf,   -Inf,   -Inf,   -1e4,   1,      -dshift,    -dshift],...
+        'Upper',        [  0,   Inf,    Inf,    Inf,    1e4,    10,     dshift,    dshift], ...
+        'StartPoint',   [-4     0       -50     exp(1)  1       exp(1)  0,          0] );  
 p = fit(log10(R), G, ft, fo);
 d_val= log10(logspace(log10(min(R)), log10(max(R)), 20));
 g_val=feval(p,d_val);
@@ -101,25 +103,31 @@ rmse = calcMse(R, G, p);
 
 % plot the gains
 h = figure();
-semilogx(R,G, 'color', [0,0,0]+0.75, 'marker', '.', 'linestyle' , 'none')
+semilogx(R,G, 'color', [0,0,0]+0.75, 'marker', 'o', 'linestyle' , 'none')
 
-    hold on
-    semilogx(10.^d_val,g_val,'b*-')
-    hold off
-    legend('Measured',...
-        sprintf('P: %0.1f*%0.1f^{log10(d)} + %0.1f*log10(d) %+0.1f, rmse %.1f dB',p.A, p.F, p.B, p.C, rmse), ...
-        'Location','southwest', 'Interpreter','Latex');
-xlabel('Distance, d (m)','Interpreter','Latex');
-ylabel('$10\ log_{10}(G)$','Interpreter','Latex');
-ylim([-120 -40]);
+hold on
+semilogx(10.^d_val,g_val,'b*-')
+hold off       
+fit_legstr = ...
+    sprintf('$\\hat{G}=A~U^{x}+Bx+V~log_{W}(x)+C$\nA: %0.3f, B: %0.1f, C: %0.1f\nU: %0.1f, V: %0.1f, W: %0.1f\nY:%0.1f, Z:%0.1f, rmse: %0.1f', ...
+        p.A, p.B, p.C, p.U, p.V, p.W, ...
+        p.Y, p.Z, ...
+        rmse);
+hl = legend('Measured Data, G',...
+    fit_legstr, ...
+    'Location','Best',...
+    'Interpreter','latex');
+set(hl,'Interpreter','latex');
+
+xlabel('Distance, $d$ (m)','Interpreter','Latex');
+ylabel('$10 \times log_{10}( \sum{|h(t)|^{2}} )$','Interpreter','Latex');
 reporting.setCommonAxisProps();
-reporting.setFigureForPrinting(h);
 
 end
 
 
-function e = calcMse(R, G, pcustom)
-    G2=pcustom.A*pcustom.F.^(log10(R))+pcustom.B*log10(R)+pcustom.C;
+function e = calcMse(R, G, p)
+    G2=p(log10(R));
     e=sqrt(sum((G-G2).^2)/length(G));
 end
 
