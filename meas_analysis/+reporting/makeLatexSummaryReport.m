@@ -1,4 +1,4 @@
-function summarizeStatsFile(filename)
+function makeLatexSummaryReport(filename)
 % Analyze complex impulse responses from measurements
 % Author: Rick Candell
 % Organization: National Institute of Standards and Technology
@@ -43,7 +43,7 @@ disp('ALL ====================================')
 %         '$\bar{\tau}$ (ns)','$\bar{S}$ (ns)','$\bar{K}$ (dB)'}, ...
 %         'format', '%-.1f', 'alignment', 'c');
 
-statarray = grpstats(ds,{'Run'},'mean','DataVars',{'Freq','Path_Gain_Poly_Slope','Path_Gain_Poly_YInt', 'Mean_Delay_ns', 'Mean_Delay_Spread_ns', 'Mean_K','Max_K','Min_K'})
+statarray = grpstats(ds,{'Run'},'mean','DataVars',{'Freq','Path_Gain_Poly_Slope','Path_Gain_Poly_YInt', 'Mean_Delay_ns', 'Mean_Delay_Spread_ns', 'Mean_K','Max_K','Min_K'});
 for ii = 1:length(statarray.Run)
     statarray.Run{ii} = strrep(statarray.Run{ii},'_',' ');
 end
@@ -51,27 +51,34 @@ export(statarray,'XLSfile','all_data.xls')
 statarray1 = statarray(1:end,[1 3 4 6 7 8]);
 N = length(statarray1);
 N2 = round(N/2);
+
+%
+% Make the summary tables in latex report
+%
 matrix2latex(statarray1(1:N2,:), '../pub/allruns1.tex', 'columnLabels', ...
-    {'Run','$f$ (GHz)','Slope (dB/dec)', ...
-        '$\bar{\tau}$ (ns)','$\bar{S}$ (ns)','$\bar{K}$ (dB)',...
-        'Max K (dB)'}, 'format', '%-.1f', 'alignment', 'c');
-matrix2latex(statarray1(N2+1:N,:), '../pub/allruns2.tex', 'columnLabels', ...
-    {'Run','$f$ (GHz)','Slope (dB/dec)', ...
-        '$\bar{\tau}$ (ns)','$\bar{S}$ (ns)','$\bar{K}$ (dB)',...
+    {'Run','$f$ (GHz)','$\gamma_2$', ...
+        '$\mathbf{E}(\tau)$ (ns)','$\mathbf{E}(S)$ (ns)','$\mathbf{E}(K)$ (dB)',...
         'Max K (dB)'}, 'format', '%-.1f', 'alignment', 'c');
     
-statarray = grpstats(ds,{'Site','Freq','RunType'},'mean','DataVars',{'Path_Gain_Poly_Slope','Path_Gain_Poly_YInt', 'Mean_Delay_ns', 'Mean_Delay_Spread_ns', 'Mean_K','Max_K','Min_K'})
+matrix2latex(statarray1(N2+1:N,:), '../pub/allruns2.tex', 'columnLabels', ...
+    {'Run','$f$ (GHz)','$\gamma_2$', ...
+        '$\mathbf{E}(\tau)$ (ns)','$\mathbf{E}(S)$ (ns)','$\mathbf{E}(K)$ (dB)',...
+        'Max K (dB)'}, 'format', '%-.1f', 'alignment', 'c');
+
+statarray = grpstats(ds,{'Site','Freq','RunType'},'mean','DataVars',{'Path_Gain_Poly_Slope','Path_Gain_Poly_YInt', 'Mean_Delay_ns', 'Mean_Delay_Spread_ns', 'Mean_K','Max_K','Min_K'});
 export(statarray,'XLSfile','mobile_gain.xls')
 matrix2latex(statarray(1:end,[1 2 3 5 6]), '../pub/all.tex', 'columnLabels', ...
-    {'Site','$f$ (GHz)','Route','Slope (dB/dec)','Intercept (dB)', ...
-        '$\bar{\tau}$ (ns)','$\bar{S}$ (ns)','$\bar{K}$ (dB)',...
+    {'Site','$f$ (GHz)','Route','$\gamma_2$','Intercept (dB)', ...
+        '$\mathbf{E}(\tau)$ (ns)','$\mathbf{E}(S)$ (ns)','$\mathbf{E}(K)$ (dB)',...
         'Max K (dB)','Min K (dB)'}, 'format', '%-.1f', 'alignment', 'c');
 
 
 disp('CHANNEL GAIN  ====================================')
-statarray = grpstats(ds,{'Site','Freq','RunType'},'mean','DataVars',{'Path_Gain_Poly_Slope','Path_Gain_Poly_YInt'})
+statarray = grpstats(ds,{'Site','Freq','RunType'},'mean','DataVars',{'Path_Gain_Poly_Slope','Path_Gain_Poly_YInt'});
 export(statarray,'XLSfile','mobile_gain.xls')
-matrix2latex(statarray(1:end,[1 2 3 5 6]), '../pub/gain.tex', 'columnLabels', {'Site','$f$ (GHz)','Route','Slope (dB/dec)','Intercept (dB)'}, 'format', '%-.1f', 'alignment', 'c')
+matrix2latex(statarray(1:end,[1 2 3 5 6]), '../pub/gain.tex', 'columnLabels', ...
+    {'Site','$f$ (GHz)','Route','$\gamma_2$','Intercept (dB)'}, ...
+        'format', '%-.1f', 'alignment', 'c')
 
 % disp('POWER DELAY  ====================================')
 % statarray = grpstats(ds,{'Site','Freq','RunType'},'mean','DataVars',{'Mean_Delay_ns'})
@@ -79,46 +86,20 @@ matrix2latex(statarray(1:end,[1 2 3 5 6]), '../pub/gain.tex', 'columnLabels', {'
 % matrix2latex(statarray(1:end,[1 2 3 5]), 'delay.tex', 'columnLabels', {'Site','f (GHz)','Route','$\bar{\tau}$ (ns)'}, 'format', '%-.1f', 'alignment', 'c') 
 
 disp('DELAY AND DELAY SPREAD ====================================')
-statarray = grpstats(ds,{'Site','Freq','RunType'},'mean','DataVars',{'Mean_Delay_ns', 'Mean_Delay_Spread_ns'})
+statarray = grpstats(ds,{'Site','Freq','RunType'},{'mean','min','max','std'},'DataVars',{'Mean_Delay_Spread_ns'});
 export(statarray,'XLSfile','mobile_ds.xls')
-matrix2latex(statarray(1:end,[1 2 3 5 6]), '../pub/spread.tex', 'columnLabels', {'Site','$f$ (GHz)','Route','$\bar{\tau}$ (ns)','$\bar{S}$ (ns)'}, 'format', '%-.1f', 'alignment', 'c') 
+matrix2latex(statarray(1:end,[1 2 3 5 6 7 8]), '../pub/spread.tex', 'columnLabels', ...
+    {'Site','$f$ (GHz)','Route','$\mathbf{E}(S)$ (ns)','$\min(S)$ (ns)','$\max(S)$ (ns)','$\sigma(S)$ (ns)'}, ...
+        'format', '%-.1f', 'alignment', 'c') 
 
 disp('RICIAN K FACTOR==================================')
-statarray = grpstats(ds,{'Site','Freq','RunType'},'mean','DataVars',{'Mean_K','Max_K','Min_K'})
+statarray = grpstats(ds,{'Site','Freq','RunType'},'mean','DataVars',{'Mean_K','Max_K','Min_K'});
 export(statarray,'XLSfile','mobile_K.xls')
-matrix2latex(statarray(1:end,[1 2 3 5 6 7]), '../pub/kfactor.tex', 'columnLabels', {'Site','$f$ (GHz)','Route','$\bar{K}$ (dB)','Max K (dB)','Min K (dB)'}, 'format', '%-.1f', 'alignment', 'c') 
+matrix2latex(statarray(1:end,[1 2 3 5 6 7]), '../pub/kfactor.tex', 'columnLabels', ... 
+    {'Site','$f$ (GHz)','Route','$\mathbf{E}(K)$ (dB)','Max K (dB)','Min K (dB)'}, ...
+        'format', '%-.1f', 'alignment', 'c') 
 
 return
-% CLOUD STATS
-cloudstats = cloud_stats();
-cloudstats.RunType = cell(size(cloudstats,1),1);
-cloudstats.Site = cell(size(cloudstats,1),1);
-for ii = 1:size(cloudstats,1)
-    if strfind(cell2mat(cloudstats.Run(ii)),'internal')
-        cloudstats.RunType(ii) = {'internal'};
-    else
-        cloudstats.RunType(ii) = {'external'};
-    end
-    cloudstats.Site(ii) = {'steam'};
-end
-
-ds_c = table2dataset(cloudstats);
-
-disp('CLOUD MEASUREMENTS ==============================')
-disp('=================================================')
-disp('=================================================')
-disp(' ')
-
-disp('POWER DELAY  ====================================')
-statarray = grpstats(ds_c,{'Site','Freq','RunType'},'mean','DataVars',{'Mean_Delay_ns','Max_Delay_ns','Min_Delay_ns'})
-export(statarray,'XLSfile','cloud_du.xls')
-
-disp('DELAY SPREAD ====================================')
-statarray = grpstats(ds_c,{'Site','Freq','RunType'},'mean','DataVars',{'Mean_Delay_Spread_ns','Max_Delay_Spread_ns','Min_Delay_Spread_ns'})
-export(statarray,'XLSfile','cloud_ds.xls')
-
-
-% diary off
 
 end
 

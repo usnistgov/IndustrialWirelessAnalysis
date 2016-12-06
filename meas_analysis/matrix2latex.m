@@ -142,7 +142,7 @@ function matrix2latex(matrix, filename, varargin)
     fprintf(fid, '\\begin{tabular}{|');
 
     if(~isempty(rowLabels))
-        fprintf(fid, 'l|');
+        fprintf(fid, '|l|');
     end
     for i=1:width
         fprintf(fid, '%c|', alignment);

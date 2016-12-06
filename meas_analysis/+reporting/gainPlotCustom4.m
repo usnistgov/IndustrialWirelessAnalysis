@@ -1,4 +1,4 @@
-function [p, rmse] = gainPlotCustom3(root, pattern, freq, location_str, loc_logic)
+function [p, rmse] = gainPlotCustom4(root, pattern, freq, location_str, loc_logic)
 % Analyze complex impulse responses from measurements
 % Author: Rick Candell, Mohamed Hany
 % Organization: National Institute of Standards and Technology
@@ -83,21 +83,20 @@ end
 % compute the least squares fit of the gain data
 G = G(~isnan(R));
 R = R(~isnan(R));
-G=G(R>=10);
-R=R(R>=10);
 
-ft = fittype( 'A + B*(-sign(x-E)+1)*x*U^(x)     + BB*(sign(x-EE)+1)*x*UU^(x)', 'independent', 'x', 'dependent', 'y' );
+ft = fittype( 'A + B*(-sign(x-E)+1)*x*U^(x) + BB*(sign(x-E)+1)*x*UU^(x)', 'independent', 'x', 'dependent', 'y' );
 opts = fitoptions( 'Method', 'NonlinearLeastSquares' );
 opts.Display = 'Off';
-opts.Lower = [-Inf -Inf -Inf -Inf -Inf 0 0];
-opts.StartPoint = [0.728661681678271 0.73784165379759 0.988417928784981 1.7 1.7 0.662808061960974 0.7069];
+opts.Lower = [-Inf -Inf -Inf -Inf 0 0];
+opts.StartPoint = [0.728661681678271 0.73784165379759 0.988417928784981 1.7 0 0.7069];
 
-p = fit(log10(R), G, ft, opts);
+[p, gof] = fit(log10(R), G, ft, opts);
 d_val= log10(logspace(log10(min(R)), log10(max(R)), 20));
 g_val=feval(p,d_val);
 
 % calculate the RMS error
-rmse = calcMse(R, G, p);
+% rmse = calcMse(R, G, p);
+rmse = gof.rmse;
 
 % plot the gains
 h = figure();
@@ -106,17 +105,7 @@ semilogx(R,G, 'color', [0,0,0]+0.75, 'marker', 'o', 'linestyle' , 'none')
 hold on
 semilogx(10.^d_val,g_val,'b*-')
 hold off       
-% fit_legstr = ...
-%     sprintf('$\\hat{G}=A~U^{x}+Bx+V~log_{W}(x)+C$\nA: %0.3f, B: %0.1f, C: %0.1f\nU: %0.1f, V: %0.1f, W: %0.1f\nY:%0.1f, Z:%0.1f, rmse: %0.1f', ...
-%         p.A, p.B, p.C, p.U, p.V, p.W, ...
-%         p.Y, p.Z, ...
-%         rmse);
-% hl = legend('Measured Data, G',...
-%     fit_legstr, ...
-%     'Location','Best',...
-%     'Interpreter','latex');
-% set(hl,'Interpreter','latex');
-
+legend('data','piecewise fit','Location','best')
 xlabel('Distance, $d$ (m)','Interpreter','Latex');
 ylabel('$10 \times log_{10}( \sum{|h(t)|^{2}} )$','Interpreter','Latex');
 reporting.setCommonAxisProps();

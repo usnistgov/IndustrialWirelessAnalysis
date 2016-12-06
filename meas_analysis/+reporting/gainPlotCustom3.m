@@ -83,8 +83,6 @@ end
 % compute the least squares fit of the gain data
 G = G(~isnan(R));
 R = R(~isnan(R));
-% G=G(R>=10);
-% R=R(R>=10);
 
 ft = fittype('A*U^(x+Y)+B*x+V*log10(x+Z)/log10(W)+C');
 ftvars = coeffnames(ft);

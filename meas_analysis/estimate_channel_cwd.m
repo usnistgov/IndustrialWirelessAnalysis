@@ -12,7 +12,7 @@ end
 OPT_PATH_GAIN = 1;
 OPT_KFACTOR = 2;
 OPT_DELAY_SPREAD = 3;
-OPT_AVGCIR_NTAP = 4;
+OPT_AVGCIR = 4;
 OPT_NTAP_APPROX = 5;
 OPT_WRITE_STATS = 6;
 
@@ -32,7 +32,7 @@ if nargin < 1
     error 'specify a file search pattern'
 end
 
-if OPTS(OPT_AVGCIR_NTAP) == 1
+if OPTS(OPT_AVGCIR) == 1
     if OPTS(OPT_KFACTOR) == 0
         OPTS(OPT_KFACTOR) = 1;
         disp('average cir estimation requires k factor estimation')
@@ -120,7 +120,7 @@ for fk = 1:Nfiles
     
     
     % META DATA SECTION
-    disp(meta)
+    %disp(meta)
     Ts = (1/meta.SampleRate_MHz_num)*1e-6;  % sample rate
     wl =  meta.CodewordLength_num;          % codeword length
     ns = meta.PNOversample_num;             % oversample rate
@@ -164,9 +164,9 @@ for fk = 1:Nfiles
     stats_dir = 'stats';
     fig_dir = 'figs';
     png_dir = 'png';
-    mkdir(stats_dir);
-    mkdir(fig_dir); 
-    mkdir(png_dir); 
+    if ~exist(stats_dir,'dir'), mkdir(stats_dir), end;
+    if ~exist(fig_dir,'dir'),   mkdir(fig_dir), end;
+    if ~exist(png_dir,'dir'),   mkdir(png_dir), end; 
 
     %
     % ANTENNA DATA
@@ -209,12 +209,8 @@ for fk = 1:Nfiles
         % because of the wrapping of energy in the FFT-based
         % correlation we must remove the trailing edge.
         if OPTS(OPT_DELAY_SPREAD)
-%           if pk_pwr > -110;
             [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
                 compute_delay_spread(Ts, cir);
-%             else
-%                 nan;
-%             end
         end        
 
         % Compute the path loss in the cir
@@ -233,25 +229,33 @@ for fk = 1:Nfiles
         % compute the K factor assuming Rician channel
         % we only consider components 10 dB above the noise floor and
         % where the peak occurs within 8 samples of beginning of the CIR 
-        if OPTS(OPT_KFACTOR) || OPTS(OPT_AVGCIR_NTAP)
+        if OPTS(OPT_KFACTOR) || OPTS(OPT_AVGCIR)
             [K(kk), LOS(kk), k_pks] = compute_k_factor(cir, ns);
         end
         
         % Aggregate the sums for later computation of avg CIR
         % LOS and NLOS are considered as separate classes of CIR's
-        if OPTS(OPT_AVGCIR_NTAP)
+        % it is assumed that the clock synchronization between TX and RX is
+        % working correctly
+        if OPTS(OPT_AVGCIR)
             if pk_pwr > -100
-                cir0 = cir/max(abs(cir));
-                if LOS(kk) == 1
+                cir0 = cir/max(abs(cir)); 
+                if (k_pks(1)-ns > -1)
+                    cir0start = k_pks(1)-ns+1;
+                else
+                    cir0start = 1;
+                end
+                cir0stop = k_pks(end)+ns;
+                cir0 = cir0(cir0start:cir0stop);
+                lcir0 = length(cir0);
+                if LOS(kk) == 1 
                     num_los = num_los + 1;
-                    inds = k_pks-k_pks(1)+1;
-                    cir_sum_los(inds) = cir_sum_los(inds) + cir0(k_pks);
+                    cir_sum_los(1:lcir0) = cir_sum_los(1:lcir0) + cir0;                      
                 elseif LOS(kk) == -1
                     num_nlos = num_nlos + 1;
-                    inds = k_pks-k_pks(1)+1;
-                    cir_sum_nlos(inds) = cir_sum_nlos(inds) + cir0(k_pks);
+                    cir_sum_nlos(1:lcir0) = cir_sum_nlos(1:lcir0) + cir0;                
                 end      
-            end
+            end   
         end      
         
     end
@@ -273,10 +277,6 @@ for fk = 1:Nfiles
     
     if OPTS(OPT_PATH_GAIN)
         
-%         rA = cir_file.IQdata_Range_m(1:NN,3);
-%         r = rA;
-%         path_gain_dB = path_gain_dB(r~=r(1));
-%         r = r(r~=r(1));
         rA = path_gain_range_m;
         r = rA;        
         
@@ -360,14 +360,14 @@ for fk = 1:Nfiles
             semilogx(10.^d_val1,g_val1,'bx-')
         end
         semilogx(10.^d_val2,g_val2,'bo-')
-        semilogx(d_frii, -frii_fspl_dB, 'k-')
-        %text(d_frii(floor(length(d_frii)/4)),-frii_fspl_dB(floor(length(d_frii)/4))+5,'FSPL','Color','blue');         
+        semilogx(d_frii, -frii_fspl_dB, 'k-') 
         hold off
         if ~isempty(Rfit1) && ~isempty(Rfit2)
-            legend('data','fit1','fit2','fspl')
+            legend('data',sprintf('fit1(n=%.1f)',abs(p1(1)/10)),sprintf('fit2(n=%.1f)', abs(p2(1)/10)),'fspl')
         else
-            legend('data','fit','fspl')
+            legend('data',sprintf('fit(n=%.1f)',abs(p2(1)/10)),'fspl')
         end
+        legend('Location','Best')
         
         setCommonAxisProps()    
         xlabel('distance (m)')
@@ -385,23 +385,9 @@ for fk = 1:Nfiles
         %
         % Analyze the average delay of the CIR's 
         %
-        h = figure();      
-        ds_th = nanmean(mean_delay_sec) + 1.5*nanstd(mean_delay_sec);
-        [du_counts,du_centers] = hist(1e9*mean_delay_sec(mean_delay_sec<ds_th),100);
-        du_probs = cumsum(du_counts/sum(du_counts));     
-        du_pdf = [0 diff(du_probs)];
-        yyaxis left, harea = area(du_centers, du_pdf, 'FaceAlpha',0.5);
-        harea.EdgeColor = 'none';
-        ylim([0 max(du_pdf)]);
-        str = 'Pr. $$ \hat{\tau_D} $$'; ylabel(str,'Interpreter','Latex'); 
-        str = 'average delay, $$\tau_D$$ (ns)';xlabel(str,'Interpreter','Latex')
-        yyaxis right, plot(du_centers,du_probs)
-        ylim([0 1])
-        str = 'Pr. $$ \hat{\tau_D} < {\tau_D} $$'; ylabel(str,'Interpreter','Latex'); 
-        str = 'mean delay, $${\tau_D}$$ (ns)';xlabel(str,'Interpreter','Latex')
+        X = deleteoutliers(1e9*mean_delay_sec(~isnan(mean_delay_sec)));
+        h = plotPDFCDF(X, 100, 'mean delay', 'ns');
         setCommonAxisProps();
-        %title({'CDF of Average Delay', strrep(mat_fname,'_','-')})
-        drawnow
         savefig(h,[fig_dir '\' mat_fname(1:end-4) '__du.fig']);
         setFigureForPrinting();
         print(h,[png_dir '\' mat_fname(1:end-4) '__du.png'],'-dpng','-r300')    
@@ -410,26 +396,13 @@ for fk = 1:Nfiles
         %
         % Analyze the delay spread of the CIR's 
         %
-        h = figure();      
-        ds_th = nanmean(rms_delay_spread_sec) + 1.5*nanstd(rms_delay_spread_sec);
-        [ds_counts,ds_centers] = hist(1e9*rms_delay_spread_sec(rms_delay_spread_sec<ds_th),100);
-        ds_probs = cumsum(ds_counts/sum(ds_counts));
-        ds_pdf = [0 diff(ds_probs)];
-        yyaxis left, harea = area(ds_centers, ds_pdf,'FaceAlpha',0.5);
-        harea.EdgeColor = 'none';
-        ylim([0 max(ds_pdf)]);
-        str = 'Pr. $$\hat{S}$$'; ylabel(str,'Interpreter','Latex');
-        yyaxis right, plot(ds_centers,ds_probs)
-        str = 'Pr. $$\hat{S} < S$$'; ylabel(str,'Interpreter','Latex');
-        str = 'rms delay spread, $$S$$ (ns)';xlabel(str,'Interpreter','Latex')
-        ylim([0 1]);
+        X = deleteoutliers(1e9*rms_delay_spread_sec(~isnan(rms_delay_spread_sec)));
+        h = plotPDFCDF(X, 100, 'rms delay spread', 'ns');
         setCommonAxisProps();
-        drawnow
         savefig(h,[fig_dir '\' mat_fname(1:end-4) '__ds.fig']);
-        h.PaperPositionMode = 'auto';
         setFigureForPrinting();
         print(h,[png_dir '\' mat_fname(1:end-4) '__ds.png'],'-dpng','-r300')    
-        close(h)
+        close(gcf)
         
     end %if OPTS(OPT_DELAY_SPREAD)
 
@@ -437,25 +410,18 @@ for fk = 1:Nfiles
         % 
         % Analyze the Rician K Factor Estimates CDF
         % 
-        h = figure();      
-        Kx = K(~isinf(K));
-        [counts,centers] = hist(Kx,300);
-        plot(centers, cumsum(counts/sum(counts)), 'k');
-        ylim([0 1]);
-        str = '$$K$$ (dB)'; xlabel(str,'Interpreter','Latex');
-        str = '$$ \hat{K} < K $$'; ylabel(str,'Interpreter','Latex');
-        setCommonAxisProps()
-        %title({'CDF of Rician K-factor Estimate', strrep(mat_fname,'_','-')})
-        drawnow
+        X = deleteoutliers(K(~isinf(K)));
+        h = plotPDFCDF(X, 300, 'Rician K Factor', 'dB');
+        setCommonAxisProps();
         savefig(h,[fig_dir '\' mat_fname(1:end-4) '__Kcdf.fig']);
         setFigureForPrinting();
-        print(h,[png_dir '\' mat_fname(1:end-4) '__Kcdf.png'],'-dpng','-r300')
-        close(h)
+        print(h,[png_dir '\' mat_fname(1:end-4) '__Kcdf.png'],'-dpng','-r300')    
+        close(gcf)        
     
     end % OPTS(OPT_KFACTOR)
     
     % approximate an N-tap CIR from the measured CIR's
-    if OPTS(OPT_AVGCIR_NTAP)
+    if OPTS(OPT_AVGCIR)
         
         NtapApprox_N = 13;
         for cir_class_ii = 1:length(cir_class)
@@ -479,7 +445,6 @@ for fk = 1:Nfiles
             r_h = r_h/max(r_h);  % normalize the approximated cir
 
             hold off
-            %subplot(4,1,1:2)
             if OPTS(OPT_NTAP_APPROX)
                 plot(1E9*t_ciravg, abs(cir_avg)); 
             else
@@ -487,7 +452,6 @@ for fk = 1:Nfiles
             end
             str = '$$\mid{h(t)}\mid$$';ylabel(str, 'Interpreter', 'Latex')
             xlabel('time (ns)')
-            %set(gca,'XTickLabel','')
             xlim([-20 1000]);  
             ylim([0 1.1])
             if OPTS(OPT_NTAP_APPROX)
@@ -498,23 +462,6 @@ for fk = 1:Nfiles
             end
             setCommonAxisProps();
             set(gca,'OuterPosition',get(gca,'OuterPosition').*[1 1 0.95 0.95]+[0.05 0.05 0 0])
-            
-            if 0
-            subplot(4,1,3:4)
-            plot(1E9*t_ciravg, angle(cir_avg));
-            str = '$$\angle{h(t)}$$';ylabel(str, 'Interpreter', 'Latex')
-            xlabel('time (ns)')
-            set(gca,...
-                 'ylim',[-2*pi() 2*pi()],...
-                 'ytick',[-2*pi() 0 2*pi()],...
-                 'yticklabel',{'-2\pi' '0' '2\pi'})
-            xlim([0 1000]); 
-            hold on
-            stem(1E9*t_ciravg(r_t+1), r_ph, 'r')
-            hold off
-            setCommonAxisProps();
-            set(gca,'OuterPosition',get(gca,'OuterPosition').*[1 1 0.95 0.95]+[0.05 0.05 0 0])
-            end
 
             cir_avg_st(cir_class_ii).time = t_ciravg(r_t+1);
             cir_avg_st(cir_class_ii).mag = r_h;
@@ -529,7 +476,7 @@ for fk = 1:Nfiles
         end
 
         
-    end % OPTS(OPT_AVGCIR_NTAP)
+    end % OPTS(OPT_AVGCIR)
     
     if OPTS(OPT_WRITE_STATS)
         % save the metrics
@@ -602,45 +549,6 @@ end
 
 end % function
 
-function setCommonAxisProps()
-
-    alw = 0.75;    % AxesLineWidth
-    fsz = 10;      % Fontsize
-    lw = 0.75;%1.25;      % LineWidth
-    msz = 6.0;       % MarkerSize
-    
-%    grid on
-    set(gca,'XGrid','on')
-    set(gca,'XMinorGrid','off')
-    set(gca,'YGrid','on')
-    set(gca,'YMinorGrid','off')
-    set(gca,'GridAlpha',0.25)
-    set(gca,'MinorGridAlpha',0.4)
-    set(gca,'Fontsize',fsz)
-    set(gca,'LineWidth',alw);
-    set(gca,'FontName','TimesRoman')
-    
-    % set the line properties
-    hline = get(gca,'Children');
-    for h = hline(:)'
-        if strcmp(h.Type,'line')
-            h.LineWidth = lw;
-            h.MarkerSize = msz;
-        end
-    end
-end
-
-function setFigureForPrinting()
-    width=3; height=3;
-    %set(gcf,'InvertHardcopy','on');
-    set(gcf,'PaperUnits', 'inches');
-    papersize = get(gcf, 'PaperSize');
-    left = (papersize(1)- width)/2;
-    bottom = (papersize(2)- height)/2;
-    myfiguresize = [left, bottom, width, height];
-    set(gcf,'PaperPosition', myfiguresize);
-end
-
 function writeStatsToFile(X)
     if isempty(X)
         return
@@ -673,5 +581,9 @@ function b = testForStatsFile(mat_fname)
         b = true;
     end
 end
+
+
+
+
 
 

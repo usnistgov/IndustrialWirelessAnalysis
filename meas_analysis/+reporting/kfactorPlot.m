@@ -74,20 +74,26 @@ Kmean = mean(K);
 Kmax = max(K);
 Kmin = min(K);
 
+% 
+% Analyze the Rician K Factor Estimates CDF
+% 
+X = deleteoutliers(K);
+plotPDFCDF(X, 300, 'Rician K Factor', 'dB');
+setCommonAxisProps();
+
 % plot the histogram of S   
-K_th = K + 3*std(K);
-[ds_counts,ds_centers] = hist(K(K<K_th),length(K)/25);
-ds_probs = cumsum(ds_counts/sum(ds_counts));
-ds_centers = ds_centers(ds_probs < 0.99);
-ds_probs = ds_probs(ds_probs < 0.99);
-yyaxis left, area(ds_centers, [0 diff(ds_probs)],'FaceAlpha',0.25)
-str = 'Pr. $$\hat{K}$$'; ylabel(str,'Interpreter','Latex');
-yyaxis right, plot(ds_centers,ds_probs)
-str = 'Pr. $$\hat{K} < K$$'; ylabel(str,'Interpreter','Latex');
-str = 'K factor, $$K$$ (dB)';xlabel(str,'Interpreter','Latex')
-reporting.setCommonAxisProps();   
+% K_th = K + 3*std(K);
+% [ds_counts,ds_centers] = hist(K(K<K_th),length(K)/25);
+% ds_probs = cumsum(ds_counts/sum(ds_counts));
+% ds_centers = ds_centers(ds_probs < 0.99);
+% ds_probs = ds_probs(ds_probs < 0.99);
+% yyaxis left, area(ds_centers, [0 diff(ds_probs)],'FaceAlpha',0.25)
+% str = 'Pr. $$\hat{K}$$'; ylabel(str,'Interpreter','Latex');
+% yyaxis right, plot(ds_centers,ds_probs)
+% str = 'Pr. $$\hat{K} < K$$'; ylabel(str,'Interpreter','Latex');
+% str = 'K factor, $$K$$ (dB)';xlabel(str,'Interpreter','Latex')
+% reporting.setCommonAxisProps();   
 
 end
-
 
 

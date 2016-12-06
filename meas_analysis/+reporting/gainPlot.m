@@ -130,7 +130,7 @@ else
         'Location','southwest')
 end
 xlabel('Distance, d (m)','Interpreter','Latex')
-ylabel('$10\ log_{10}(G)$','Interpreter','Latex')
+ylabel('$10\ \log{G}$','Interpreter','Latex')
 ylim([-120 -40])
 reporting.setCommonAxisProps()
 reporting.setFigureForPrinting(h)

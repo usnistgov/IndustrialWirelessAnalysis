@@ -74,20 +74,28 @@ S = S*1e9;
 Smean = mean(S);
 Smax = max(S);
 Smin = min(S);
+Smad = mad(S);
+Sstd = std(S);
 
 % plot the histogram of S   
-[ds_counts,ds_centers] = hist(S,100);
-ds_probs = cumsum(ds_counts/sum(ds_counts));
-ds_centers = ds_centers(ds_probs < 0.99);
-ds_probs = ds_probs(ds_probs < 0.99);
-yyaxis left, area(ds_centers, [0 diff(ds_probs)],'FaceAlpha',0.25)
-str = 'Pr. $$\hat{S}$$'; ylabel(str,'Interpreter','Latex');
-yyaxis right, plot(ds_centers,ds_probs)
-ylim([0 1])
-str = 'Pr. $$\hat{S} < S$$'; ylabel(str,'Interpreter','Latex');
-str = 'rms delay spread, $$S$$ (ns)';xlabel(str,'Interpreter','Latex')
-reporting.setCommonAxisProps();   
-reporting.setFigureForPrinting(gcf);
+X = S;
+X(abs(X)>(Smean+100)) = [];
+plotPDFCDF(X, 300, 'Delay Spread, S', 'ns');
+setCommonAxisProps();
+
+% 
+% [ds_counts,ds_centers] = hist(S,100);
+% ds_probs = cumsum(ds_counts/sum(ds_counts));
+% ds_centers = ds_centers(ds_probs < 0.99);
+% ds_probs = ds_probs(ds_probs < 0.99);
+% yyaxis left, area(ds_centers, [0 diff(ds_probs)],'FaceAlpha',0.25)
+% str = 'Pr. $$\hat{S}$$'; ylabel(str,'Interpreter','Latex');
+% yyaxis right, plot(ds_centers,ds_probs)
+% ylim([0 1])
+% str = 'Pr. $$\hat{S} < S$$'; ylabel(str,'Interpreter','Latex');
+% str = 'rms delay spread, $$S$$ (ns)';xlabel(str,'Interpreter','Latex')
+% reporting.setCommonAxisProps();   
+% reporting.setFigureForPrinting(gcf);
 
 end
 
