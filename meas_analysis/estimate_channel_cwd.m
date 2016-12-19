@@ -15,6 +15,7 @@ OPT_DELAY_SPREAD = 3;
 OPT_AVGCIR = 4;
 OPT_NTAP_APPROX = 5;
 OPT_WRITE_STATS = 6;
+OPT_DO_PLOTS = 7;
 
 if nargin < 2
     OPTS = ...
@@ -22,9 +23,10 @@ if nargin < 2
             1; ...  % compute path gain
             1; ...  % K factor
             1; ...  % delay spread
-            1; ...  % compute average CIR from data
-            1; ...  % compute ntap approximation
+            0; ...  % compute average CIR from data
+            0; ...  % compute ntap approximation
             1; ...  % write stats file    
+            1; ...  % do plots
         ]; 
 end
 
@@ -196,6 +198,19 @@ for fk = 1:Nfiles
         elseif length(cir_mag2) < wl
             continue;
         end
+        
+        % Compute the path loss in the cir
+        % note that the CIR contains antenna gains.  We must remove the
+        % bulk antenna gains using the assumption that the gain is
+        % applied equally to all multi-path components.  We know that
+        % this is not the true case, but without ray-tracing it is the
+        % only option.
+        if OPTS(OPT_PATH_GAIN)
+            path_gain_range_m(kk) = r;
+            path_gain_dB(kk) = compute_path_gain(cir, ...
+                TransmitterAntennaGain_dBi, ...
+                ReceiverAntennaGain_dBi);           
+        end        
 
         % select the sample of the cir that meet threshold criteria
         % also compute the noise floor
@@ -213,19 +228,6 @@ for fk = 1:Nfiles
                 compute_delay_spread(Ts, cir);
         end        
 
-        % Compute the path loss in the cir
-        % note that the CIR contains antenna gains.  We must remove the
-        % bulk antenna gains using the assumption that the gain is
-        % applied equally to all multi-path components.  We know that
-        % this is not the true case, but without ray-tracing it is the
-        % only option.
-        if OPTS(OPT_PATH_GAIN)
-            path_gain_range_m(kk) = r;
-            path_gain_dB(kk) = compute_path_gain(cir, ...
-                TransmitterAntennaGain_dBi, ...
-                ReceiverAntennaGain_dBi);           
-        end
-
         % compute the K factor assuming Rician channel
         % we only consider components 10 dB above the noise floor and
         % where the peak occurs within 8 samples of beginning of the CIR 
@@ -238,14 +240,14 @@ for fk = 1:Nfiles
         % it is assumed that the clock synchronization between TX and RX is
         % working correctly
         if OPTS(OPT_AVGCIR)
-            if pk_pwr > -100
+            if pk_pwr > -100 && ~isempty(k_pks)
                 cir0 = cir/max(abs(cir)); 
                 if (k_pks(1)-ns > -1)
                     cir0start = k_pks(1)-ns+1;
                 else
                     cir0start = 1;
                 end
-                cir0stop = k_pks(end)+ns;
+                cir0stop = min([k_pks(end)+ns, length(cir0)]);
                 cir0 = cir0(cir0start:cir0stop);
                 lcir0 = length(cir0);
                 if LOS(kk) == 1 
@@ -279,10 +281,14 @@ for fk = 1:Nfiles
         
         rA = path_gain_range_m;
         r = rA;        
+        pg_nans = isnan(path_gain_dB);
+        r(pg_nans) = [];
+        path_gain_dB(pg_nans) = [];
         
         %
         % Analyze path loss versus acquisition
         %
+        if OPTS(OPT_DO_PLOTS)
         h = figure();
         yyaxis left
         plot(1:length(r(~isnan(r))),path_gain_dB(~isnan(r)))
@@ -297,54 +303,39 @@ for fk = 1:Nfiles
         setFigureForPrinting();
         print(h,[png_dir '\' mat_fname(1:end-4) '__plvacq.png'],'-dpng','-r300')
         close(h) 
-        
+        end
         
         %
         % Analyze path loss versus distance
         %
         
-        infpt = 0;
-        if SITE_IND == SITE_IND_AAPLANT
-            infpt = 30;
-        elseif SITE_IND == SITE_IND_GBURG
-        	infpt = 10;
-        elseif SITE_IND == SITE_IND_STEAM
-        	infpt = 5;
-        elseif SITE_IND == SITE_IND_OATS;
-            infpt = 5;
-        end
+%         infpt = 0;
+%         if SITE_IND == SITE_IND_AAPLANT
+%             infpt = 30;
+%         elseif SITE_IND == SITE_IND_GBURG
+%         	infpt = 10;
+%         elseif SITE_IND == SITE_IND_STEAM
+%         	infpt = 5;
+%         elseif SITE_IND == SITE_IND_OATS;
+%             infpt = 0;
+%         end
         R = r;
         G = path_gain_dB;
         G = G(~isnan(R));
         R = R(~isnan(R));
         
-        % lower segment
-        Gfit1 = G(R<infpt);
-        Rfit1 = R(R<infpt);
-        if ~isempty(Rfit1)
-            p1 = polyfit(log10(Rfit1), Gfit1, 1);
-        else
-            p1 = [0 infpt];
-        end
+        % new way for fit
+        [fr, gof] = reporting.createPwLFit(log10(R), G);
+        p1 = [fr.a1, fr.b1];
+        p2 = [fr.a2, fr.b2];
+        %x_intersect = 10^(fr.Q);
+        x_intersect = fzero(@(x) polyval(p1-p2,x),10^(fr.Q));
         path_gain_dB_poly{1} = p1;
-
-        % upper segment
-        Gfit2 = G(R>infpt);
-        Rfit2 = R(R>infpt);
-        p2 = polyfit(log10(Rfit2), Gfit2, 1);   
         path_gain_dB_poly{2} = p2;
-
-        % find draw points
-        if ~isempty(Rfit1)
-            x_intersect = fzero(@(x) polyval(p1-p2,x),log10(infpt));
-            %x_intersect = fzero(@(x) polyval(p1-p2,x),[log10(min(Rfit1)), log10(max(Rfit2))]);
-            d_val1 = log10(logspace(log10(min(Rfit1)), x_intersect, 5));
-            g_val1 = polyval(p1, d_val1);
-        else
-            x_intersect = log10(min(R));
-        end
-        d_val2 = log10(logspace(x_intersect, log10(max(Rfit2)), 5));
-        g_val2 = polyval(p2, d_val2);
+        d_val1 = log10(logspace(log10(min(R)), x_intersect, 5));
+        g_val1 = polyval(p1, d_val1); 
+        d_val2 = log10(logspace(x_intersect,log10(max(R)),5));
+        g_val2 = polyval(p2, d_val2);   
         
         % frii as reference
         d_frii = logspace(log10(min(R)), log10(max(R)), 5);
@@ -353,20 +344,15 @@ for fk = 1:Nfiles
         frii_fspl_dB = 10*log10(d_frii.^2) + 20*log10(ff) + 20*log10(1e9) + 20*log10(4*pi/c);         
         
         % plot the gains
+        if OPTS(OPT_DO_PLOTS)
         h = figure();
         semilogx(R,G, 'color', [0,0,0]+0.7, 'marker', '.', 'linestyle' , 'none')
         hold on
-        if ~isempty(Rfit1)
-            semilogx(10.^d_val1,g_val1,'bx-')
-        end
+        semilogx(10.^d_val1,g_val1,'bx-')
         semilogx(10.^d_val2,g_val2,'bo-')
         semilogx(d_frii, -frii_fspl_dB, 'k-') 
         hold off
-        if ~isempty(Rfit1) && ~isempty(Rfit2)
-            legend('data',sprintf('fit1(n=%.1f)',abs(p1(1)/10)),sprintf('fit2(n=%.1f)', abs(p2(1)/10)),'fspl')
-        else
-            legend('data',sprintf('fit(n=%.1f)',abs(p2(1)/10)),'fspl')
-        end
+        legend('data',sprintf('fit1(n=%.1f)',abs(p1(1)/10)),sprintf('fit2(n=%.1f)', abs(p2(1)/10)),'fspl')
         legend('Location','Best')
         
         setCommonAxisProps()    
@@ -377,11 +363,77 @@ for fk = 1:Nfiles
         setFigureForPrinting();
         print(h,[png_dir '\' mat_fname(1:end-4) '__pl.png'],'-dpng','-r300')
         close(h) 
+        end
+        
+        
+        % lower segment
+%         Gfit1 = G(R<infpt);
+%         Rfit1 = R(R<infpt);
+%         if ~isempty(Rfit1)
+%             p1 = polyfit(log10(Rfit1), Gfit1, 1);
+%         else
+%             p1 = [0 infpt];
+%         end
+%         path_gain_dB_poly{1} = p1;
+
+        % upper segment
+%         Gfit2 = G(R>infpt);
+%         Rfit2 = R(R>infpt);
+%         p2 = polyfit(log10(Rfit2), Gfit2, 1);   
+%         path_gain_dB_poly{2} = p2;
+
+        % find draw points
+%         if ~isempty(Rfit1)
+%             try
+%                 x_intersect = fzero(@(x) polyval(p1-p2,x),log10(infpt));
+%                 %x_intersect = fzero(@(x) polyval(p1-p2,x),[log10(min(Rfit1)), log10(max(Rfit2))]);
+%             catch ME
+%                 x_intersect = log10(infpt);             
+%             end
+%             d_val1 = log10(logspace(log10(min(Rfit1)), x_intersect, 5));
+%             g_val1 = polyval(p1, d_val1);            
+%         else
+%             x_intersect = log10(min(R));
+%         end
+%         d_val2 = log10(logspace(x_intersect, log10(max(Rfit2)), 5));
+%         g_val2 = polyval(p2, d_val2);
+        
+%         % frii as reference
+%         d_frii = logspace(log10(min(R)), log10(max(R)), 5);
+%         ff = meta.Frequency_GHz_num;
+%         c = physconst('LightSpeed');
+%         frii_fspl_dB = 10*log10(d_frii.^2) + 20*log10(ff) + 20*log10(1e9) + 20*log10(4*pi/c);         
+%         
+%         % plot the gains
+%         h = figure();
+%         semilogx(R,G, 'color', [0,0,0]+0.7, 'marker', '.', 'linestyle' , 'none')
+%         hold on
+%         if ~isempty(Rfit1)
+%             semilogx(10.^d_val1,g_val1,'bx-')
+%         end
+%         semilogx(10.^d_val2,g_val2,'bo-')
+%         semilogx(d_frii, -frii_fspl_dB, 'k-') 
+%         hold off
+%         if ~isempty(Rfit1) && ~isempty(Rfit2)
+%             legend('data',sprintf('fit1(n=%.1f)',abs(p1(1)/10)),sprintf('fit2(n=%.1f)', abs(p2(1)/10)),'fspl')
+%         else
+%             legend('data',sprintf('fit(n=%.1f)',abs(p2(1)/10)),'fspl')
+%         end
+%         legend('Location','Best')
+%         
+%         setCommonAxisProps()    
+%         xlabel('distance (m)')
+%         ylabel('Path Gain (dB)')
+%         drawnow
+%         savefig(h, [fig_dir '\' mat_fname(1:end-4) '__pl.fig']);
+%         setFigureForPrinting();
+%         print(h,[png_dir '\' mat_fname(1:end-4) '__pl.png'],'-dpng','-r300')
+%         close(h) 
         
     end % if OPTS(OPT_PATH_GAIN)
     
 
-    if OPTS(OPT_DELAY_SPREAD) && sum(~isnan(mean_delay_sec)) > 100
+    if OPTS(OPT_DELAY_SPREAD) && sum(~isnan(mean_delay_sec)) > 100 && OPTS(OPT_DO_PLOTS)
         %
         % Analyze the average delay of the CIR's 
         %
@@ -406,7 +458,7 @@ for fk = 1:Nfiles
         
     end %if OPTS(OPT_DELAY_SPREAD)
 
-    if OPTS(OPT_KFACTOR)
+    if OPTS(OPT_KFACTOR) && OPTS(OPT_DO_PLOTS)
         % 
         % Analyze the Rician K Factor Estimates CDF
         % 
@@ -421,7 +473,7 @@ for fk = 1:Nfiles
     end % OPTS(OPT_KFACTOR)
     
     % approximate an N-tap CIR from the measured CIR's
-    if OPTS(OPT_AVGCIR)
+    if OPTS(OPT_AVGCIR) 
         
         NtapApprox_N = 13;
         for cir_class_ii = 1:length(cir_class)
@@ -478,6 +530,7 @@ for fk = 1:Nfiles
         
     end % OPTS(OPT_AVGCIR)
     
+    stats = []; %#ok<NASGU>
     if OPTS(OPT_WRITE_STATS)
         % save the metrics
         stats = struct(...
@@ -490,38 +543,39 @@ for fk = 1:Nfiles
             'rms_delay_spread_sec',rms_delay_spread_sec, ...
             'mean_delay_sec',mean_delay_sec, ...
             'cir_duration_sec',cir_duration, ...
-            'avg_cir_st', cir_avg_st);
+            'avg_cir_st', cir_avg_st); %#ok<NASGU>
 
-        save([stats_dir '\' mat_fname(1:end-4) '__channel_stats.mat'], 'stats')
-    end
+        save([stats_dir '\' mat_fname(1:end-4) '__channel_stats.mat'], 'stats')    
 
-    % save the stats for this measurement run
-    RxPol = 'U';
-    if strfind(meta.ReceiverAntenna_str,'V Pol')
-        RxPol = 'V';
-    elseif ~isempty(strfind(meta.ReceiverAntenna_str,'Cross Pol')) || ...
-            ~isempty(strfind(meta.ReceiverAntenna_str,'X Pol')) || ...
-            ~isempty(strfind(meta.ReceiverAntenna_str,'Long Pol'))
-        RxPol = 'X';
+%         % save the stats for this measurement run in local cell array
+%         RxPol = 'U';
+%         if strfind(meta.ReceiverAntenna_str,'V Pol')
+%             RxPol = 'V';
+%         elseif ~isempty(strfind(meta.ReceiverAntenna_str,'Cross Pol')) || ...
+%                 ~isempty(strfind(meta.ReceiverAntenna_str,'X Pol')) || ...
+%                 ~isempty(strfind(meta.ReceiverAntenna_str,'Long Pol'))
+%             RxPol = 'X';
+%         end
+%         TxPol = 'U';
+%         if ~isempty(strfind(meta.TransmitterAntenna_str,'V Pol'))
+%             TxPol = 'V';
+%         elseif ~isempty(strfind(meta.TransmitterAntenna_str,'Cross Pol')) || ...
+%                 ~isempty(strfind(meta.TransmitterAntenna_str,'X Pol')) || ...
+%                 ~isempty(strfind(meta.TransmitterAntenna_str,'Long Pol'))
+%             TxPol = 'X';
+%         end    
+%         Cstats(Cstats_ii,:) = {   
+%             meta.MatFile_str, meta.Frequency_GHz_num, ...
+%             RxPol, meta.ReceiverAntennaGain_dBi_num, ...
+%             TxPol, meta.TransmitterAntennaGain_dBi_num, ...
+%             stats.path_gain_dB_poly(1), stats.path_gain_dB_poly(2), ...
+%             nanmean(stats.K), nanmin(stats.K), nanmax(stats.K) ...
+%             1e9*nanmean(stats.mean_delay_sec), 1e9*nanmin(stats.mean_delay_sec), 1e9*nanmax(stats.mean_delay_sec)...
+%             1e9*nanmean(stats.rms_delay_spread_sec), 1e9*nanmin(stats.rms_delay_spread_sec), 1e9*nanmax(stats.rms_delay_spread_sec) ...
+%         };
+%         Cstats_ii = Cstats_ii + 1;
+    
     end
-    TxPol = 'U';
-    if ~isempty(strfind(meta.TransmitterAntenna_str,'V Pol'))
-        TxPol = 'V';
-    elseif ~isempty(strfind(meta.TransmitterAntenna_str,'Cross Pol')) || ...
-            ~isempty(strfind(meta.TransmitterAntenna_str,'X Pol')) || ...
-            ~isempty(strfind(meta.TransmitterAntenna_str,'Long Pol'))
-        TxPol = 'X';
-    end    
-    Cstats(Cstats_ii,:) = {   
-        meta.MatFile_str, meta.Frequency_GHz_num, ...
-        RxPol, meta.ReceiverAntennaGain_dBi_num, ...
-        TxPol, meta.TransmitterAntennaGain_dBi_num, ...
-        stats.path_gain_dB_poly(1), stats.path_gain_dB_poly(2), ...
-        nanmean(stats.K), nanmin(stats.K), nanmax(stats.K) ...
-        1e9*nanmean(stats.mean_delay_sec), 1e9*nanmin(stats.mean_delay_sec), 1e9*nanmax(stats.mean_delay_sec)...
-        1e9*nanmean(stats.rms_delay_spread_sec), 1e9*nanmin(stats.rms_delay_spread_sec), 1e9*nanmax(stats.rms_delay_spread_sec) ...
-    };
-    Cstats_ii = Cstats_ii + 1;
 
     % explicit clear of large memory
     cir_file = [];  %#ok<NASGU>
