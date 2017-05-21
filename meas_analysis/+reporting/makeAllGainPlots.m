@@ -30,9 +30,6 @@ for fk = 1:Nfiles
     try 
 
         stats_file_path = files(fk).name;      
-        if strfind(stats_file_path,'Oats')
-            continue;
-        end
         stats = load(stats_file_path);
         stats = stats.stats;
 
@@ -56,12 +53,16 @@ for fk = 1:Nfiles
     % extract path gain
     G = stats.path_gain_dB;
     R = stats.path_gain_range_m;
+    
+    % eliminate first measurements up close
+    G = G(R>(min(R)*1.5));
+    R = R(R>(min(R)*1.5));
 
     % least squares fit
     [p1, p2, x_intersect, gof] = calLSqFit(R,G);
 
     % plots 
-    h = plotThePathGains(meta, R,G, p1, p2, x_intersect, gof);
+    h = plotThePathGains(meta, R, G, p1, p2, x_intersect, gof);
     
     % save the plot
     fig_dir = '..\figs';
@@ -73,22 +74,21 @@ for fk = 1:Nfiles
     print(h,[png_dir '\' mat_fname(1:end-4) '__pl.png'],'-dpng','-r300')
     close(h) 
     
-
 end
 
 end
 
-function [p1, p2, x_intersect, gof] = calLSqFit(R,G)
-    [fr, gof] = reporting.createPwLFit(log10(R), G);
+function [p1, p2, x_intersect_m, gof] = calLSqFit(R_m,G_dB)
+    [fr, gof] = reporting.createPwLFit(log10(R_m), G_dB);
     p1 = [fr.a1, fr.b1];
     p2 = [fr.a2, fr.b2];
     %x_intersect = 10^(fr.Q);
-    x_intersect = fzero(@(x) polyval(p1-p2,x),10^(fr.Q));
+    x_intersect_m = fzero(@(x) polyval(p1-p2,x),10^(fr.Q));
 end
 
 function h = plotThePathGains(meta, R,G, p1, p2, x_intersect, gof)
 
-    if 10^(x_intersect) < min(R)
+    if (10^(x_intersect) < min(R)) || (10^(x_intersect) > max(R))
         x_intersect = [];
     end
 

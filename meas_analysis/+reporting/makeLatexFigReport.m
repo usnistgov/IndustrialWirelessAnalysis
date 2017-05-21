@@ -228,7 +228,7 @@ function addMetricsTable(f, stats, delol)
     if delol
         fprintf(f, '\\caption{Statistics of Channel Estimates.  Outliers are removed using a significance test of 0.95.}\n');
     else
-        fprintf(f, '\\caption{Statistics of Channel Estimates.  Outliers are not removed.  N indicates the total number of samples in the population.  Outliers are provided at 10 and 20 times $\\sigma$ }\n');
+        fprintf(f, '\\caption{Statistics of Channel Estimates.  Outliers are not removed.  N indicates the total number of samples in the population.  Outliers are provided at 10 and 20 times $\\sigma$. }\n');
     end
     
     fprintf(f, '\\begin{tabular}{l||c|c|c|c||c|c||l}\n');
