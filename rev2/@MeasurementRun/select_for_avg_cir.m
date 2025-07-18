@@ -1,4 +1,4 @@
-function [ c_k ] = select_for_avg_cir( cir )
+function [ c_k ] = select_for_avg_cir( obj, cir )
 % SELECT_FOR_AVG_CIR Select CIR components for average cir computation.
 % Propagation delay is removed.
 %

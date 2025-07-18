@@ -1,11 +1,11 @@
-function estimate_cloud_cwd(pattern, OPTS, TEST_DATA)
+function estimate_cloud_cwd(obj, pattern, OPTS, TEST_DATA)
 % Analyze complex impulse responses from cloud measurements
 % Author: Rick Candell
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
 
 TESTING = false;
-if nargin == 3
+if nargin == 4
     TESTING = true;
 end
 
@@ -107,7 +107,10 @@ for fk = 1:Nfiles
     wla = 2*wl+1;   % size of cir avg calculation buffer
     mlos = ceil(wla/2);  %mid-point of cir avg calculation buffer
     cir_sum = zeros(wla,1);
+    cir_sum_los = zeros(wla,1);
     num_los = 0;
+    cir_sum_nlos = zeros(wla,1);
+    num_nlos = 0;
     
     cir_class = {'los','nlos'};
     for cir_class_ii = 1:length(cir_class)
@@ -134,26 +137,27 @@ for fk = 1:Nfiles
     % verify that x,y position data is available for this file
     if isempty(cir_file.IQdata_CloudLocations_m_num.xPositions)
         warning 'no position data found'
-        continue;
+        return;
     end
     % plot the x,y positions
-    NX = length(cir_file.IQdata_CloudLocations_m_num.xPositions);
-    NY = length(cir_file.IQdata_CloudLocations_m_num.yPositions);
+    CoordX = cir_file.IQdata_CloudLocations_m_num.xPositions;
+    CoordY = cir_file.IQdata_CloudLocations_m_num.yPositions
+    NX = length(CoordX);
+    NY = length(CoordY);
     h=figure();
-    plot(cir_file.IQdata_CloudLocations_m_num.xPositions/lambda_m, ...
-        cir_file.IQdata_CloudLocations_m_num.yPositions/lambda_m, '+')
+    plot(CoordX/lambda_m, CoordY/lambda_m, '+')
     xlabel('xpos (\lambda)')
     ylabel('ypos (\lambda)')
     drawnow
     savefig(h,[fig_dir '\' mat_fname(1:end-4) '__position.fig']);
-    setFigureForPrinting();
+    reporting.setFigureForPrinting(gcf);
     print(h,[png_dir '\' mat_fname(1:end-4) '__position.png'],'-dpng','-r300')    
     close(gcf)      
     
-    %
-    % TODO: compute the sample variance across all of the CIR's
-    %
-    % show the mean and variation of h(k) at each sample time??? 
+    % metrics table 
+    metrics_arr = [];
+    reduced_cir_arr = [];
+    m_kk = 1;
     
     % 
     % Loop through all records within the file
@@ -183,20 +187,71 @@ for fk = 1:Nfiles
 
         % select the sample of the cir that meet threshold criteria
         % also compute the noise floor
-        [k_sel, ~, cir, pk_pwr] = select_cir_samples(r, cir);
+        [k_sel, ~, cir, pk_pwr] = obj.select_cir_samples(r, cir);
         if isempty(k_sel)
             continue
         end
-        USE(kk) = 1;
+        USE(kk) = 1;         
+
+        % record the path gain
+        metrics_arr(m_kk,obj.PathGain) = nan;        
+
+        % grab a reduced tap cir
+        cir_mag2_red = abs(cir(1:256)).^2;
+        % [cir_red_tap_t,cir_red_tap_h,cir_red_tap_ph] = reduce_taps(cir_mag2_red, obj.NtapApprox_N);
+        % cir_red_tap_h = cir_mag2_red;
+        cir_red_tap_h=resample(cir(1:256),1,4);
+        reduced_cir_arr(m_kk,:) = cir_red_tap_h;
+
+        % record the X and Y coordinates
+        metrics_arr(m_kk,obj.CoordX) = 0;
+        metrics_arr(m_kk,obj.CoordY) = 0;          
         
         % compute delay spread parameters of the CIR 
         % because of the wrapping of energy in the FFT-based
         % correlation we must remove the trailing edge.
         if OPTS(OPT_DELAY_SPREAD)
-            if pk_pwr > -100;
+            if pk_pwr > -100
                 [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
-                    compute_delay_spread(Ts, cir);
+                    obj.compute_delay_spread(Ts, cir);
+                metrics_arr(m_kk,obj.MeanDelay) = mean_delay_sec(kk);
+                metrics_arr(m_kk,obj.RMSDelaySpread) = rms_delay_spread_sec(kk);
+                metrics_arr(m_kk,obj.MaxDelay) = cir_duration(kk);                
             end
+        end    
+
+        % compute the K factor assuming Rician channel
+        % we only consider components 10 dB above the noise floor and
+        % where the peak occurs within 8 samples of beginning of the CIR 
+        if obj.OPTS(obj.OPT_KFACTOR) || obj.OPTS(obj.OPT_AVGCIR)
+            [K(kk), LOS(kk), k_pks] = obj.compute_k_factor(cir, ns);
+            metrics_arr(m_kk,obj.RicianK) = K(kk);
+            metrics_arr(m_kk,obj.LOS) = LOS(kk);
+        end   
+
+        % Aggregate the sums for later computation of avg CIR
+        % LOS and NLOS are considered as separate classes of CIR's
+        % it is assumed that the clock synchronization between TX and RX is
+        % working correctly
+        if obj.OPTS(obj.OPT_AVGCIR)
+            if pk_pwr > -100 && ~isempty(k_pks)
+                cir0 = cir/max(abs(cir)); 
+                if (k_pks(1)-ns > -1)
+                    cir0start = k_pks(1)-ns+1;
+                else
+                    cir0start = 1;
+                end
+                cir0stop = min([k_pks(end)+ns, length(cir0)]);
+                cir0 = cir0(cir0start:cir0stop);
+                lcir0 = length(cir0);
+                if LOS(kk) == 1 
+                    num_los = num_los + 1;
+                    cir_sum_los(1:lcir0) = cir_sum_los(1:lcir0) + cir0;                      
+                elseif LOS(kk) == -1
+                    num_nlos = num_nlos + 1;
+                    cir_sum_nlos(1:lcir0) = cir_sum_nlos(1:lcir0) + cir0;                
+                end      
+            end   
         end          
 
         % Compute the path loss in the cir
@@ -206,7 +261,7 @@ for fk = 1:Nfiles
         % this is not the true case, but without ray-tracing it is the
         % only option.
         if OPTS(OPT_PATH_GAIN)
-            path_gain_dB(kk) = compute_path_gain(cir, ...
+            path_gain_dB(kk) = obj.compute_path_gain(cir, ...
                 TransmitterAntennaGain_dBi, ...
                 ReceiverAntennaGain_dBi);           
         end
@@ -214,7 +269,7 @@ for fk = 1:Nfiles
         % Aggregate the sums for later computation of avg CIR
         % LOS and NLOS are considered as separate classes of CIR's
         if OPTS(OPT_AVGCIR)
-            [~, ~, k_pks] = compute_k_factor(cir, ns);
+            [~, ~, k_pks] = obj.compute_k_factor(cir, ns);
             if pk_pwr > -100  && ~isempty(k_pks)
                 cir0 = cir/max(abs(cir));
                 num_los = num_los + 1;
@@ -222,7 +277,9 @@ for fk = 1:Nfiles
                 cir_sum(inds) = cir_sum(inds) + cir0(k_pks);
                 %stem(abs(cir_sum)), xlim([0 60]), drawnow
             end
-        end         
+        end    
+
+        m_kk = m_kk + 1;
 
     end
     
@@ -236,6 +293,20 @@ for fk = 1:Nfiles
         disp(mat_fname)
         continue
     end
+
+    % write the ai metrics to file
+    if 1
+        ai_metrics_fname = [stats_dir '/' mat_fname(1:end-4) '_aimetrics.xlsx'];
+        metrics_tbl = array2table(metrics_arr, 'VariableNames',obj.metrics_tbl_colnames);
+        writetable(metrics_tbl, ai_metrics_fname);
+    end
+
+    % write the reduced cirs to file
+    red_cir_fname = [stats_dir '/' mat_fname(1:end-4) '_redcirs.xlsx'];
+    reduced_cir_arr = [metrics_arr(:,1:8) reduced_cir_arr];
+    red_cir_tbl = array2table(reduced_cir_arr);
+    red_cir_tbl.Properties.VariableNames(1:8) = obj.metrics_tbl_colnames;
+    writetable(red_cir_tbl, red_cir_fname);    
     
     if OPTS(OPT_PATH_GAIN)
     %
@@ -261,12 +332,12 @@ for fk = 1:Nfiles
     legend({'measured', ...
         sprintf('%0.2fx + %0.1f',path_gain_dB_poly), ...
         '+/- 2\sigma'}, 'Location', 'best');
-    setCommonAxisProps()    
+    reporting.setCommonAxisProps()    
     xlabel('distance (\lambda)')
     ylabel('Gain (dB)')
     drawnow
     savefig(h, [fig_dir '\' mat_fname(1:end-4) '__pl.fig']);
-    setFigureForPrinting();
+    reporting.setFigureForPrinting(gcf);
     print(h,[png_dir '\' mat_fname(1:end-4) '__pl.png'],'-dpng','-r300')
     close(gcf)    
     
@@ -277,10 +348,10 @@ for fk = 1:Nfiles
     ylim([0 1]);
     str = 'Path Gain, G (dB)';xlabel(str,'Interpreter','Latex')
     str = 'Pr. $$ \hat{G} < G $$'; ylabel(str,'Interpreter','Latex'); 
-    setCommonAxisProps();
+    reporting.setCommonAxisProps();
     drawnow
     savefig(h,[fig_dir '\' mat_fname(1:end-4) '__plcdf.fig']);
-    setFigureForPrinting();
+    reporting.setFigureForPrinting(gcf);
     print(h,[png_dir '\' mat_fname(1:end-4) '__plcdf.png'],'-dpng','-r300')    
 
     close(h)    
@@ -300,11 +371,11 @@ for fk = 1:Nfiles
         xlim([0 max(du_centers(du_probs<0.995))]);
         str = 'average delay, $$\tau_D$$ (ns)';xlabel(str,'Interpreter','Latex')
         str = 'Pr. $$ \hat{\tau_D} < {\tau_D} $$'; ylabel(str,'Interpreter','Latex'); 
-        setCommonAxisProps();
+        reporting.setCommonAxisProps();
         %title({'CDF of Average Delay', strrep(mat_fname,'_','-')})
         drawnow
         savefig(h,[fig_dir '\' mat_fname(1:end-4) '__du.fig']);
-        setFigureForPrinting();
+        reporting.setFigureForPrinting(gcf);
         print(h,[png_dir '\' mat_fname(1:end-4) '__du.png'],'-dpng','-r300')    
         close(gcf)
 
@@ -318,11 +389,11 @@ for fk = 1:Nfiles
         ylim([0 1]);
         str = 'rms delay spread, $$S$$ (ns)';xlabel(str,'Interpreter','Latex')
         str = 'Pr. $$\hat{S} < S$$'; ylabel(str,'Interpreter','Latex');
-        setCommonAxisProps();
+        reporting.setCommonAxisProps();
         drawnow
         savefig(h,[fig_dir '\' mat_fname(1:end-4) '__ds.fig']);
         h.PaperPositionMode = 'auto';
-        setFigureForPrinting();
+        reporting.setFigureForPrinting(gcf);
         print(h,[png_dir '\' mat_fname(1:end-4) '__ds.png'],'-dpng','-r300')    
         close(gcf)
         
@@ -340,7 +411,7 @@ for fk = 1:Nfiles
         % now remove leading zeros
         cir_avg(1:find(cir_avg, 1,'first')-1) = [];
         cir_avg = cir_avg(1:wl);
-        cir_avg = select_for_avg_cir(cir_avg);
+        cir_avg = obj.select_for_avg_cir(cir_avg);
         cir_avg = cir_avg/max(abs(cir_avg));
         Ncir_avg = length(cir_avg);
         t_ciravg = t(1:Ncir_avg);
@@ -365,7 +436,7 @@ for fk = 1:Nfiles
             legend('Avg CIR','N-tap approx.')
             hold off
         end        
-        setCommonAxisProps();
+        reporting.setCommonAxisProps();
         set(gca,'OuterPosition',get(gca,'OuterPosition').*[1 1 0.95 0.95]+[0.05 0.05 0 0])
 
         if 0
@@ -380,7 +451,7 @@ for fk = 1:Nfiles
             hold on
             stem(1E9*t_ciravg(r_t+1), r_ph, 'r')
             hold off
-            setCommonAxisProps();
+            reporting.setCommonAxisProps();
             set(gca,'OuterPosition',get(gca,'OuterPosition').*[1 1 0.95 0.95]+[0.05 0.05 0 0])
         end
 
@@ -390,7 +461,7 @@ for fk = 1:Nfiles
 
         drawnow
         savefig(h,[fig_dir '\' mat_fname(1:end-4) '__avgcir_' cell2mat(cir_class_name) '.fig']);
-        setFigureForPrinting();
+        reporting.setFigureForPrinting(gcf);
         print(h,[png_dir '\' mat_fname(1:end-4) '__avgcir_' cell2mat(cir_class_name) '.png'],'-dpng','-r300')    
         close(gcf)   
         
@@ -445,47 +516,49 @@ end
 
 % create the delay profile files for RF emulator
 if OPT_AVGCIR
-    stats2rfnestdp( '*_stats.mat', '.\stats', '.\emu' )
+    obj.stats2rfnestdp( '*_stats.mat', '.\stats', '.\emu' )
 end
+
+close all;
 
 end % function
 
-function setCommonAxisProps()
-
-    alw = 0.75;    % AxesLineWidth
-    fsz = 10;      % Fontsize
-    lw = 0.75;      % LineWidth
-    msz = 3.5;       % MarkerSize
-    
-%    grid on
-    set(gca,'XGrid','on')
-    set(gca,'XMinorGrid','off')
-    set(gca,'YGrid','on')
-    set(gca,'YMinorGrid','off')
-    set(gca,'GridAlpha',0.5)
-    set(gca,'MinorGridAlpha',0.4)
-    set(gca,'Fontsize',fsz)
-    set(gca,'LineWidth',alw);
-    set(gca,'FontName','TimesRoman')
-    
-    % set the line properties
-    hline = get(gca,'Children');
-    for h = hline(:)'
-        h.LineWidth = lw;
-        h.MarkerSize = msz;
-    end
-end
-
-function setFigureForPrinting()
-    width=3; height=3;
-    %set(gcf,'InvertHardcopy','on');
-    set(gcf,'PaperUnits', 'inches');
-    papersize = get(gcf, 'PaperSize');
-    left = (papersize(1)- width)/2;
-    bottom = (papersize(2)- height)/2;
-    myfiguresize = [left, bottom, width, height];
-    set(gcf,'PaperPosition', myfiguresize);
-end
+% function setCommonAxisProps()
+% 
+%     alw = 0.75;    % AxesLineWidth
+%     fsz = 8;      % Fontsize
+%     lw = 0.75;      % LineWidth
+%     msz = 3.5;       % MarkerSize
+% 
+% %    grid on
+%     set(gca,'XGrid','on')
+%     set(gca,'XMinorGrid','off')
+%     set(gca,'YGrid','on')
+%     set(gca,'YMinorGrid','off')
+%     set(gca,'GridAlpha',0.5)
+%     set(gca,'MinorGridAlpha',0.4)
+%     set(gca,'Fontsize',fsz)
+%     set(gca,'LineWidth',alw);
+%     set(gca,'FontName','TimesRoman')
+% 
+%     % set the line properties
+%     hline = get(gca,'Children');
+%     for h = hline(:)'
+%         h.LineWidth = lw;
+%         h.MarkerSize = msz;
+%     end
+% end
+% 
+% function setFigureForPrinting()
+%     width=3; height=3;
+%     %set(gcf,'InvertHardcopy','on');
+%     set(gcf,'PaperUnits', 'inches');
+%     papersize = get(gcf, 'PaperSize');
+%     left = (papersize(1)- width)/2;
+%     bottom = (papersize(2)- height)/2;
+%     myfiguresize = [left, bottom, width, height];
+%     set(gcf,'PaperPosition', myfiguresize);
+% end
 
 function writeStatsToFile(X)
     if isempty(X)

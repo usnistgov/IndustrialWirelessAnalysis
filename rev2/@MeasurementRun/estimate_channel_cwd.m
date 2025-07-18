@@ -178,8 +178,16 @@ for fk = 1:Nfiles
             continue;
         elseif length(cir_mag2) < wl
             continue;
+        end     
+
+        % select the sample of the cir that meet threshold criteria
+        % also compute the noise floor
+        [k_sel, ~, cir, pk_pwr] = obj.select_cir_samples(r, cir);
+        if isempty(k_sel)
+            continue
         end
-        
+        USE(kk) = 1;
+
         % Compute the path loss in the cir
         % note that the CIR contains antenna gains.  We must remove the
         % bulk antenna gains using the assumption that the gain is
@@ -191,15 +199,7 @@ for fk = 1:Nfiles
             path_gain_dB(kk) = obj.compute_path_gain(cir, ...
                 TransmitterAntennaGain_dBi, ...
                 ReceiverAntennaGain_dBi); 
-        end        
-
-        % select the sample of the cir that meet threshold criteria
-        % also compute the noise floor
-        [k_sel, ~, cir, pk_pwr] = obj.select_cir_samples(r, cir);
-        if isempty(k_sel)
-            continue
-        end
-        USE(kk) = 1;
+        end           
 
         % record the path gain
         metrics_arr(m_kk,obj.PathGain) = path_gain_dB(kk);
@@ -276,15 +276,13 @@ for fk = 1:Nfiles
     end
 
     % write the ai metrics to file
-    if 1
-        ai_metrics_fname = [stats_dir '/' mat_fname(1:end-4) '_aimetrics.xlsx'];
-        metrics_tbl_colnames = { ...
-            'CoordX', 'CoordY', 'LOS', 'RicianK', ...
-            'RMSDelaySpread', 'MeanDelay', 'MaxDelay', 'PathGain'};   
-        metrics_tbl_vartypes = {'double', 'double', 'double', 'double', 'double', 'double', 'double', 'double' };
-        metrics_tbl = array2table(metrics_arr, 'VariableNames',metrics_tbl_colnames);
-        writetable(metrics_tbl, ai_metrics_fname);
-    end
+    ai_metrics_fname = [stats_dir '/' mat_fname(1:end-4) '_aimetrics.xlsx'];
+    metrics_tbl_colnames = { ...
+        'CoordX', 'CoordY', 'LOS', 'RicianK', ...
+        'RMSDelaySpread', 'MeanDelay', 'MaxDelay', 'PathGain'};   
+    metrics_tbl_vartypes = {'double', 'double', 'double', 'double', 'double', 'double', 'double', 'double' };
+    metrics_tbl = array2table(metrics_arr, 'VariableNames',metrics_tbl_colnames);
+    writetable(metrics_tbl, ai_metrics_fname);
 
     % write the reduced cirs to file
     red_cir_fname = [stats_dir '/' mat_fname(1:end-4) '_redcirs.xlsx'];

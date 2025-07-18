@@ -1,4 +1,4 @@
-function stats2rfnestdp( file_filter, stats_dir_path, emu_path )
+function stats2rfnestdp( obj, file_filter, stats_dir_path, emu_path )
 %STATS2RFNESTDP Convert stats file reduced tap CIR to delay profile used by
 % the RFNest emulator.
 %

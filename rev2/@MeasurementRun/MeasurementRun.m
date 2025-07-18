@@ -11,6 +11,12 @@ classdef MeasurementRun < handle
 
         NtapApprox_N = 48;
 
+        metrics_tbl_colnames = { ...
+            'CoordX', 'CoordY', 'LOS', 'RicianK', ...
+            'RMSDelaySpread', 'MeanDelay', 'MaxDelay', 'PathGain'};   
+        metrics_tbl_vartypes = {'double', 'double', 'double', 'double', ...
+            'double', 'double', 'double', 'double' };        
+
         % order of metrics
         CoordX = 1;
         CoordY =2;
@@ -20,7 +26,7 @@ classdef MeasurementRun < handle
         MeanDelay = 6;
         MaxDelay = 7;
         PathGain = 8;
-        AverageCIR = 9:9+48-1; % needs to use NtapApprox_N
+        % AverageCIR = 9:9+48-1; % needs to use NtapApprox_N
     end
     
     properties
