@@ -202,7 +202,7 @@ for fk = 1:Nfiles
         end           
 
         % record the path gain
-        metrics_arr(m_kk,obj.PathGain) = path_gain_dB(kk);
+        metrics_arr(m_kk,MeasurementRunMetric.PathGain) = path_gain_dB(kk);
 
         % grab a reduced tap cir
         cir_mag2_red = abs(cir(1:256)).^2;
@@ -214,8 +214,8 @@ for fk = 1:Nfiles
         % record the X and Y coordinates
         coord_x = cir_file.IQdata_Range_m(kk,4);
         coord_y = cir_file.IQdata_Range_m(kk,5);
-        metrics_arr(m_kk,obj.CoordX) = coord_x;
-        metrics_arr(m_kk,obj.CoordY) = coord_y;        
+        metrics_arr(m_kk,MeasurementRunMetric.CoordX) = coord_x;
+        metrics_arr(m_kk,MeasurementRunMetric.CoordY) = coord_y;        
         
         % compute delay spread parameters of the CIR 
         % because of the wrapping of energy in the FFT-based
@@ -223,9 +223,9 @@ for fk = 1:Nfiles
         if obj.OPTS(obj.OPT_DELAY_SPREAD)
             [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
                 obj.compute_delay_spread(Ts, cir);
-            metrics_arr(m_kk,obj.MeanDelay) = mean_delay_sec(kk);
-            metrics_arr(m_kk,obj.RMSDelaySpread) = rms_delay_spread_sec(kk);
-            metrics_arr(m_kk,obj.MaxDelay) = cir_duration(kk);
+            metrics_arr(m_kk,MeasurementRunMetric.MeanDelay) = mean_delay_sec(kk);
+            metrics_arr(m_kk,MeasurementRunMetric.RMSDelaySpread) = rms_delay_spread_sec(kk);
+            metrics_arr(m_kk,MeasurementRunMetric.MaxDelay) = cir_duration(kk);
         end        
 
         % compute the K factor assuming Rician channel
@@ -233,8 +233,8 @@ for fk = 1:Nfiles
         % where the peak occurs within 8 samples of beginning of the CIR 
         if obj.OPTS(obj.OPT_KFACTOR) || obj.OPTS(obj.OPT_AVGCIR)
             [K(kk), LOS(kk), k_pks] = obj.compute_k_factor(cir, ns);
-            metrics_arr(m_kk,obj.RicianK) = K(kk);
-            metrics_arr(m_kk,obj.LOS) = LOS(kk);
+            metrics_arr(m_kk,MeasurementRunMetric.RicianK) = K(kk);
+            metrics_arr(m_kk,MeasurementRunMetric.LOS) = LOS(kk);
         end
         
         % Aggregate the sums for later computation of avg CIR
@@ -276,20 +276,36 @@ for fk = 1:Nfiles
     end
 
     % write the ai metrics to file
-    ai_metrics_fname = [stats_dir '/' mat_fname(1:end-4) '_aimetrics.xlsx'];
-    metrics_tbl_colnames = { ...
-        'CoordX', 'CoordY', 'LOS', 'RicianK', ...
-        'RMSDelaySpread', 'MeanDelay', 'MaxDelay', 'PathGain'};   
-    metrics_tbl_vartypes = {'double', 'double', 'double', 'double', 'double', 'double', 'double', 'double' };
-    metrics_tbl = array2table(metrics_arr, 'VariableNames',metrics_tbl_colnames);
-    writetable(metrics_tbl, ai_metrics_fname);
+    metrics_tbl = array2table(metrics_arr, 'VariableNames',obj.metrics_tbl_colnames);    
+    % ai_metrics_fname = [stats_dir '/' mat_fname(1:end-4) '_aimetrics.csv'];
+    % writetable(metrics_tbl, ai_metrics_fname, 'WriteMode','overwrite');
+    ai_metrics_fname = [stats_dir '/' obj.AI_METRICS_FNAME_OUT];
+    writetable(metrics_tbl, ai_metrics_fname, 'WriteMode','append');
 
     % write the reduced cirs to file
-    red_cir_fname = [stats_dir '/' mat_fname(1:end-4) '_redcirs.xlsx'];
-    reduced_cir_arr = [metrics_arr(:,1:8) reduced_cir_arr];
+    reduced_cir_arr = [metrics_arr(:,1:obj.NBaseColumnNames) reduced_cir_arr];
     red_cir_tbl = array2table(reduced_cir_arr);
-    red_cir_tbl.Properties.VariableNames(1:8) = metrics_tbl_colnames;
-    writetable(red_cir_tbl, red_cir_fname);
+    red_cir_tbl.Properties.VariableNames(1:obj.NBaseColumnNames) = obj.metrics_tbl_colnames(1:obj.NBaseColumnNames);
+    % red_cir_fname = [stats_dir '/' mat_fname(1:end-4) '_redcirs.csv'];
+    % writetable(red_cir_tbl, red_cir_fname, 'WriteMode','overwrite');  
+    red_cir_fname = [stats_dir '/' obj.AI_REDTAP_FNAME_OUT];
+    writetable(red_cir_tbl, red_cir_fname, 'WriteMode','append'); 
+    
+    % % write the ai metrics to file
+    % ai_metrics_fname = [stats_dir '/' mat_fname(1:end-4) '_aimetrics.xlsx'];
+    % metrics_tbl_colnames = { ...
+    %     'CoordX', 'CoordY', 'LOS', 'RicianK', ...
+    %     'RMSDelaySpread', 'MeanDelay', 'MaxDelay', 'PathGain'};   
+    % metrics_tbl_vartypes = {'double', 'double', 'double', 'double', 'double', 'double', 'double', 'double' };
+    % metrics_tbl = array2table(metrics_arr, 'VariableNames',metrics_tbl_colnames);
+    % writetable(metrics_tbl, ai_metrics_fname, 'WriteMode','overwrite');
+    % 
+    % % write the reduced cirs to file
+    % red_cir_fname = [stats_dir '/' mat_fname(1:end-4) '_redcirs.xlsx'];
+    % reduced_cir_arr = [metrics_arr(:,1:8) reduced_cir_arr];
+    % red_cir_tbl = array2table(reduced_cir_arr);
+    % red_cir_tbl.Properties.VariableNames(1:8) = metrics_tbl_colnames;
+    % writetable(red_cir_tbl, red_cir_fname, 'WriteMode','overwrite');
     
     %
     % Extract range data for off-line analysis

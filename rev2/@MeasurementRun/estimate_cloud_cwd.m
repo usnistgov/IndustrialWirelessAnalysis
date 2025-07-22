@@ -1,14 +1,15 @@
-function estimate_cloud_cwd(obj, pattern, OPTS, TEST_DATA)
+function estimate_cloud_cwd(obj, pattern, TEST_DATA)
 % Analyze complex impulse responses from cloud measurements
 % Author: Rick Candell
 % Organization: National Institute of Standards and Technology
 % Email: rick.candell@nist.gov
 
 TESTING = false;
-if nargin == 4
+if nargin == 3
     TESTING = true;
 end
 
+OPTS = obj.OPTS;
 OPT_PATH_GAIN = 1;
 OPT_DELAY_SPREAD = 2;
 OPT_AVGCIR = 3;
@@ -141,7 +142,7 @@ for fk = 1:Nfiles
     end
     % plot the x,y positions
     CoordX = cir_file.IQdata_CloudLocations_m_num.xPositions;
-    CoordY = cir_file.IQdata_CloudLocations_m_num.yPositions
+    CoordY = cir_file.IQdata_CloudLocations_m_num.yPositions;
     NX = length(CoordX);
     NY = length(CoordY);
     h=figure();
@@ -176,7 +177,8 @@ for fk = 1:Nfiles
         cir = cir_file.IQdata(:,kk);
         
         % compute the magnitude of the CIR samples
-        cir_mag2 = abs(cir).^2;        % ignore record if it is empty or the length is less than the
+        cir_mag2 = abs(cir).^2;        
+        % ignore record if it is empty or the length is less than the
         % expected codeword length.  This indicates that something went
         % wrong with the instrumentation.
         if isempty(cir_mag2)
@@ -191,21 +193,28 @@ for fk = 1:Nfiles
         if isempty(k_sel)
             continue
         end
-        USE(kk) = 1;         
+        USE(kk) = 1; 
+
+        % record frequency
+        metrics_arr(m_kk, MeasurementRunMetric.Freq) = f;
+
+        % record the antenna position
+        % record the X and Y coordinates
+        % metrics_arr(m_kk,MeasurementRunMetric.CoordX) = meta.Rx_xyz_m_cll{1};
+        % metrics_arr(m_kk,MeasurementRunMetric.CoordY) = meta.Rx_xyz_m_cll{2};            
+        metrics_arr(m_kk,MeasurementRunMetric.CoordX) = POS(1);
+        metrics_arr(m_kk,MeasurementRunMetric.CoordY) = POS(2);
 
         % record the path gain
-        metrics_arr(m_kk,obj.PathGain) = nan;        
+        metrics_arr(m_kk,MeasurementRunMetric.PathGain) = nan;        
 
         % grab a reduced tap cir
         cir_mag2_red = abs(cir(1:256)).^2;
-        % [cir_red_tap_t,cir_red_tap_h,cir_red_tap_ph] = reduce_taps(cir_mag2_red, obj.NtapApprox_N);
+        % [cir_red_tap_t,cir_red_tap_h,cir_red_tap_ph] = ...
+        %       reduce_taps(cir_mag2_red, obj.NtapApprox_N);
         % cir_red_tap_h = cir_mag2_red;
         cir_red_tap_h=resample(cir(1:256),1,4);
-        reduced_cir_arr(m_kk,:) = cir_red_tap_h;
-
-        % record the X and Y coordinates
-        metrics_arr(m_kk,obj.CoordX) = 0;
-        metrics_arr(m_kk,obj.CoordY) = 0;          
+        reduced_cir_arr(m_kk,:) = cir_red_tap_h;      
         
         % compute delay spread parameters of the CIR 
         % because of the wrapping of energy in the FFT-based
@@ -214,9 +223,9 @@ for fk = 1:Nfiles
             if pk_pwr > -100
                 [mean_delay_sec(kk), rms_delay_spread_sec(kk), cir_duration(kk)] = ...
                     obj.compute_delay_spread(Ts, cir);
-                metrics_arr(m_kk,obj.MeanDelay) = mean_delay_sec(kk);
-                metrics_arr(m_kk,obj.RMSDelaySpread) = rms_delay_spread_sec(kk);
-                metrics_arr(m_kk,obj.MaxDelay) = cir_duration(kk);                
+                metrics_arr(m_kk,MeasurementRunMetric.MeanDelay) = mean_delay_sec(kk);
+                metrics_arr(m_kk,MeasurementRunMetric.RMSDelaySpread) = rms_delay_spread_sec(kk);
+                metrics_arr(m_kk,MeasurementRunMetric.MaxDelay) = cir_duration(kk);                
             end
         end    
 
@@ -225,8 +234,8 @@ for fk = 1:Nfiles
         % where the peak occurs within 8 samples of beginning of the CIR 
         if obj.OPTS(obj.OPT_KFACTOR) || obj.OPTS(obj.OPT_AVGCIR)
             [K(kk), LOS(kk), k_pks] = obj.compute_k_factor(cir, ns);
-            metrics_arr(m_kk,obj.RicianK) = K(kk);
-            metrics_arr(m_kk,obj.LOS) = LOS(kk);
+            metrics_arr(m_kk,MeasurementRunMetric.RicianK) = K(kk);
+            metrics_arr(m_kk,MeasurementRunMetric.LOS) = LOS(kk);
         end   
 
         % Aggregate the sums for later computation of avg CIR
@@ -263,7 +272,8 @@ for fk = 1:Nfiles
         if OPTS(OPT_PATH_GAIN)
             path_gain_dB(kk) = obj.compute_path_gain(cir, ...
                 TransmitterAntennaGain_dBi, ...
-                ReceiverAntennaGain_dBi);           
+                ReceiverAntennaGain_dBi);   
+            metrics_arr(m_kk, MeasurementRunMetric.PathGain) = path_gain_dB(kk);
         end
         
         % Aggregate the sums for later computation of avg CIR
@@ -295,18 +305,20 @@ for fk = 1:Nfiles
     end
 
     % write the ai metrics to file
-    if 1
-        ai_metrics_fname = [stats_dir '/' mat_fname(1:end-4) '_aimetrics.xlsx'];
-        metrics_tbl = array2table(metrics_arr, 'VariableNames',obj.metrics_tbl_colnames);
-        writetable(metrics_tbl, ai_metrics_fname);
-    end
+    metrics_tbl = array2table(metrics_arr, 'VariableNames',obj.metrics_tbl_colnames);    
+    % ai_metrics_fname = [stats_dir '/' mat_fname(1:end-4) '_aimetrics.csv'];
+    % writetable(metrics_tbl, ai_metrics_fname, 'WriteMode','overwrite');
+    ai_metrics_fname = [stats_dir '/' obj.AI_METRICS_FNAME_OUT];
+    writetable(metrics_tbl, ai_metrics_fname, 'WriteMode','append');
 
     % write the reduced cirs to file
-    red_cir_fname = [stats_dir '/' mat_fname(1:end-4) '_redcirs.xlsx'];
-    reduced_cir_arr = [metrics_arr(:,1:8) reduced_cir_arr];
+    reduced_cir_arr = [metrics_arr(:,1:obj.NBaseColumnNames) reduced_cir_arr];
     red_cir_tbl = array2table(reduced_cir_arr);
-    red_cir_tbl.Properties.VariableNames(1:8) = obj.metrics_tbl_colnames;
-    writetable(red_cir_tbl, red_cir_fname);    
+    red_cir_tbl.Properties.VariableNames(1:obj.NBaseColumnNames) = obj.metrics_tbl_colnames(1:obj.NBaseColumnNames);
+    % red_cir_fname = [stats_dir '/' mat_fname(1:end-4) '_redcirs.csv'];
+    % writetable(red_cir_tbl, red_cir_fname, 'WriteMode','overwrite');  
+    red_cir_fname = [stats_dir '/' obj.AI_REDTAP_FNAME_OUT];
+    writetable(red_cir_tbl, red_cir_fname, 'WriteMode','append');  
     
     if OPTS(OPT_PATH_GAIN)
     %
@@ -523,43 +535,6 @@ close all;
 
 end % function
 
-% function setCommonAxisProps()
-% 
-%     alw = 0.75;    % AxesLineWidth
-%     fsz = 8;      % Fontsize
-%     lw = 0.75;      % LineWidth
-%     msz = 3.5;       % MarkerSize
-% 
-% %    grid on
-%     set(gca,'XGrid','on')
-%     set(gca,'XMinorGrid','off')
-%     set(gca,'YGrid','on')
-%     set(gca,'YMinorGrid','off')
-%     set(gca,'GridAlpha',0.5)
-%     set(gca,'MinorGridAlpha',0.4)
-%     set(gca,'Fontsize',fsz)
-%     set(gca,'LineWidth',alw);
-%     set(gca,'FontName','TimesRoman')
-% 
-%     % set the line properties
-%     hline = get(gca,'Children');
-%     for h = hline(:)'
-%         h.LineWidth = lw;
-%         h.MarkerSize = msz;
-%     end
-% end
-% 
-% function setFigureForPrinting()
-%     width=3; height=3;
-%     %set(gcf,'InvertHardcopy','on');
-%     set(gcf,'PaperUnits', 'inches');
-%     papersize = get(gcf, 'PaperSize');
-%     left = (papersize(1)- width)/2;
-%     bottom = (papersize(2)- height)/2;
-%     myfiguresize = [left, bottom, width, height];
-%     set(gcf,'PaperPosition', myfiguresize);
-% end
-
 function writeStatsToFile(X)
     if isempty(X)
         return
@@ -583,41 +558,3 @@ function writeStatsToFile(X)
     writetable(M, file_path, 'Delimiter', '\t');
     
 end
-
-
-
-% function [ k, nf ] = select_cir_samples( cir )
-% % SELECT_CIR_SAMPLES Compute the delay spread of the input CIR
-% %
-% % Outputs:
-% %   k is an array of the selected indices
-% %   nf is the noise floor
-% %
-% % Inputs:
-% %   r is the range in meters from transmitter to receiver
-% %   cir is the real or complex valued channel impulse response
-% %
-% % Time and CIR vectors must have the same length.
-% %
-% % Author: Rick Candell
-% % Organization: National Institute of Standards and Technology
-% % Email: rick.candell@nist.gov
-% 
-% % linear domain thresholds
-% nft = 10;           % 10 dB above noise floor
-% pkt = 1/31.6228;    % 15 dB from peak
-% 
-% % eliminate the anomalous tail components (last 8 samples)
-% cir = cir(1:round(length(cir)*0.5));
-% % cir = cir(1:end-8);
-% 
-% % compute the magnitude squared of the cir normailzed to the peak value
-% cir_mag2 = (abs(cir).^2);
-% cir_max = max(cir_mag2);
-% cir_mag2 = (abs(cir).^2)/cir_max;
-% 
-% % select the cir sample for use in average cir estimation
-% nf = mean(cir_mag2(round(length(cir)*0.8):round(length(cir)*0.9)));
-% k = find( cir_mag2 > nf*nft );
-% 
-% end
